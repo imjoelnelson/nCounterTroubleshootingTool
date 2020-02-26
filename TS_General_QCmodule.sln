@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TS_General_QCmodule", "TS_General_QCmodule\TS_General_QCmodule.csproj", "{BC5E17DD-A1D6-48D1-B29C-1BF9E77876DB}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "nCounter_Troubleshooting_Tool_Setup", "nCounter_Troubleshooting_Tool_Setup\nCounter_Troubleshooting_Tool_Setup.vdproj", "{A4A72CFB-DD55-4C9A-99E9-1EAF6A3B980C}"
+EndProject
+Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC5E17DD-A1D6-48D1-B29C-1BF9E77876DB}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5E17DD-A1D6-48D1-B29C-1BF9E77876DB}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{BC5E17DD-A1D6-48D1-B29C-1BF9E77876DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5E17DD-A1D6-48D1-B29C-1BF9E77876DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4A72CFB-DD55-4C9A-99E9-1EAF6A3B980C}.Debug|Any CPU.ActiveCfg = Debug
+		{A4A72CFB-DD55-4C9A-99E9-1EAF6A3B980C}.Release|Any CPU.ActiveCfg = Release
+		{A4A72CFB-DD55-4C9A-99E9-1EAF6A3B980C}.Release|Any CPU.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4F9CF869-2A88-4DBA-8A1F-936F3FC628D3}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,16 @@
+﻿	Plot Configuration
+		FOV Mets
+			W/O Error bars
+			W/ Error bars
+		FOV Class Sums
+			Counts
+			% of Total
+			Per FOV
+		Code Class
+			Geomean
+			Max
+			Total
+			% of Total Counts
+			Binned (Endogenous Only)
+
+			
