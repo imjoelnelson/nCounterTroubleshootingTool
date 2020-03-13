@@ -2188,6 +2188,20 @@ namespace TS_General_QCmodule
             }
 
             panel2.Controls.Add(chart2);
+
+            // Add min, max, and diff pressures
+            TextBox tex1 = new TextBox();
+            tex1.Location = new Point(panel2.Location.X + 100, panel2.Location.Y + panel2.Height + 10);
+            tex1.Size = new Size(205, 100);
+            tex1.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, FontStyle.Bold);
+            tex1.BackColor = System.Drawing.Color.White;
+            tex1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            tex1.Multiline = true;
+            double maxPress = vals.Select(x => x.Item2).Max();
+            double minPress = vals.Select(x => x.Item2).Min();
+            string diffPress = Math.Round(maxPress - minPress,3).ToString();
+            tex1.Text = $"Pressure Differential:\r\nMax = {maxPress.ToString()}\r\nMin = {minPress.ToString()}\r\nDiff = {diffPress.ToString()}";
+            tabControl1.TabPages[18].Controls.Add(tex1);
         }
 
         private void GetMessageLogButton()
