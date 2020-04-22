@@ -51,6 +51,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RegFileParser">
+      <HintPath>..\..\..\..\..\Desktop\RegFileParser\RegFileParser\obj\Release\RegFileParser.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -144,6 +147,9 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="G2EdReader.cs" />
+    <Compile Include="G2FidLocRawReader.cs" />
+    <Compile Include="G2zHeightReader.cs" />
     <Compile Include="GuiCursor.cs" />
     <Compile Include="Html.cs" />
     <Compile Include="HybCodeReader.cs" />
@@ -172,12 +178,6 @@
     </Compile>
     <Compile Include="SlatForm.Designer.cs">
       <DependentUpon>SlatForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SlatSummaryPage.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SlatSummaryPage.Designer.cs">
-      <DependentUpon>SlatSummaryPage.cs</DependentUpon>
     </Compile>
     <Compile Include="SprintRunLogClass.cs" />
     <Compile Include="testForm.cs">
@@ -255,9 +255,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SlatForm.resx">
       <DependentUpon>SlatForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SlatSummaryPage.resx">
-      <DependentUpon>SlatSummaryPage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="testForm.resx">
       <DependentUpon>testForm.cs</DependentUpon>
@@ -366,6 +363,7 @@
     <None Include="Resources\CodeClassTranslator.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="TextFile2.txt" />
     <None Include="Resources\StatusHelp_16x.png" />
     <Content Include="TextFile1.txt" />
   </ItemGroup>

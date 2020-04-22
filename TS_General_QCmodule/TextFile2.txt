@@ -1,0 +1,16 @@
+﻿Windows error
+	EventLogs\AppEvent.log
+initialization error
+	ScanLogs\ScanController.log
+	HardwareLogs\EmbeddedHwLogs
+	HardwareLogs\ErrorRecover.csv
+UI Error
+	GuiError.log
+Scanning issues
+	MTX files
+		Low FOV Counted
+			High BD -> saturation
+			Tilt flag?
+			Z height check (observed Z height {.MTX}, surface detection z-height {SD_XYZ.csv}, taught z-height {Registry.reg})
+			Edge detection {ED_XYZ.csv}
+			Image processing {NCP.log}

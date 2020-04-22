@@ -58,6 +58,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.panel2.SuspendLayout();
             this.plotPanel.SuspendLayout();
             this.slatPanel.SuspendLayout();
@@ -105,7 +106,7 @@
             this.label1.Location = new System.Drawing.Point(92, 4);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(51, 16);
+            this.label1.Size = new System.Drawing.Size(59, 20);
             this.label1.TabIndex = 6;
             this.label1.Text = "Tables";
             // 
@@ -188,7 +189,7 @@
             this.checkBox1.Location = new System.Drawing.Point(191, 19);
             this.checkBox1.Margin = new System.Windows.Forms.Padding(4);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(55, 20);
+            this.checkBox1.Size = new System.Drawing.Size(58, 21);
             this.checkBox1.TabIndex = 13;
             this.checkBox1.Text = "RCC";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -202,7 +203,7 @@
             this.checkBox2.Location = new System.Drawing.Point(239, 19);
             this.checkBox2.Margin = new System.Windows.Forms.Padding(4);
             this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(55, 20);
+            this.checkBox2.Size = new System.Drawing.Size(59, 21);
             this.checkBox2.TabIndex = 14;
             this.checkBox2.Text = "MTX";
             this.checkBox2.UseVisualStyleBackColor = true;
@@ -215,7 +216,7 @@
             this.radioButton1.Location = new System.Drawing.Point(133, 18);
             this.radioButton1.Margin = new System.Windows.Forms.Padding(4);
             this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(65, 20);
+            this.radioButton1.Size = new System.Drawing.Size(69, 21);
             this.radioButton1.TabIndex = 15;
             this.radioButton1.TabStop = true;
             this.radioButton1.Text = "Folder";
@@ -227,7 +228,7 @@
             this.radioButton2.Location = new System.Drawing.Point(133, 38);
             this.radioButton2.Margin = new System.Windows.Forms.Padding(4);
             this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(149, 20);
+            this.radioButton2.Size = new System.Drawing.Size(160, 21);
             this.radioButton2.TabIndex = 16;
             this.radioButton2.Text = "Files (including ZIPs)";
             this.radioButton2.UseVisualStyleBackColor = true;
@@ -298,7 +299,7 @@
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(98, 6);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(38, 16);
+            this.label2.Size = new System.Drawing.Size(47, 20);
             this.label2.TabIndex = 0;
             this.label2.Text = "Plots";
             // 
@@ -332,7 +333,7 @@
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(88, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(56, 16);
+            this.label3.Size = new System.Drawing.Size(68, 20);
             this.label3.TabIndex = 0;
             this.label3.Text = "Reports";
             // 
@@ -356,10 +357,21 @@
             this.pictureBox2.TabIndex = 18;
             this.pictureBox2.TabStop = false;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(882, 12);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 19;
+            this.button1.Text = "Test";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(969, 800);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.slatPanel);
@@ -419,6 +431,7 @@
         private System.Windows.Forms.Button tsTableButton;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.Button button1;
     }
 }
 

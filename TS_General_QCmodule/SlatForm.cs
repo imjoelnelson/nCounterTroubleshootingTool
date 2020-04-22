@@ -2197,8 +2197,8 @@ namespace TS_General_QCmodule
             tex1.BackColor = System.Drawing.Color.White;
             tex1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             tex1.Multiline = true;
-            double maxPress = vals.Select(x => x.Item2).Max();
-            double minPress = vals.Select(x => x.Item2).Min();
+            double maxPress = vals.Select(x => x.Item2).Skip(1).Max();
+            double minPress = vals.Select(x => x.Item2).Skip(1).Min();
             string diffPress = Math.Round(maxPress - minPress,3).ToString();
             tex1.Text = $"Pressure Differential:\r\nMax = {maxPress.ToString()}\r\nMin = {minPress.ToString()}\r\nDiff = {diffPress.ToString()}";
             tabControl1.TabPages[18].Controls.Add(tex1);
@@ -2599,8 +2599,25 @@ namespace TS_General_QCmodule
             }
         }
 
+        private void CleanUpTmp()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            var toDelete = Directory.EnumerateFiles(Form1.tmpPath, "*.BMP");
+            foreach(string f in toDelete)
+            {
+                try
+                {
+                    File.Delete(f);
+                }
+                catch { }
+            }
+        }
+
         private void ConvertSlatToPdf(TabControl.TabPageCollection collection)
         {
+            CleanUpTmp();
+
             string slatTitle = $"{theseRunLanes[0].Date}_{theseRunLanes[0].cartID}_SLAT";
             PdfDocument doc = new PdfDocument();
             doc.Info.Title = slatTitle;
@@ -2752,6 +2769,10 @@ namespace TS_General_QCmodule
                             }
                         }
                     }
+                }
+                else
+                {
+                    return;
                 }
             }
         }

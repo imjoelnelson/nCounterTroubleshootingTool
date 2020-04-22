@@ -444,6 +444,9 @@ namespace TS_General_QCmodule
             flagTable = Properties.Settings.Default.includeFlagTable;
             dspFlagTable = Properties.Settings.Default.dspIncludeFlagTable;
             ligBkgSubtract = Properties.Settings.Default.ligBkgSubtract;
+
+            ClearTmp();
+
             this.Load -= Form1_Load; 
         }
 
@@ -463,6 +466,11 @@ namespace TS_General_QCmodule
             Properties.Settings.Default.ligBkgSubtract = ligBkgSubtract;
             Properties.Settings.Default.Save();
 
+            ClearTmp();
+        }
+
+        public static void ClearTmp()
+        {
             List<string> toDelete = Directory.EnumerateFiles(tmpPath, "*", SearchOption.AllDirectories).ToList();
             for (int i = 0; i < toDelete.Count; i++)
             {
@@ -852,14 +860,15 @@ namespace TS_General_QCmodule
             List<string> temp0 = Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories).ToList();
             for (int i = 0; i < extensions.Count; i++)
             {
-                temp.AddRange(temp0.Where(x => x.EndsWith(extensions[i], StringComparison.InvariantCultureIgnoreCase)));
+                temp.AddRange(temp0.Where(x => x.EndsWith(extensions[i], StringComparison.InvariantCultureIgnoreCase) && !x.Contains("_MACOSX")));
             }
 
             List<string> zipsToUnzip = temp0.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase) 
                                                     && !x.EndsWith("syslogs.zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
             for (int i = 0; i < zipsToUnzip.Count; i++)
             {
-                temp.AddRange(RecursivelyUnzip(zipsToUnzip[i], tmpPath, extensions));
+                List<string> unzipped = RecursivelyUnzip(zipsToUnzip[i], tmpPath, extensions);
+                temp.AddRange(unzipped.Where(x => !x.Contains("_MACOSX")));
                 tempCounter++;
             }
 
@@ -1241,7 +1250,7 @@ namespace TS_General_QCmodule
                 }
                 catch (Exception er)
                 {
-                    failedMtxList.Add($"{directory[i]}\t{er.Message}");
+                failedMtxList.Add($"{directory[i]}\t{er.Message}");
                 }
             }
         }
@@ -2102,5 +2111,10 @@ namespace TS_General_QCmodule
             }
         }
         #endregion
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

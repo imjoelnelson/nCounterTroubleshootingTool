@@ -1388,8 +1388,12 @@ namespace TS_General_QCmodule
                             }
                             else
                             {
-                                var checkRLFarchive = Directory.EnumerateFiles($"{dir.ElementAt(0)}\\archive", $"*{targetRlf}.*");
-                                temp0.AddRange(checkRLFarchive);
+                                string archivePath = $"{dir.ElementAt(0)}\\archive";
+                                if(Directory.Exists(archivePath))
+                                {
+                                    var checkRLFarchive = Directory.EnumerateFiles($"{dir.ElementAt(0)}\\archive", $"*{targetRlf}.*");
+                                    temp0.AddRange(checkRLFarchive);
+                                }
                             }
                             break;
                         }
