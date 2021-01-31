@@ -30,95 +30,50 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.saveTableButton = new System.Windows.Forms.Button();
-            this.saveTable2button = new System.Windows.Forms.Button();
-            this.saveTable3Button = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.clearButton = new System.Windows.Forms.Button();
             this.Filename = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.CartID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Lane = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MTX = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RCC = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.tsTableButton = new System.Windows.Forms.Button();
-            this.mainImportButton = new System.Windows.Forms.Button();
+            this.mFlatButton = new System.Windows.Forms.Button();
+            this.SLATButton = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.slatButton = new System.Windows.Forms.Button();
-            this.plotPanel = new System.Windows.Forms.Panel();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.slatPanel = new System.Windows.Forms.Panel();
-            this.button6 = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.panel2.SuspendLayout();
-            this.plotPanel.SuspendLayout();
-            this.slatPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.fileImportButton = new System.Windows.Forms.Button();
+            this.mainImportButton = new System.Windows.Forms.Button();
+            this.panelStrip = new System.Windows.Forms.Panel();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadADirectoryOfFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fOVLaneAveragesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stringClassesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.codeSummaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.troubleshootingTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sLATToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dqToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.binnedCountsBarplotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.heatmapsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sampleVsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panelStrip.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // saveTableButton
-            // 
-            this.saveTableButton.Location = new System.Drawing.Point(13, 28);
-            this.saveTableButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.saveTableButton.Name = "saveTableButton";
-            this.saveTableButton.Size = new System.Drawing.Size(224, 30);
-            this.saveTableButton.TabIndex = 1;
-            this.saveTableButton.Text = "FOV Lane Averages Table";
-            this.saveTableButton.UseVisualStyleBackColor = true;
-            this.saveTableButton.Click += new System.EventHandler(this.saveTableButton_Click);
-            // 
-            // saveTable2button
-            // 
-            this.saveTable2button.Location = new System.Drawing.Point(13, 62);
-            this.saveTable2button.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.saveTable2button.Name = "saveTable2button";
-            this.saveTable2button.Size = new System.Drawing.Size(224, 30);
-            this.saveTable2button.TabIndex = 2;
-            this.saveTable2button.Text = "String Class Sums Table";
-            this.saveTable2button.UseVisualStyleBackColor = true;
-            this.saveTable2button.Click += new System.EventHandler(this.saveTable2button_Click);
-            // 
-            // saveTable3Button
-            // 
-            this.saveTable3Button.Location = new System.Drawing.Point(13, 96);
-            this.saveTable3Button.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.saveTable3Button.Name = "saveTable3Button";
-            this.saveTable3Button.Size = new System.Drawing.Size(224, 30);
-            this.saveTable3Button.TabIndex = 3;
-            this.saveTable3Button.Text = "Code Summary Table";
-            this.saveTable3Button.UseVisualStyleBackColor = true;
-            this.saveTable3Button.Click += new System.EventHandler(this.saveTable3Button_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(92, 4);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(59, 20);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Tables";
             // 
             // clearButton
             // 
-            this.clearButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.clearButton.Location = new System.Drawing.Point(418, 18);
+            this.clearButton.BackgroundImage = global::TS_General_QCmodule.Properties.Resources.Cancel_32x;
+            this.clearButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.clearButton.Font = new System.Drawing.Font("Segoe UI", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.clearButton.Location = new System.Drawing.Point(174, 3);
             this.clearButton.Margin = new System.Windows.Forms.Padding(4);
             this.clearButton.Name = "clearButton";
-            this.clearButton.Size = new System.Drawing.Size(107, 33);
+            this.clearButton.Size = new System.Drawing.Size(47, 33);
             this.clearButton.TabIndex = 7;
-            this.clearButton.Text = "Clear All";
             this.clearButton.UseVisualStyleBackColor = true;
             this.clearButton.Click += new System.EventHandler(this.clearButton_Click);
             // 
@@ -142,54 +97,39 @@
             // 
             this.RCC.Name = "RCC";
             // 
-            // panel2
+            // mFlatButton
             // 
-            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.panel2.Controls.Add(this.tsTableButton);
-            this.panel2.Controls.Add(this.label1);
-            this.panel2.Controls.Add(this.saveTableButton);
-            this.panel2.Controls.Add(this.saveTable2button);
-            this.panel2.Controls.Add(this.saveTable3Button);
-            this.panel2.Enabled = false;
-            this.panel2.Location = new System.Drawing.Point(50, 329);
-            this.panel2.Margin = new System.Windows.Forms.Padding(4);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(253, 177);
-            this.panel2.TabIndex = 9;
+            this.mFlatButton.Enabled = false;
+            this.mFlatButton.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.mFlatButton.Location = new System.Drawing.Point(317, 3);
+            this.mFlatButton.Name = "mFlatButton";
+            this.mFlatButton.Size = new System.Drawing.Size(65, 33);
+            this.mFlatButton.TabIndex = 8;
+            this.mFlatButton.Text = "M/FLAT";
+            this.mFlatButton.UseVisualStyleBackColor = true;
             // 
-            // tsTableButton
+            // SLATButton
             // 
-            this.tsTableButton.Enabled = false;
-            this.tsTableButton.Location = new System.Drawing.Point(13, 130);
-            this.tsTableButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tsTableButton.Name = "tsTableButton";
-            this.tsTableButton.Size = new System.Drawing.Size(224, 30);
-            this.tsTableButton.TabIndex = 7;
-            this.tsTableButton.Text = "TroubleShooting Table";
-            this.tsTableButton.UseVisualStyleBackColor = true;
-            this.tsTableButton.Click += new System.EventHandler(this.tsTableButton_Click);
-            // 
-            // mainImportButton
-            // 
-            this.mainImportButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.mainImportButton.Location = new System.Drawing.Point(15, 19);
-            this.mainImportButton.Margin = new System.Windows.Forms.Padding(4);
-            this.mainImportButton.Name = "mainImportButton";
-            this.mainImportButton.Size = new System.Drawing.Size(107, 33);
-            this.mainImportButton.TabIndex = 11;
-            this.mainImportButton.Text = "Import";
-            this.mainImportButton.UseVisualStyleBackColor = true;
-            this.mainImportButton.Click += new System.EventHandler(this.mainImportButton_Click);
+            this.SLATButton.Enabled = false;
+            this.SLATButton.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.SLATButton.Location = new System.Drawing.Point(246, 3);
+            this.SLATButton.Name = "SLATButton";
+            this.SLATButton.Size = new System.Drawing.Size(65, 33);
+            this.SLATButton.TabIndex = 7;
+            this.SLATButton.Text = "SLAT";
+            this.SLATButton.UseVisualStyleBackColor = true;
+            this.SLATButton.Click += new System.EventHandler(this.slatButton_Click);
             // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Checked = true;
             this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(191, 19);
+            this.checkBox1.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBox1.Location = new System.Drawing.Point(4, 4);
             this.checkBox1.Margin = new System.Windows.Forms.Padding(4);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(58, 21);
+            this.checkBox1.Size = new System.Drawing.Size(57, 23);
             this.checkBox1.TabIndex = 13;
             this.checkBox1.Text = "RCC";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -200,238 +140,263 @@
             this.checkBox2.AutoSize = true;
             this.checkBox2.Checked = true;
             this.checkBox2.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox2.Location = new System.Drawing.Point(239, 19);
+            this.checkBox2.Font = new System.Drawing.Font("Segoe UI", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBox2.Location = new System.Drawing.Point(4, 21);
             this.checkBox2.Margin = new System.Windows.Forms.Padding(4);
             this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(59, 21);
+            this.checkBox2.Size = new System.Drawing.Size(59, 23);
             this.checkBox2.TabIndex = 14;
             this.checkBox2.Text = "MTX";
             this.checkBox2.UseVisualStyleBackColor = true;
             this.checkBox2.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
             // 
-            // radioButton1
+            // fileImportButton
             // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Checked = true;
-            this.radioButton1.Location = new System.Drawing.Point(133, 18);
-            this.radioButton1.Margin = new System.Windows.Forms.Padding(4);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(69, 21);
-            this.radioButton1.TabIndex = 15;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Folder";
-            this.radioButton1.UseVisualStyleBackColor = true;
+            this.fileImportButton.BackgroundImage = global::TS_General_QCmodule.Properties.Resources.Document_32x;
+            this.fileImportButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.fileImportButton.Font = new System.Drawing.Font("Segoe UI", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.fileImportButton.Location = new System.Drawing.Point(119, 3);
+            this.fileImportButton.Margin = new System.Windows.Forms.Padding(4);
+            this.fileImportButton.Name = "fileImportButton";
+            this.fileImportButton.Size = new System.Drawing.Size(47, 33);
+            this.fileImportButton.TabIndex = 21;
+            this.fileImportButton.UseVisualStyleBackColor = true;
+            this.fileImportButton.Click += new System.EventHandler(this.fileImportButton_Click);
             // 
-            // radioButton2
+            // mainImportButton
             // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(133, 38);
-            this.radioButton2.Margin = new System.Windows.Forms.Padding(4);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(160, 21);
-            this.radioButton2.TabIndex = 16;
-            this.radioButton2.Text = "Files (including ZIPs)";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
+            this.mainImportButton.BackgroundImage = global::TS_General_QCmodule.Properties.Resources.Folder_32x;
+            this.mainImportButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.mainImportButton.Font = new System.Drawing.Font("Segoe UI", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.mainImportButton.Location = new System.Drawing.Point(65, 36);
+            this.mainImportButton.Margin = new System.Windows.Forms.Padding(4);
+            this.mainImportButton.Name = "mainImportButton";
+            this.mainImportButton.Size = new System.Drawing.Size(47, 33);
+            this.mainImportButton.TabIndex = 11;
+            this.mainImportButton.UseVisualStyleBackColor = true;
+            this.mainImportButton.Click += new System.EventHandler(this.mainImportButton_Click);
             // 
-            // slatButton
+            // panelStrip
             // 
-            this.slatButton.Enabled = false;
-            this.slatButton.Location = new System.Drawing.Point(11, 25);
-            this.slatButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.slatButton.Name = "slatButton";
-            this.slatButton.Size = new System.Drawing.Size(226, 30);
-            this.slatButton.TabIndex = 7;
-            this.slatButton.Text = "SLAT Report";
-            this.slatButton.UseVisualStyleBackColor = true;
-            this.slatButton.Click += new System.EventHandler(this.slatButton_Click);
+            this.panelStrip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelStrip.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelStrip.Controls.Add(this.mFlatButton);
+            this.panelStrip.Controls.Add(this.clearButton);
+            this.panelStrip.Controls.Add(this.fileImportButton);
+            this.panelStrip.Controls.Add(this.SLATButton);
+            this.panelStrip.Controls.Add(this.checkBox2);
+            this.panelStrip.Controls.Add(this.checkBox1);
+            this.panelStrip.Location = new System.Drawing.Point(0, 32);
+            this.panelStrip.Name = "panelStrip";
+            this.panelStrip.Size = new System.Drawing.Size(969, 40);
+            this.panelStrip.TabIndex = 23;
             // 
-            // plotPanel
+            // fileToolStripMenuItem
             // 
-            this.plotPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.plotPanel.Controls.Add(this.button5);
-            this.plotPanel.Controls.Add(this.button4);
-            this.plotPanel.Controls.Add(this.button3);
-            this.plotPanel.Controls.Add(this.label2);
-            this.plotPanel.Enabled = false;
-            this.plotPanel.Location = new System.Drawing.Point(50, 531);
-            this.plotPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.plotPanel.Name = "plotPanel";
-            this.plotPanel.Size = new System.Drawing.Size(253, 138);
-            this.plotPanel.TabIndex = 7;
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.loadADirectoryOfFilesToolStripMenuItem,
+            this.loadFilesToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(47, 27);
+            this.fileToolStripMenuItem.Text = "File";
             // 
-            // button5
+            // loadADirectoryOfFilesToolStripMenuItem
             // 
-            this.button5.Enabled = false;
-            this.button5.Location = new System.Drawing.Point(11, 96);
-            this.button5.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(226, 30);
-            this.button5.TabIndex = 9;
-            this.button5.Text = "Lane Bubble Plot";
-            this.button5.UseVisualStyleBackColor = true;
+            this.loadADirectoryOfFilesToolStripMenuItem.Name = "loadADirectoryOfFilesToolStripMenuItem";
+            this.loadADirectoryOfFilesToolStripMenuItem.Size = new System.Drawing.Size(270, 28);
+            this.loadADirectoryOfFilesToolStripMenuItem.Text = "Load A Directory of Files";
+            this.loadADirectoryOfFilesToolStripMenuItem.Click += new System.EventHandler(this.mainImportButton_Click);
             // 
-            // button4
+            // loadFilesToolStripMenuItem
             // 
-            this.button4.Enabled = false;
-            this.button4.Location = new System.Drawing.Point(11, 62);
-            this.button4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(226, 30);
-            this.button4.TabIndex = 8;
-            this.button4.Text = "Y-axis Scatter Plot";
-            this.button4.UseVisualStyleBackColor = true;
+            this.loadFilesToolStripMenuItem.Name = "loadFilesToolStripMenuItem";
+            this.loadFilesToolStripMenuItem.Size = new System.Drawing.Size(270, 28);
+            this.loadFilesToolStripMenuItem.Text = "Load Selected Files";
+            this.loadFilesToolStripMenuItem.Click += new System.EventHandler(this.fileImportButton_Click);
             // 
-            // button3
+            // tsToolStripMenuItem
             // 
-            this.button3.Location = new System.Drawing.Point(11, 28);
-            this.button3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(226, 30);
-            this.button3.TabIndex = 7;
-            this.button3.Text = "Bar Plot";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.tsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tablesToolStripMenuItem,
+            this.sLATToolStripMenuItem});
+            this.tsToolStripMenuItem.Name = "tsToolStripMenuItem";
+            this.tsToolStripMenuItem.Size = new System.Drawing.Size(147, 27);
+            this.tsToolStripMenuItem.Text = "Troubleshooting";
             // 
-            // label2
+            // tablesToolStripMenuItem
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(98, 6);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(47, 20);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Plots";
+            this.tablesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fOVLaneAveragesToolStripMenuItem,
+            this.stringClassesToolStripMenuItem,
+            this.codeSummaryToolStripMenuItem,
+            this.troubleshootingTableToolStripMenuItem});
+            this.tablesToolStripMenuItem.Name = "tablesToolStripMenuItem";
+            this.tablesToolStripMenuItem.Size = new System.Drawing.Size(134, 28);
+            this.tablesToolStripMenuItem.Text = "Tables";
             // 
-            // slatPanel
+            // fOVLaneAveragesToolStripMenuItem
             // 
-            this.slatPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.slatPanel.Controls.Add(this.button6);
-            this.slatPanel.Controls.Add(this.slatButton);
-            this.slatPanel.Controls.Add(this.label3);
-            this.slatPanel.Enabled = false;
-            this.slatPanel.Location = new System.Drawing.Point(50, 685);
-            this.slatPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.slatPanel.Name = "slatPanel";
-            this.slatPanel.Size = new System.Drawing.Size(253, 104);
-            this.slatPanel.TabIndex = 8;
+            this.fOVLaneAveragesToolStripMenuItem.Enabled = false;
+            this.fOVLaneAveragesToolStripMenuItem.Name = "fOVLaneAveragesToolStripMenuItem";
+            this.fOVLaneAveragesToolStripMenuItem.Size = new System.Drawing.Size(279, 28);
+            this.fOVLaneAveragesToolStripMenuItem.Text = "FOV Lane Averages Table";
+            this.fOVLaneAveragesToolStripMenuItem.Click += new System.EventHandler(this.saveTableButton_Click);
             // 
-            // button6
+            // stringClassesToolStripMenuItem
             // 
-            this.button6.Enabled = false;
-            this.button6.Location = new System.Drawing.Point(11, 59);
-            this.button6.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(226, 30);
-            this.button6.TabIndex = 8;
-            this.button6.Text = "Dx QC Report";
-            this.button6.UseVisualStyleBackColor = true;
+            this.stringClassesToolStripMenuItem.Enabled = false;
+            this.stringClassesToolStripMenuItem.Name = "stringClassesToolStripMenuItem";
+            this.stringClassesToolStripMenuItem.Size = new System.Drawing.Size(279, 28);
+            this.stringClassesToolStripMenuItem.Text = "String Classes Table";
+            this.stringClassesToolStripMenuItem.Click += new System.EventHandler(this.saveTable2button_Click);
             // 
-            // label3
+            // codeSummaryToolStripMenuItem
             // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(88, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(68, 20);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "Reports";
+            this.codeSummaryToolStripMenuItem.Enabled = false;
+            this.codeSummaryToolStripMenuItem.Name = "codeSummaryToolStripMenuItem";
+            this.codeSummaryToolStripMenuItem.Size = new System.Drawing.Size(279, 28);
+            this.codeSummaryToolStripMenuItem.Text = "Code Summary Table";
+            this.codeSummaryToolStripMenuItem.Click += new System.EventHandler(this.saveTable3Button_Click);
             // 
-            // pictureBox1
+            // troubleshootingTableToolStripMenuItem
             // 
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(288, 19);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(16, 16);
-            this.pictureBox1.TabIndex = 17;
-            this.pictureBox1.TabStop = false;
+            this.troubleshootingTableToolStripMenuItem.Enabled = false;
+            this.troubleshootingTableToolStripMenuItem.Name = "troubleshootingTableToolStripMenuItem";
+            this.troubleshootingTableToolStripMenuItem.Size = new System.Drawing.Size(279, 28);
+            this.troubleshootingTableToolStripMenuItem.Text = "Troubleshooting Table";
+            this.troubleshootingTableToolStripMenuItem.Click += new System.EventHandler(this.tsTableButton_Click);
             // 
-            // pictureBox2
+            // sLATToolStripMenuItem
             // 
-            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
-            this.pictureBox2.Location = new System.Drawing.Point(257, 38);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(16, 16);
-            this.pictureBox2.TabIndex = 18;
-            this.pictureBox2.TabStop = false;
+            this.sLATToolStripMenuItem.Enabled = false;
+            this.sLATToolStripMenuItem.Name = "sLATToolStripMenuItem";
+            this.sLATToolStripMenuItem.Size = new System.Drawing.Size(134, 28);
+            this.sLATToolStripMenuItem.Text = "SLAT";
+            this.sLATToolStripMenuItem.Click += new System.EventHandler(this.slatButton_Click);
             // 
-            // button1
+            // dqToolStripMenuItem
             // 
-            this.button1.Location = new System.Drawing.Point(882, 12);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 19;
-            this.button1.Text = "Test";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.dqToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.binnedCountsBarplotToolStripMenuItem,
+            this.heatmapsToolStripMenuItem,
+            this.sampleVsToolStripMenuItem});
+            this.dqToolStripMenuItem.Name = "dqToolStripMenuItem";
+            this.dqToolStripMenuItem.Size = new System.Drawing.Size(117, 27);
+            this.dqToolStripMenuItem.Text = "Data Quality";
+            // 
+            // binnedCountsBarplotToolStripMenuItem
+            // 
+            this.binnedCountsBarplotToolStripMenuItem.Enabled = false;
+            this.binnedCountsBarplotToolStripMenuItem.Name = "binnedCountsBarplotToolStripMenuItem";
+            this.binnedCountsBarplotToolStripMenuItem.Size = new System.Drawing.Size(315, 28);
+            this.binnedCountsBarplotToolStripMenuItem.Text = "Binned Counts Barplot";
+            this.binnedCountsBarplotToolStripMenuItem.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // heatmapsToolStripMenuItem
+            // 
+            this.heatmapsToolStripMenuItem.Enabled = false;
+            this.heatmapsToolStripMenuItem.Name = "heatmapsToolStripMenuItem";
+            this.heatmapsToolStripMenuItem.Size = new System.Drawing.Size(315, 28);
+            this.heatmapsToolStripMenuItem.Text = "Heatmaps";
+            this.heatmapsToolStripMenuItem.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // sampleVsToolStripMenuItem
+            // 
+            this.sampleVsToolStripMenuItem.Enabled = false;
+            this.sampleVsToolStripMenuItem.Name = "sampleVsToolStripMenuItem";
+            this.sampleVsToolStripMenuItem.Size = new System.Drawing.Size(315, 28);
+            this.sampleVsToolStripMenuItem.Text = "Sample vs. Sample Scatterplot";
+            this.sampleVsToolStripMenuItem.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // helpToolStripMenuItem1
+            // 
+            this.helpToolStripMenuItem1.Name = "helpToolStripMenuItem1";
+            this.helpToolStripMenuItem1.Size = new System.Drawing.Size(57, 27);
+            this.helpToolStripMenuItem1.Text = "Help";
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.menuStrip1.Font = new System.Drawing.Font("Segoe UI", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem,
+            this.tsToolStripMenuItem,
+            this.dqToolStripMenuItem,
+            this.helpToolStripMenuItem1});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(969, 31);
+            this.menuStrip1.TabIndex = 20;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // panel2
+            // 
+            this.panel2.AutoScroll = true;
+            this.panel2.BackColor = System.Drawing.SystemColors.Window;
+            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Location = new System.Drawing.Point(15, 592);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(385, 180);
+            this.panel2.TabIndex = 24;
             // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(969, 800);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.pictureBox2);
-            this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.slatPanel);
-            this.Controls.Add(this.plotPanel);
-            this.Controls.Add(this.clearButton);
-            this.Controls.Add(this.mainImportButton);
-            this.Controls.Add(this.radioButton2);
-            this.Controls.Add(this.radioButton1);
-            this.Controls.Add(this.checkBox2);
-            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.panel2);
+            this.Controls.Add(this.mainImportButton);
+            this.Controls.Add(this.panelStrip);
+            this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_Close);
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
-            this.plotPanel.ResumeLayout(false);
-            this.plotPanel.PerformLayout();
-            this.slatPanel.ResumeLayout(false);
-            this.slatPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.panelStrip.ResumeLayout(false);
+            this.panelStrip.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.Button saveTableButton;
-        private System.Windows.Forms.Button saveTable2button;
-        private System.Windows.Forms.Button saveTable3Button;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button clearButton;
         private System.Windows.Forms.DataGridViewTextBoxColumn Filename;
         private System.Windows.Forms.DataGridViewTextBoxColumn CartID;
         private System.Windows.Forms.DataGridViewTextBoxColumn Lane;
         private System.Windows.Forms.DataGridViewTextBoxColumn MTX;
         private System.Windows.Forms.DataGridViewTextBoxColumn RCC;
-        private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Button mainImportButton;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.CheckBox checkBox2;
-        private System.Windows.Forms.RadioButton radioButton1;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.Button slatButton;
-        private System.Windows.Forms.Panel plotPanel;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Panel slatPanel;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button tsTableButton;
-        private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.PictureBox pictureBox2;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button fileImportButton;
+        private System.Windows.Forms.Button mFlatButton;
+        private System.Windows.Forms.Button SLATButton;
+        private System.Windows.Forms.Button mainImportButton;
+        private System.Windows.Forms.Panel panelStrip;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadADirectoryOfFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tablesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fOVLaneAveragesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem stringClassesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem codeSummaryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem troubleshootingTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sLATToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dqToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem binnedCountsBarplotToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem heatmapsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sampleVsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem1;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.Panel panel2;
     }
 }
 

@@ -620,9 +620,86 @@ namespace TS_General_QCmodule
             panel1.Controls.Add(chart);
         }
 
+        private static List<Chart> ChartToCopySave { get; set; }
+        private static MenuItem save = new MenuItem("Save Chart", Save_onClick);
+        private static MenuItem copy = new MenuItem("Copy Chart", Copy_onClick);
         private void Chart_RightClick(object sender, EventArgs e)
         {
-            // Context menu with options to copy or save chart
+            MouseEventArgs args = (MouseEventArgs)e;
+
+            if (args.Button == MouseButtons.Right)
+            {
+                if (ChartToCopySave == null)
+                {
+                    ChartToCopySave = new List<Chart>();
+                }
+                else
+                {
+                    ChartToCopySave.Clear();
+                }
+
+                Chart temp = sender as Chart;
+                ChartToCopySave.Add(temp);
+                MenuItem[] items = new MenuItem[] { save, copy };
+                ContextMenu menu = new ContextMenu(items);
+                menu.Show(temp, new Point(args.X, args.Y));
+            }
+        }
+
+        private static void Save_onClick(object sender, EventArgs e)
+        {
+            Chart temp = ChartToCopySave[0];
+
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "JPEG|*.jpeg|PNG|*.png|BMP|*.bmp|TIFF|*.tiff|GIF|*.gif|EMF|*.emf|EmfDual|*.emfdual|EmfPlus|*.emfplus";
+                sfd.FileName = $"{DateTime.Now.ToString("yyyyMMdd_hhmmss")}_{temp.Text}";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    int i = sfd.FilterIndex;
+                    switch (i)
+                    {
+                        case 0:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Jpeg);
+                            break;
+                        case 1:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Png);
+                            break;
+                        case 2:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Bmp);
+                            break;
+                        case 3:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Tiff);
+                            break;
+                        case 4:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Gif);
+                            break;
+                        case 5:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.Emf);
+                            break;
+                        case 6:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.EmfDual);
+                            break;
+                        case 7:
+                            temp.SaveImage(sfd.FileName, ChartImageFormat.EmfPlus);
+                            break;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+        }
+
+        private static void Copy_onClick(object sender, EventArgs e)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ChartToCopySave[0].SaveImage(ms, ChartImageFormat.Bmp);
+                Bitmap bm = new Bitmap(ms);
+                Clipboard.SetImage(bm);
+            }
         }
     }
 }

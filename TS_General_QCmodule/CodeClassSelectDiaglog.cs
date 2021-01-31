@@ -265,7 +265,7 @@ namespace TS_General_QCmodule
             int len = notExtended.Count;
             if (updatedRLF.thisRLFType == RlfClass.RlfType.ps)
             {
-                List<RlfRecord> uniqueContent = notExtended.Where(x => x.CodeClass.Contains('1') || x.CodeClass == "Positive" || x.CodeClass == "Negative").ToList();
+                List<RlfRecord> uniqueContent = notExtended.Where(x => x.CodeClass.Contains('1') || x.CodeClass.StartsWith("Pos") || x.CodeClass.StartsWith("Neg") || x.CodeClass.StartsWith("Puri")).ToList();
                 len = uniqueContent.Count;
                 Dictionary<string, string> nameIDMatches = new Dictionary<string, string>(len);
                 for (int j = 0; j < len; j++)
@@ -370,7 +370,7 @@ namespace TS_General_QCmodule
             // Cross RLF
             {
                 List<int> crossRlfType = new List<int>(); // 0 = Normal, 1 = PS, 2 = DSP
-                if (!rlfList.All(x => x.thisRLFType == RlfClass.RlfType.ps) && !rlfList.All(x => x.thisRLFType == RlfClass.RlfType.dsp))
+                if (rlfList.All(x => x.thisRLFType != RlfClass.RlfType.ps) && rlfList.All(x => x.thisRLFType != RlfClass.RlfType.dsp))
                 {
                     crossRlfType.Add(0);
                 }
@@ -619,6 +619,8 @@ namespace TS_General_QCmodule
 
             return temp.ToArray();
         }
+
+
 
         private Tuple<string, string[]> GetProbeAnnotColumn(List<RlfRecord> list, int col) // 0 = CodeClass, 1 = Name, 2 = ProbeID, 3 = Accession, 4 = Barcode, 5 = Sequence, 6 = Analyte, 7 = Control Type
         {

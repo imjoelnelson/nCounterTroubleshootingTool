@@ -667,10 +667,25 @@ namespace TS_General_QCmodule
             }
             else
             {
-                if(rccTemp != null)
+              if(rccTemp != null)
                 {
                     codeClasses = rccTemp.Distinct();
                 }
+            }
+        }
+
+        public double PosGeoMean { get; set; }
+
+        private void GetPosGeoMean() { PosGeoMean = CalculatePosGeoMean(); }
+        public double CalculatePosGeoMean()
+        {
+            if(hasRCC)
+            {
+                return thisRcc.GetPosGeoMean();
+            }
+            else
+            {
+                return thisMtx.GetPOSgeomean();
             }
         }
 

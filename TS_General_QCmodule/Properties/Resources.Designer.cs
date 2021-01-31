@@ -81,6 +81,16 @@ namespace TS_General_QCmodule.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Cancel_32x {
+            get {
+                object obj = ResourceManager.GetObject("Cancel_32x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;CodeClassTranslate&gt;
         ///Type,CodeClass,Analyte,ControlType,ClassActive
         ///dsp,DSP,dsp,,3
@@ -101,6 +111,26 @@ namespace TS_General_QCmodule.Properties {
         internal static string CodeClassTranslator {
             get {
                 return ResourceManager.GetString("CodeClassTranslator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Document_32x {
+            get {
+                object obj = ResourceManager.GetObject("Document_32x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Folder_32x {
+            get {
+                object obj = ResourceManager.GetObject("Folder_32x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

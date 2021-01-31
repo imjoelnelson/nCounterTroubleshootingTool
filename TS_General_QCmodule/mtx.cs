@@ -109,7 +109,7 @@ namespace TS_General_QCmodule
         private Dictionary<string, string> headerAtts { get; set; }
         public string fileVersion => headerAtts["FileVersion"];
         public string softwareVersion => headerAtts["SoftwareVersion"];
-        public string systemType => fileVersion == "2.0" ? headerAtts["SystemType"] : null;
+        public string systemType => double.Parse(fileVersion) > 1.9 ? headerAtts["SystemType"] : null;
 
         // Sample attributes
         private Dictionary<string, string> sampleAtt { get; set; }
@@ -163,7 +163,7 @@ namespace TS_General_QCmodule
         /// <summary>
         /// <value>Bool indicating if the run will contain Sprint run log info; also used to set BD threshold</value>
         /// </summary>
-        public bool isSprint => laneAtt["ScannerID"].Contains('P');
+        public bool isSprint => systemType != null ? systemType.Equals("gen3", StringComparison.InvariantCultureIgnoreCase) : false;
 
         // Data Lists
         public Dictionary<string, int> fovMetCols { get; set; }
@@ -598,6 +598,22 @@ namespace TS_General_QCmodule
             {
                 posName = "Positive1";
             }
+        }
+
+        public double GetPOSgeomean()
+        {
+            IEnumerable<string[]> posRows = codeList.Where(x => x[codeClassCols["CodeClass"]] == posName);
+            if (posRows == null)
+            {
+                return -1;
+            }
+
+            int[] posCounts = posRows.OrderBy(x => x[codeClassCols["Name"]])
+                                     .Select(x => int.Parse(x[codeClassCols["Count"]]))
+                                     .ToArray();
+
+            // POS Geomean
+            return gm_mean(posCounts.Take(4));
         }
         
         /// <summary>

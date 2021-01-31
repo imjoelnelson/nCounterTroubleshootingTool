@@ -41,47 +41,91 @@ namespace TS_General_QCmodule
                     pressureLines.AddRange(GetParsedLines(pressurePath));
 
                     GetTime(pressureLines);
-                    bufferIndices = GetIndices(bufferEndPoints, bufferEndNames, time);
+                    if(!bufferPressFail)
+                    {
+                        bufferIndices = GetIndices(bufferEndPoints, bufferEndNames, time);
+                    }
+
                     // Get Initialize pressure traces
-                    if (fPure == null)
+                    int bufferEnd = pressureLines.Count - 1;
+                    if(bufferIndices != null)
                     {
-                        fPure = new List<double>();
-                        gPure = new List<double>();
-                        dBind = new List<double>();
-                        lw = new List<double>();
+                        if (fPure == null)
+                        {
+                            fPure = new List<double>();
+                            gPure = new List<double>();
+                            dBind = new List<double>();
+                            lw = new List<double>();
+                        }
+                        else
+                        {
+                            fPure.Clear();
+                            gPure.Clear();
+                            dBind.Clear();
+                            lw.Clear();
+                        }
+                        // Get pressure traces
+                        fPure.AddRange(GetDoubles(new int[] { bufferIndices[0], bufferIndices[1] }, pressureLines, 1));
+                        fpureTimes = time.GetRange(bufferIndices[0], bufferIndices[1] - bufferIndices[0]);
+                        gPure.AddRange(GetDoubles(new int[] { bufferIndices[2], bufferIndices[3] }, pressureLines, 1));
+                        gPureTimes = time.GetRange(bufferIndices[2], bufferIndices[3] - bufferIndices[2]);
+                        dBind.AddRange(GetDoubles(new int[] { bufferIndices[4], bufferIndices[5] }, pressureLines, 1));
+                        dBindTimes = time.GetRange(bufferIndices[4], bufferIndices[5] - bufferIndices[4]);
+                        lw.AddRange(GetDoubles(new int[] { bufferIndices[5], bufferIndices[6] }, pressureLines, 1));
+                        lwTimes = time.GetRange(bufferIndices[5], bufferIndices[6] - bufferIndices[5]);
                     }
                     else
                     {
-                        fPure.Clear();
-                        gPure.Clear();
-                        dBind.Clear();
-                        lw.Clear();
+                        if(bufferPress == null)
+                        {
+                            bufferPress = new List<double>();
+                        }
+                        else
+                        {
+                            bufferPress.Clear();
+                        }
+
+                        bufferPress.AddRange(GetDoubles(new int[] { 0, pressureLines.Count }, pressureLines, 1));
+                        bufferPressTimes = time.GetRange(0, pressureLines.Count);
                     }
-                    // Get pressure traces
-                    fPure.AddRange(GetDoubles(new int[] { bufferIndices[0], bufferIndices[1] }, pressureLines, 1));
-                    fpureTimes = time.GetRange(bufferIndices[0], bufferIndices[1] - bufferIndices[0]);
-                    gPure.AddRange(GetDoubles(new int[] { bufferIndices[2], bufferIndices[3] }, pressureLines, 1));
-                    gPureTimes = time.GetRange(bufferIndices[2], bufferIndices[3] - bufferIndices[2]);
-                    dBind.AddRange(GetDoubles(new int[] { bufferIndices[4], bufferIndices[5] }, pressureLines, 1));
-                    dBindTimes = time.GetRange(bufferIndices[4], bufferIndices[5] - bufferIndices[4]);
-                    lw.AddRange(GetDoubles(new int[] { bufferIndices[5], bufferIndices[6] }, pressureLines, 1));
-                    lwTimes = time.GetRange(bufferIndices[5], bufferIndices[6] - bufferIndices[5]);
+                    
                     GetImmobEndPoints(messageLogPath);
-                    immobIndices = GetIndices(immobEndPoints, immobEndNames, time);
-                    if (immobWash1 == null)
+                    if(!immobPressFail)
                     {
-                        immobWash1 = new List<double>();
-                        immobWash2 = new List<double>();
+                        immobIndices = GetIndices(immobEndPoints, immobEndNames, time);
+                    }
+
+                    if(immobIndices != null)
+                    {
+                        if (immobWash1 == null)
+                        {
+                            immobWash1 = new List<double>();
+                            immobWash2 = new List<double>();
+                        }
+                        else
+                        {
+                            immobWash1.Clear();
+                            immobWash2.Clear();
+                        }
+                        immobWash1.AddRange(GetDoubles(new int[] { immobIndices[0], immobIndices[1] }, pressureLines, 2));
+                        immobWash1Times = time.GetRange(immobIndices[0], immobIndices[1] - immobIndices[0]);
+                        immobWash2.AddRange(GetDoubles(new int[] { immobIndices[2], bufferEnd }, pressureLines, 2));
+                        immobWash2Times = time.GetRange(immobIndices[2], bufferEnd - immobIndices[2]);
                     }
                     else
                     {
-                        immobWash1.Clear();
-                        immobWash2.Clear();
+                        if(immob == null)
+                        {
+                            immob = new List<double>();
+                        }
+                        else
+                        {
+                            immob.Clear();
+                        }
+
+                        immob.AddRange(GetDoubles(new int[] { 0, pressureLines.Count }, pressureLines, 2));
+                        immobTimes = time.GetRange(0, pressureLines.Count);
                     }
-                    immobWash1.AddRange(GetDoubles(new int[] { immobIndices[0], immobIndices[1] }, pressureLines, 2));
-                    immobWash1Times = time.GetRange(immobIndices[0], immobIndices[1] - immobIndices[0]);
-                    immobWash2.AddRange(GetDoubles(new int[] { immobIndices[2], bufferIndices[6] }, pressureLines, 2));
-                    immobWash2Times = time.GetRange(immobIndices[2], bufferIndices[6] - immobIndices[2]);
 
                     // Get pneumatics
                     if (air == null)
@@ -154,6 +198,8 @@ namespace TS_General_QCmodule
         public string runHistoryPath { get; set; }
         public List<string[]> runHistory { get; set; }
         public string messageLogPath { get; set; }
+        public bool bufferPressFail { get; set; }
+        public bool immobPressFail { get; set; }
         public bool fail { get; set; }
 
         private bool validateRunLogDir(List<string> contents)
@@ -245,6 +291,13 @@ namespace TS_General_QCmodule
                         temp.Add(0);
                     }
                 }
+                else
+                {
+                    if(list[i].Any(x => x.Contains("Exception") || x.Contains("ERR") || x.Contains("ERROR")))
+                    {
+                        temp.Add(0);
+                    }
+                }
             }
             return temp;
         }
@@ -276,7 +329,7 @@ namespace TS_General_QCmodule
 
 
         // NEED TO HANDLE ERRORS WHEN END POINTS ARE MISSING
-            #region Buffer A Pressure traces
+        #region Buffer A Pressure traces
         private static string[] bufferEndStrings = new string[]
         {
             "OpenClamp invoked using inputs",
@@ -325,6 +378,8 @@ namespace TS_General_QCmodule
             {
                 string line = string.Empty;
                 line = sr.ReadLine().Split(',')[0];
+
+                // Get run info
                 startDate = GetDateTime(line);
                 while (!sr.EndOfStream)
                 {
@@ -389,100 +444,211 @@ namespace TS_General_QCmodule
                         break;
                     }
                 }
+
+                // initialize buffer end point checks
+                bool cont = false;
+                bufferPressFail = false;
+
+                // get buffer end points
                 while (!sr.EndOfStream)
                 {
                     line = sr.ReadLine();
                     if (line.Contains(bufferEndStrings[0]))
                     {
                         bufferEndPoints.Add("fpStart", GetDateTime(line));
+                        cont = true;
                         break;
                     }
                 }
-                while (!sr.EndOfStream)
+                if(cont)
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[1]))
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[1]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[2]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("fpEnd", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[2]))
+                        {
+                            bufferEndPoints.Add("fpEnd", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[3]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("gpStart", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[3]))
+                        {
+                            bufferEndPoints.Add("gpStart", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[4]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[4]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[5]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("gpEnd", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[5]))
+                        {
+                            bufferEndPoints.Add("gpEnd", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[9]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[9]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[10]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("dBindStart", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[10]))
+                        {
+                            bufferEndPoints.Add("dBindStart", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[6]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[6]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[7]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("lwStart", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[7]))
+                        {
+                            bufferEndPoints.Add("lwStart", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(bufferEndStrings[8]))
+                    bufferPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        bufferEndPoints.Add("lwEnd", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(bufferEndStrings[8]))
+                        {
+                            bufferEndPoints.Add("lwEnd", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
+                }
+                else
+                {
+                    bufferPressFail = true;
+                }
+
+                if(!cont)
+                {
+                    bufferPressFail = true;
                 }
             }
         }
@@ -515,6 +681,10 @@ namespace TS_General_QCmodule
         public List<DateTime> dBindTimes { get; set; }
         public List<double> lw { get; set; }
         public List<DateTime> lwTimes { get; set; }
+
+        // Buffer pressure fail recovery
+        public List<double> bufferPress { get; set; }
+        public  List<DateTime> bufferPressTimes { get; set; }
         #endregion
 
         #region Immobilize pressure traces
@@ -546,6 +716,9 @@ namespace TS_General_QCmodule
                 immobEndPoints.Clear();
             }
 
+            bool cont = false;
+            immobPressFail = false;
+
             using (StreamReader sr = new StreamReader(path))
             {
                 string line = string.Empty;
@@ -554,51 +727,107 @@ namespace TS_General_QCmodule
                     line = sr.ReadLine();
                     if (line.Contains(immobEndStrings[0]))
                     {
+                        cont = true;
                         break;
                     }
                 }
-                while (!sr.EndOfStream)
+
+                if(cont)
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(immobEndStrings[1]))
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        immobEndPoints.Add("immob1Start", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(immobEndStrings[1]))
+                        {
+                            immobEndPoints.Add("immob1Start", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(immobEndStrings[2]))
+                    immobPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(immobEndStrings[2]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(immobEndStrings[3]))
+                    immobPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        immobEndPoints.Add("immob1End", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(immobEndStrings[3]))
+                        {
+                            immobEndPoints.Add("immob1End", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(immobEndStrings[4]))
+                    immobPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(immobEndStrings[4]))
+                        {
+                            cont = true;
+                            break;
+                        }
                     }
                 }
-                while (!sr.EndOfStream)
+                else
                 {
-                    line = sr.ReadLine();
-                    if (line.Contains(immobEndStrings[5]))
+                    immobPressFail = true;
+                }
+
+                if(cont)
+                {
+                    cont = false;
+                    while (!sr.EndOfStream)
                     {
-                        immobEndPoints.Add("immob2Start", GetDateTime(line));
-                        break;
+                        line = sr.ReadLine();
+                        if (line.Contains(immobEndStrings[5]))
+                        {
+                            immobEndPoints.Add("immob2Start", GetDateTime(line));
+                            cont = true;
+                            break;
+                        }
                     }
+                }
+                else
+                {
+                    immobPressFail = true;
+                }
+
+                if(!cont)
+                {
+                    immobPressFail = true;
                 }
             }
         }
@@ -608,6 +837,9 @@ namespace TS_General_QCmodule
         public List<DateTime> immobWash1Times { get; set; }
         public List<double> immobWash2 { get; set; }
         public List<DateTime> immobWash2Times { get; set; }
+        // Immobilize fail recovery only
+        public List<double> immob { get; set; }
+        public List<DateTime> immobTimes { get; set; }
 
         private int[] GetIndices(Dictionary<string, DateTime> endPoints, string[] endNames, List<DateTime> _time)
         {
@@ -703,30 +935,44 @@ namespace TS_General_QCmodule
         public bool[] lanePressPass { get; set; }
         private void GetLanePressPass()
         {
-            if(lanePressPass == null)
+            try
             {
-                lanePressPass = new bool[12];
+                if (lanePressPass == null)
+                {
+                    lanePressPass = new bool[12];
+                }
+                for (int i = 0; i < 12; i++)
+                {
+                    double[] temp = lanePressures.Where(x => x.Item1 == (double)(i + 1))
+                                                 .Select(x => x.Item2).ToArray();
+                    lanePressPass[i] = temp.Max() - temp[0] < 0.15;
+                }
             }
-            for (int i = 0; i < 12; i++)
+            catch
             {
-                double[] temp = lanePressures.Where(x => x.Item1 == (double)(i + 1))
-                                             .Select(x => x.Item2).ToArray();
-                lanePressPass[i] = temp.Max() - temp[0] < 0.15;
+                lanePressPass = null;
             }
         }
 
         public bool[] laneLeakPass { get; set; }
         private void GetLaneLeakPass()
         {
-            if (laneLeakPass == null)
+            try
             {
-                laneLeakPass = new bool[12];
+                if (laneLeakPass == null)
+                {
+                    laneLeakPass = new bool[12];
+                }
+                for (int i = 0; i < 12; i++)
+                {
+                    double[] temp = lanePressures.Where(x => x.Item1 == (double)(i + 1))
+                                                 .Select(x => x.Item2).ToArray();
+                    laneLeakPass[i] = temp[0] - temp.Min() < 0.1;
+                }
             }
-            for (int i = 0; i < 12; i++)
+            catch
             {
-                double[] temp = lanePressures.Where(x => x.Item1 == (double)(i + 1))
-                                             .Select(x => x.Item2).ToArray();
-                laneLeakPass[i] = temp[0] - temp.Min() < 0.1;
+                laneLeakPass = null;
             }
         }
     }

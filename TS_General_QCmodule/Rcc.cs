@@ -294,7 +294,7 @@ namespace TS_General_QCmodule
         /// <summary>
         /// <value>Bool indicating if the run will contain Sprint run log info; also used to set BD threshold</value>
         /// </summary>
-        public bool isSprint => instrument.Contains('P');
+        public bool isSprint => systemType != null ? systemType.Equals("gen3", StringComparison.InvariantCultureIgnoreCase) : false;
 
         // Data list
         public Dictionary<string, int> CodeSumCols {get;set;}
@@ -518,6 +518,15 @@ namespace TS_General_QCmodule
             }
         }
 
+        public double GetPosGeoMean()
+        {
+            int[] posCounts = CodeSummary.Where(x => x[CodeSumCols["CodeClass"]] == posName)
+                                              .OrderBy(x => x[CodeSumCols["Name"]])
+                                              .Select(x => int.Parse(x[CodeSumCols["Count"]]))
+                                              .ToArray();
+            return gm_mean(posCounts.Take(4));
+        }
+
         /// <summary>
         /// Calculates standard deviation of a sample
         /// </summary>
@@ -528,6 +537,41 @@ namespace TS_General_QCmodule
             double mean = someDoubles.Average();
             double sumOfSquaresOfDifferences = someDoubles.Sum(val => (val - mean) * (val - mean));
             return Math.Sqrt(sumOfSquaresOfDifferences / (someDoubles.Count - 1));
+        }
+
+        /// <summary>
+        /// Calculates the geomean of a series of numbers; overload for int input
+        /// </summary>
+        /// <param name="numbers">An array of Doubles</param>
+        /// <returns>A Double, the geomean of the input array</returns>
+        private Double gm_mean(IEnumerable<int> numbers)
+        {
+            List<Double> nums = new List<Double>();
+            foreach (int i in numbers)
+            {
+                if (i == 0)
+                {
+                    nums.Add(0.00001);
+                }
+                else
+                {
+                    nums.Add(Convert.ToDouble(i));
+                }
+            }
+            List<Double> logs = new List<Double>();
+            for (int i = 0; i < nums.Count; i++)
+            {
+                if (nums[i] > 0)
+                {
+                    logs.Add(Math.Log(nums[i], 2));
+                }
+                else
+                {
+                    logs.Add(0);
+                }
+            }
+            Double geomean = Math.Pow(2, logs.Sum() / logs.Count());
+            return geomean;
         }
     }
 }

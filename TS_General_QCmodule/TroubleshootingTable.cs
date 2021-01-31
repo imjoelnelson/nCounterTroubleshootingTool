@@ -394,35 +394,92 @@ namespace TS_General_QCmodule
         private List<string> GetStringClassTable(List<Mtx> _list)
         {
             List<List<Tuple<string, float>>> temp0 = _list.Select(x => x.fovClassSums).ToList();
+            int len1 = temp0.Count;
 
             // To collect all fields, assuming occasionally included files will have different file versions thus differences in fields
-            string[] list1 = new string[] { "SingleSpot",
-                                            "UnstretchedString",
-                                            "UnderStretchedString",
-                                            "Fiducial",
-                                            "Valid"};
+            // To collect all fields, assuming occasionally included files will have different file versions thus differences in fields
+            List<string> stringClassList = temp0.SelectMany(x => x.Select(y => y.Item1))
+                                                .Distinct()
+                                                .ToList();
+            stringClassList.Remove("ID");
 
-            // Build table list
-            List<string> temp = new List<string>(5);
-            for (int i = 0; i < list1.Length; i++)
+            // Build table string
+            string outString = $"Filename,{string.Join(",", _list.Select(x => x.fileName))}\r\nLane ID,{string.Join(",", _list.Select(x => x.laneID))}\r\nSample ID,{string.Join(",", _list.Select(x => x.sampleName))}\r\nCartridge ID,{string.Join(",", _list.Select(x => x.cartID))}\r\nScanner ID,{string.Join(",", _list.Select(x => x.instrument))}\r\nSlot Number,{string.Join(",", _list.Select(x => x.stagePos))}\r\n{new string(',', _list.Count + 1)}\r\nFOV Count,{string.Join(",", _list.Select(x => x.fovCount))}\r\nFOV Counted,{string.Join(",", _list.Select(x => x.fovCounted))}\r\nBinding Density,{string.Join(",", _list.Select(x => x.BD))}\r\n{new string(',', _list.Count + 1)}\r\n";
+            // Holders for Total, Unstretched, Understreched, and Valid
+            List<float> unst = new List<float>(len1);
+            List<float> under = new List<float>(len1);
+            List<float> valid = new List<float>(len1);
+            List<float> totes = new List<float>(len1);
+            List<List<float>> totArray = new List<List<float>>(len1);
+            string[] include = new string[] { "SingleSpot", "UnstretchedString", "UnderStretchedString", "Fiducial", "Valid" };
+            List<string> temp = new List<string>(8);
+            for (int i = 0; i < stringClassList.Count; i++)
             {
-                List<string> temp1 = new List<string>();
-                for(int j = 0; j < temp0.Count; j++)
+                string[] temp1 = new string[len1];
+                List<Tuple<string, float>> temp2 = temp0.Select(x => x.Where(y => y.Item1 == stringClassList[i]).First()).ToList();
+                for (int j = 0; j < len1; j++)
                 {
-                    IEnumerable<Tuple<string, float>> temp2 = temp0[j].Where(x => x.Item1 == list1[i]);
                     // To accomodate situations where different file versions are included 
                     // thus some there are non-matching metrics:
-                    if (temp2.Count() != 0)
+                    if (temp2 != null)
                     {
-                        temp1.Add(temp2.Select(x => x.Item2).First().ToString());
+                        temp1[j] = temp2[j] != null ? temp2[j].Item2.ToString() : "NA";
+                    }
+                    else
+                    {
+                        temp1[j] = "N/A";
                     }
                 }
 
-                // Create row name combined from string class name and number designator
-                string rowName = $"{list1[i]} : {Form1.stringClassDictionary21.Where(x => x.Value == list1[i]).Select(x => x.Key).First()}";
+                string tempClass = stringClassList[i];
 
-                temp.Add($"{rowName},{string.Join(",", temp1)}");
+                if (tempClass.StartsWith("Unst"))
+                {
+                    unst.AddRange(temp2.Select(x => x.Item2));
+                }
+                if (tempClass.StartsWith("Unde"))
+                {
+                    under.AddRange(temp2.Select(x => x.Item2));
+                }
+                if (tempClass.StartsWith("Val"))
+                {
+                    valid.AddRange(temp2.Select(x => x.Item2));
+                }
+                if (!tempClass.Equals("Fiducial") && !stringClassList[i].StartsWith("Sing"))
+                {
+                    totArray.Add(temp2.Select(x => x.Item2).ToList());
+                }
+
+                if(include.Contains(tempClass))
+                {
+                    // Create row name combined from string class name and number designator
+                    string rowName = $"{tempClass} : {Form1.stringClassDictionary21.Where(x => x.Value == tempClass).Select(x => x.Key).First()}";
+
+                    temp.Add($"{rowName},{string.Join(",", temp1)}");
+                }
             }
+
+            // Calculate Total Counts
+            for (int i = 0; i < len1; i++)
+            {
+                totes.Add(totArray.Select(x => x[i]).Sum());
+            }
+            temp.Add($"Totals,{string.Join(",", totes.Select(x => x.ToString()))}");
+
+            // Add % valid
+            double[] pctValid = new double[len1];
+            for (int i = 0; i < len1; i++)
+            {
+                pctValid[i] = Math.Round(100 * valid[i] / totes[i], 2);
+            }
+            temp.Add($"% Valid,{string.Join(",", pctValid.Select(x => x.ToString()))}");
+            // Add % unstretched
+            double[] pctUnst = new double[len1];
+            for (int i = 0; i < len1; i++)
+            {
+                pctUnst[i] = Math.Round(100 * unst[i] / totes[i], 2);
+            }
+            temp.Add($"% Unstretched,{string.Join(",", pctUnst.Select(x => x.ToString()))}");
 
             return temp;
         }

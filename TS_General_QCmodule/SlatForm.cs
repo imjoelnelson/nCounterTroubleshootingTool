@@ -159,7 +159,8 @@ namespace TS_General_QCmodule
                 {
                     GetLanePage(i);
                 }
-                GetBufferPressures();
+
+                GetPressures();
                 GetLanePressures();
                 GetMessageLogButton();
             }
@@ -193,6 +194,7 @@ namespace TS_General_QCmodule
             this.FormClosed += new FormClosedEventHandler(This_FormClosed);
             fail = false;
         }
+
         private bool fail { get; set; }
         private void This_Load(object sender, EventArgs e)
         {
@@ -526,8 +528,22 @@ namespace TS_General_QCmodule
             }
             gv02.Rows.Add(thisSlatClass.percentUnstretched.Select(x => Math.Round(x, 2).ToString()).ToArray());
             gv02.Rows.Add(thisSlatClass.percentValid.Select(x => x.ToString()).ToArray());
-            gv02.Rows.Add(thisSlatClass.theseRunLogs.lanePressPass.Select(x => x.ToString()).ToArray());
-            gv02.Rows.Add(thisSlatClass.theseRunLogs.laneLeakPass.Select(x => x.ToString()).ToArray());
+            if(thisRunLog.lanePressPass != null)
+            {
+                gv02.Rows.Add(thisRunLog.lanePressPass.Select(x => x.ToString()).ToArray());
+            }
+            else
+            {
+                gv02.Rows.Add(new string[] { "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA" });
+            }
+            if(thisRunLog.laneLeakPass != null)
+            {
+                gv02.Rows.Add(thisRunLog.laneLeakPass.Select(x => x.ToString()).ToArray());
+            }
+            else
+            {
+                gv02.Rows.Add(new string[] { "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA" });
+            }
             gv02.Rows[0].HeaderCell.Value = "Binding Density";
             gv02.Rows[1].HeaderCell.Value = "Pct Fov Counted";
             if (thisSlatClass.isRccRlf)
@@ -1734,207 +1750,38 @@ namespace TS_General_QCmodule
             return toRound - toRound % roundBy;
         }
 
-        private void GetBufferPressures()
+        private void GetPressures()
         {
             int h = -2 + (Size.Height / 4);
 
-            // Fbead pure
-            Panel panel1 = new Panel();
-            panel1.Location = home;
-            panel1.Size = new Size(Size.Width/2, h);
-            tabControl1.TabPages[17].Controls.Add(panel1);
+            if(thisRunLog.bufferPressFail)
+            {
+                GetBufferPressures2(h);
+            }
+            else
+            {
+                GetBufferPressures(h);
+            }
 
-            Chart chart1 = new Chart();
-            chart1.Click += new EventHandler(Chart_ClickInteractive);
-            chart1.Dock = DockStyle.Fill;
-            chart1.Text = "BufferA FBead";
-            chart1.Titles.Add("Buffer A: FBead Purification");
-
-            ChartArea area1 = new ChartArea("area1");
-            area1.AxisY = new Axis(area1, AxisName.Y);
-            area1.AxisX = new Axis(area1, AxisName.X);
-            area1.AxisY.Title = "psi";
-            area1.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area1.AxisX.LabelStyle.Format = "hh:mm";
-            area1.AxisX.MajorGrid.LineWidth = area1.AxisY.MajorGrid.LineWidth = 0;
-            area1.AxisY.LabelStyle.Font = littleFont;
-            chart1.ChartAreas.Add(area1);
-
-            Series ser1 = new Series("FBead Buffer Pressure");
-            ser1.ChartType = SeriesChartType.FastLine;
-            double[] fpure = thisSlatClass.theseRunLogs.fPure.ToArray();
-            ser1.Points.DataBindXY(thisRunLog.fpureTimes, fpure);
-            area1.AxisY.Minimum = RoundDown(fpure.Min(), 0.5);
-            area1.AxisY.Maximum = RoundUp(fpure.Max(), 0.5);
-            ser1.ChartArea = "area1";
-            chart1.Series.Add(ser1);
-
-            panel1.Controls.Add(chart1);
-
-            // Gbead pure
-            Panel panel2 = new Panel();
-            panel2.Location = new Point(1 + (Size.Width / 2), 1);
-            panel2.Size = new Size(Size.Width / 2, h);
-            tabControl1.TabPages[17].Controls.Add(panel2);
-
-            Chart chart2 = new Chart();
-            chart2.Click += new EventHandler(Chart_ClickInteractive);
-            chart2.Dock = DockStyle.Fill;
-            chart2.Text = "BufferA GBead";
-            chart2.Titles.Add("Buffer A: GBead Purification");
-
-            ChartArea area2 = new ChartArea("area2");
-            area2.AxisY = new Axis(area2, AxisName.Y);
-            area2.AxisX = new Axis(area2, AxisName.X);
-            area2.AxisY.Title = "psi";
-            area2.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area2.AxisX.LabelStyle.Format = "hh:mm";
-            area2.AxisX.MajorGrid.LineWidth = area2.AxisY.MajorGrid.LineWidth = 0;
-            area2.AxisY.LabelStyle.Font = littleFont;
-            chart2.ChartAreas.Add(area2);
-
-            Series ser2 = new Series("GBead Buffer Pressure");
-            ser2.ChartType = SeriesChartType.FastLine;
-            double[] gpure = thisSlatClass.theseRunLogs.gPure.ToArray();
-            ser2.Points.DataBindXY(thisRunLog.gPureTimes, gpure);
-            area2.AxisY.Minimum = RoundDown(gpure.Min(), 0.5);
-            area2.AxisY.Maximum = RoundUp(gpure.Max(), 0.5);
-            ser2.ChartArea = "area2";
-            chart2.Series.Add(ser2);
-
-            panel2.Controls.Add(chart2);
-
-            // Dynamic Bind
-            Panel panel3 = new Panel();
-            panel3.Location = new Point(1, h + 1);
-            panel3.Size = new Size(Size.Width, h);
-            tabControl1.TabPages[17].Controls.Add(panel3);
-
-            Chart chart3 = new Chart();
-            chart3.Click += new EventHandler(Chart_ClickInteractive);
-            chart3.Dock = DockStyle.Fill;
-            chart3.Text = "BufferA DBind";
-            chart3.Titles.Add("Buffer A: Dynamic Bind");
-
-            ChartArea area3 = new ChartArea("area3");
-            area3.AxisY = new Axis(area3, AxisName.Y);
-            area3.AxisX = new Axis(area3, AxisName.X);
-            area3.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area3.AxisX.LabelStyle.Format = "hh:mm";
-            area3.AxisY.Title = "psi";
-            area3.AxisX.MajorGrid.LineWidth = area3.AxisY.MajorGrid.LineWidth = 0;
-            area3.AxisY.LabelStyle.Font = littleFont;
-            chart3.ChartAreas.Add(area3);
-
-            Series ser3 = new Series("Dynamic Bind");
-            ser3.ChartType = SeriesChartType.FastLine;
-            double[] dynBind = thisSlatClass.theseRunLogs.dBind.ToArray();
-            ser3.Points.DataBindXY(thisRunLog.dBindTimes, dynBind);
-            area3.AxisY.Minimum = dynBind.Min() - 0.04;
-            area3.AxisY.Maximum = dynBind.Max() + 0.04;
-            ser3.ChartArea = "area3";
-            chart3.Series.Add(ser3);
-
-            panel3.Controls.Add(chart3);
-
-            // Buffer A last wash
-            Panel panel4 = new Panel();
-            panel4.Location = new Point(1, (2 * h) + 2);
-            panel4.Size = new Size(Size.Width / 4, h);
-            tabControl1.TabPages[17].Controls.Add(panel4);
-
-            Chart chart4 = new Chart();
-            chart4.Click += new EventHandler(Chart_RightClick);
-            chart4.Dock = DockStyle.Fill;
-            chart4.Text = "BufferA Wash";
-            chart4.Titles.Add("Buffer A: Wash");
-
-            ChartArea area4 = new ChartArea("area4");
-            area4.AxisY = new Axis(area4, AxisName.Y);
-            area4.AxisX = new Axis(area4, AxisName.X);
-            area4.AxisY.Title = "psi";
-            area4.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area4.AxisX.LabelStyle.Format = "hh:mm";
-            area4.AxisX.MajorGrid.LineWidth = area4.AxisY.MajorGrid.LineWidth = 0;
-            area4.AxisY.LabelStyle.Font = littleFont;
-            chart4.ChartAreas.Add(area4);
-
-            Series ser4 = new Series("Wash");
-            ser4.ChartType = SeriesChartType.FastLine;
-            double[] wash = thisSlatClass.theseRunLogs.lw.ToArray();
-            ser4.Points.DataBindXY(thisRunLog.lwTimes, wash);
-            area4.AxisY.Minimum = RoundDown(wash.Min(), 1);
-            area4.AxisY.Maximum = RoundUp(wash.Max(), 1);
-            ser4.ChartArea = "area4";
-            chart4.Series.Add(ser4);
-
-            panel4.Controls.Add(chart4);
-
-            // Immobilize first wash
-            Panel panel5 = new Panel();
-            panel5.Location = new Point(-110 + (Size.Width / 3), (2 * h) + 2);
-            panel5.Size = new Size(Size.Width / 3, h);
-            tabControl1.TabPages[17].Controls.Add(panel5);
-
-            Chart chart5 = new Chart();
-            chart5.Click += new EventHandler(Chart_RightClick);
-            chart5.Dock = DockStyle.Fill;
-            chart5.Text = "Immob Wash1";
-            chart5.Titles.Add("Immobilize: Wash 1");
-
-            ChartArea area5 = new ChartArea("area5");
-            area5.AxisY = new Axis(area5, AxisName.Y);
-            area5.AxisX = new Axis(area5, AxisName.X);
-            area5.AxisY.Title = "psi";
-            area5.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area5.AxisX.LabelStyle.Format = "hh:mm";
-            area5.AxisX.MajorGrid.LineWidth = area5.AxisY.MajorGrid.LineWidth = 0;
-            area5.AxisY.LabelStyle.Font = littleFont;
-            chart5.ChartAreas.Add(area5);
-
-            Series ser5 = new Series("ImmobWash");
-            ser5.ChartType = SeriesChartType.FastLine;
-            double[] bindWash = thisSlatClass.theseRunLogs.immobWash1.ToArray();
-            ser5.Points.DataBindXY(thisRunLog.immobWash1Times, bindWash);
-            area5.AxisY.Minimum = RoundDown(bindWash.Min(), 0.5);
-            area5.AxisY.Maximum = RoundUp(bindWash.Max(), 0.5);
-            ser5.ChartArea = "area5";
-            chart5.Series.Add(ser5);
-
-            panel5.Controls.Add(chart5);
-
-            // Immobilize final wash
-            Panel panel6 = new Panel();
-            panel6.Location = new Point(-110 + (Size.Width * 2 / 3), (2 * h) + 2);
-            panel6.Size = new Size(Size.Width / 3, h);
-            tabControl1.TabPages[17].Controls.Add(panel6);
-
-            Chart chart6 = new Chart();
-            chart6.Click += new EventHandler(Chart_RightClick);
-            chart6.Dock = DockStyle.Fill;
-            chart6.Text = "Immob Wash2";
-            chart6.Titles.Add("Immobilize: Final Wash");
-
-            ChartArea area6 = new ChartArea("area6");
-            area6.AxisY = new Axis(area6, AxisName.Y);
-            area6.AxisX = new Axis(area6, AxisName.X);
-            area6.AxisY.Title = "psi";
-            area6.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area6.AxisX.LabelStyle.Format = "hh:mm";
-            area6.AxisX.MajorGrid.LineWidth = area6.AxisY.MajorGrid.LineWidth = 0;
-            area6.AxisY.LabelStyle.Font = littleFont;
-            chart6.ChartAreas.Add(area6);
-
-            Series ser6 = new Series("ImmobWash2");
-            ser6.ChartType = SeriesChartType.FastLine;
-            double[] immobilize = thisSlatClass.theseRunLogs.immobWash2.ToArray();
-            ser6.Points.DataBindXY(thisRunLog.immobWash2Times, immobilize);
-            area6.AxisY.Minimum = RoundDown(immobilize.Min(), 1);
-            area6.AxisY.Maximum = RoundUp(immobilize.Max(), 1);
-            ser6.ChartArea = "area6";
-            chart6.Series.Add(ser6);
-
-            panel6.Controls.Add(chart6);
+            if(thisRunLog.immobPressFail)
+            {
+                if(thisRunLog.bufferPressFail)
+                {
+                    Point immobLoc = new Point(1, (2 * h) + 2);
+                    int wi = Size.Width - 1;
+                    GetImmobPressures2(h, wi, immobLoc);
+                }
+                else
+                {
+                    Point immobLoc = new Point(-110 + (Size.Width / 3), (2 * h) + 2);
+                    int wi = Size.Width - (Size.Width / 4) - 20;
+                    GetImmobPressures2(h, wi, immobLoc);
+                }
+            }
+            else
+            {
+                GetImmobPressures(h);
+            }
 
             // Vacuum
             Panel panel7 = new Panel();
@@ -1960,7 +1807,7 @@ namespace TS_General_QCmodule
 
             Series ser7 = new Series("Vacuum");
             ser7.ChartType = SeriesChartType.FastLine;
-            double[] vac = thisSlatClass.theseRunLogs.vac.Where((x, i) => i % 7 == 0).ToArray();
+            double[] vac = thisRunLog.vac.Where((x, i) => i % 7 == 0).ToArray();
             DateTime[] time7 = thisRunLog.time.Where((x, i) => i % 7 == 0).ToArray();
             ser7.Points.DataBindXY(time7, vac);
             area7.AxisY.Minimum = 0;
@@ -1994,7 +1841,7 @@ namespace TS_General_QCmodule
 
             Series ser8 = new Series("Air");
             ser8.ChartType = SeriesChartType.FastLine;
-            double[] air = thisSlatClass.theseRunLogs.air.Where((x, i) => i % 7 == 0).ToArray();
+            double[] air = thisRunLog.air.Where((x, i) => i % 7 == 0).ToArray();
             ser8.Points.DataBindXY(time7, air);
             area8.AxisY.Minimum = 0;
             area8.AxisY.Maximum = air.Max() + 1;
@@ -2026,14 +1873,14 @@ namespace TS_General_QCmodule
 
             Series ser9a = new Series("Heater1");
             ser9a.ChartType = SeriesChartType.FastLine;
-            double[] heat1 = thisSlatClass.theseRunLogs.heater1.Where((x, i) => i % 7 == 0).ToArray();
+            double[] heat1 = thisRunLog.heater1.Where((x, i) => i % 7 == 0).ToArray();
             ser9a.Points.DataBindXY(Enumerable.Range(1, heat1.Length).ToArray(), heat1);
             ser9a.ChartArea = "area9";
             chart9.Series.Add(ser9a);
 
             Series ser9b = new Series("Heater2");
             ser9b.ChartType = SeriesChartType.FastLine;
-            double[] heat2 = thisSlatClass.theseRunLogs.heater2.Where((x, i) => i % 7 == 0).ToArray();
+            double[] heat2 = thisRunLog.heater2.Where((x, i) => i % 7 == 0).ToArray();
             ser9b.Points.DataBindXY(Enumerable.Range(1, heat2.Length).ToArray(), heat2);
             ser9b.ChartArea = "area9";
             chart9.Series.Add(ser9b);
@@ -2044,18 +1891,292 @@ namespace TS_General_QCmodule
             panel9.Controls.Add(chart9);
         }
 
-        System.Drawing.Color[] laneColors = new System.Drawing.Color[] { System.Drawing.Color.Blue,
-                                                                         System.Drawing.Color.DarkMagenta,
-                                                                         System.Drawing.Color.DarkGoldenrod,
-                                                                         System.Drawing.Color.Red,
-                                                                         System.Drawing.Color.LimeGreen,
-                                                                         System.Drawing.Color.Black,
-                                                                         System.Drawing.Color.DodgerBlue,
-                                                                         System.Drawing.Color.Magenta,
-                                                                         System.Drawing.Color.Gold,
-                                                                         System.Drawing.Color.LightSalmon,
-                                                                         System.Drawing.Color.Chartreuse,
-                                                                         System.Drawing.Color.Silver };
+        private void GetBufferPressures(int h)
+        {
+            // Fbead pure
+            Panel panel1 = new Panel();
+            panel1.Location = home;
+            panel1.Size = new Size(Size.Width / 2, h);
+            tabControl1.TabPages[17].Controls.Add(panel1);
+
+            Chart chart1 = new Chart();
+            chart1.Click += new EventHandler(Chart_ClickInteractive);
+            chart1.Dock = DockStyle.Fill;
+            chart1.Text = "BufferA FBead";
+            chart1.Titles.Add("Buffer A: FBead Purification");
+
+            ChartArea area1 = new ChartArea("area1");
+            area1.AxisY = new Axis(area1, AxisName.Y);
+            area1.AxisX = new Axis(area1, AxisName.X);
+            area1.AxisY.Title = "psi";
+            area1.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area1.AxisX.LabelStyle.Format = "hh:mm";
+            area1.AxisX.MajorGrid.LineWidth = area1.AxisY.MajorGrid.LineWidth = 0;
+            area1.AxisY.LabelStyle.Font = littleFont;
+            chart1.ChartAreas.Add(area1);
+
+            Series ser1 = new Series("FBead Buffer Pressure");
+            ser1.ChartType = SeriesChartType.FastLine;
+            double[] fpure = thisRunLog.fPure.ToArray();
+            ser1.Points.DataBindXY(thisRunLog.fpureTimes, fpure);
+            area1.AxisY.Minimum = RoundDown(fpure.Min(), 0.5);
+            area1.AxisY.Maximum = RoundUp(fpure.Max(), 0.5);
+            ser1.ChartArea = "area1";
+            chart1.Series.Add(ser1);
+
+            panel1.Controls.Add(chart1);
+
+            // Gbead pure
+            Panel panel2 = new Panel();
+            panel2.Location = new Point(1 + (Size.Width / 2), 1);
+            panel2.Size = new Size(Size.Width / 2, h);
+            tabControl1.TabPages[17].Controls.Add(panel2);
+
+            Chart chart2 = new Chart();
+            chart2.Click += new EventHandler(Chart_ClickInteractive);
+            chart2.Dock = DockStyle.Fill;
+            chart2.Text = "BufferA GBead";
+            chart2.Titles.Add("Buffer A: GBead Purification");
+
+            ChartArea area2 = new ChartArea("area2");
+            area2.AxisY = new Axis(area2, AxisName.Y);
+            area2.AxisX = new Axis(area2, AxisName.X);
+            area2.AxisY.Title = "psi";
+            area2.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area2.AxisX.LabelStyle.Format = "hh:mm";
+            area2.AxisX.MajorGrid.LineWidth = area2.AxisY.MajorGrid.LineWidth = 0;
+            area2.AxisY.LabelStyle.Font = littleFont;
+            chart2.ChartAreas.Add(area2);
+
+            Series ser2 = new Series("GBead Buffer Pressure");
+            ser2.ChartType = SeriesChartType.FastLine;
+            double[] gpure = thisRunLog.gPure.ToArray();
+            ser2.Points.DataBindXY(thisRunLog.gPureTimes, gpure);
+            area2.AxisY.Minimum = RoundDown(gpure.Min(), 0.5);
+            area2.AxisY.Maximum = RoundUp(gpure.Max(), 0.5);
+            ser2.ChartArea = "area2";
+            chart2.Series.Add(ser2);
+
+            panel2.Controls.Add(chart2);
+
+            // Dynamic Bind
+            Panel panel3 = new Panel();
+            panel3.Location = new Point(1, h + 1);
+            panel3.Size = new Size(Size.Width, h);
+            tabControl1.TabPages[17].Controls.Add(panel3);
+
+            Chart chart3 = new Chart();
+            chart3.Click += new EventHandler(Chart_ClickInteractive);
+            chart3.Dock = DockStyle.Fill;
+            chart3.Text = "BufferA DBind";
+            chart3.Titles.Add("Buffer A: Dynamic Bind");
+
+            ChartArea area3 = new ChartArea("area3");
+            area3.AxisY = new Axis(area3, AxisName.Y);
+            area3.AxisX = new Axis(area3, AxisName.X);
+            area3.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area3.AxisX.LabelStyle.Format = "hh:mm";
+            area3.AxisY.Title = "psi";
+            area3.AxisX.MajorGrid.LineWidth = area3.AxisY.MajorGrid.LineWidth = 0;
+            area3.AxisY.LabelStyle.Font = littleFont;
+            chart3.ChartAreas.Add(area3);
+
+            Series ser3 = new Series("Dynamic Bind");
+            ser3.ChartType = SeriesChartType.FastLine;
+            double[] dynBind = thisRunLog.dBind.ToArray();
+            ser3.Points.DataBindXY(thisRunLog.dBindTimes, dynBind);
+            area3.AxisY.Minimum = dynBind.Min() - 0.04;
+            area3.AxisY.Maximum = dynBind.Max() + 0.04;
+            ser3.ChartArea = "area3";
+            chart3.Series.Add(ser3);
+
+            panel3.Controls.Add(chart3);
+
+            // Buffer A last wash
+            Panel panel4 = new Panel();
+            panel4.Location = new Point(1, (2 * h) + 2);
+            panel4.Size = new Size(Size.Width / 4, h);
+            tabControl1.TabPages[17].Controls.Add(panel4);
+
+            Chart chart4 = new Chart();
+            chart4.Click += new EventHandler(Chart_RightClick);
+            chart4.Dock = DockStyle.Fill;
+            chart4.Text = "BufferA Wash";
+            chart4.Titles.Add("Buffer A: Wash");
+
+            ChartArea area4 = new ChartArea("area4");
+            area4.AxisY = new Axis(area4, AxisName.Y);
+            area4.AxisX = new Axis(area4, AxisName.X);
+            area4.AxisY.Title = "psi";
+            area4.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area4.AxisX.LabelStyle.Format = "hh:mm";
+            area4.AxisX.MajorGrid.LineWidth = area4.AxisY.MajorGrid.LineWidth = 0;
+            area4.AxisY.LabelStyle.Font = littleFont;
+            chart4.ChartAreas.Add(area4);
+
+            Series ser4 = new Series("Wash");
+            ser4.ChartType = SeriesChartType.FastLine;
+            double[] wash = thisRunLog.lw.ToArray();
+            ser4.Points.DataBindXY(thisRunLog.lwTimes, wash);
+            area4.AxisY.Minimum = RoundDown(wash.Min(), 1);
+            area4.AxisY.Maximum = RoundUp(wash.Max(), 1);
+            ser4.ChartArea = "area4";
+            chart4.Series.Add(ser4);
+
+            panel4.Controls.Add(chart4);
+        }
+
+        private void GetBufferPressures2(int h)
+        {
+            Panel panel1 = new Panel();
+            panel1.Location = home;
+            panel1.Size = new Size(Size.Width, h);
+            tabControl1.TabPages[17].Controls.Add(panel1);
+
+            Chart chart2 = new Chart();
+            chart2.Click += new EventHandler(Chart_ClickInteractive);
+            chart2.Dock = DockStyle.Fill;
+            chart2.Text = "Buffer A Pressures";
+            chart2.Titles.Add("Buffer A");
+
+            ChartArea area2 = new ChartArea("area2");
+            area2.AxisY = new Axis(area2, AxisName.Y);
+            area2.AxisX = new Axis(area2, AxisName.X);
+            area2.AxisY.Title = "psi";
+            area2.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area2.AxisX.LabelStyle.Format = "hh:mm";
+            area2.AxisX.MajorGrid.LineWidth = area2.AxisY.MajorGrid.LineWidth = 0;
+            area2.AxisY.LabelStyle.Font = littleFont;
+            chart2.ChartAreas.Add(area2);
+
+            Series ser2 = new Series("Buffer A Pressure");
+            ser2.ChartType = SeriesChartType.FastLine;
+            double[] press = thisRunLog.bufferPress.ToArray();
+            ser2.Points.DataBindXY(thisRunLog.bufferPressTimes, press);
+            area2.AxisY.Minimum = RoundDown(press.Min(), 0.5);
+            area2.AxisY.Maximum = RoundUp(press.Max(), 0.5);
+            ser2.ChartArea = "area2";
+            chart2.Series.Add(ser2);
+
+            panel1.Controls.Add(chart2);
+        }
+
+        private void GetImmobPressures(int h)
+        {
+            // Immobilize first wash
+            Panel panel5 = new Panel();
+            panel5.Location = new Point(-110 + (Size.Width / 3), (2 * h) + 2);
+            panel5.Size = new Size(Size.Width / 3, h);
+            tabControl1.TabPages[17].Controls.Add(panel5);
+
+            Chart chart5 = new Chart();
+            chart5.Click += new EventHandler(Chart_RightClick);
+            chart5.Dock = DockStyle.Fill;
+            chart5.Text = "Immob Wash1";
+            chart5.Titles.Add("Immobilize: Wash 1");
+
+            ChartArea area5 = new ChartArea("area5");
+            area5.AxisY = new Axis(area5, AxisName.Y);
+            area5.AxisX = new Axis(area5, AxisName.X);
+            area5.AxisY.Title = "psi";
+            area5.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area5.AxisX.LabelStyle.Format = "hh:mm";
+            area5.AxisX.MajorGrid.LineWidth = area5.AxisY.MajorGrid.LineWidth = 0;
+            area5.AxisY.LabelStyle.Font = littleFont;
+            chart5.ChartAreas.Add(area5);
+
+            Series ser5 = new Series("ImmobWash");
+            ser5.ChartType = SeriesChartType.FastLine;
+            double[] bindWash = thisRunLog.immobWash1.ToArray();
+            ser5.Points.DataBindXY(thisRunLog.immobWash1Times, bindWash);
+            area5.AxisY.Minimum = RoundDown(bindWash.Min(), 0.5);
+            area5.AxisY.Maximum = RoundUp(bindWash.Max(), 0.5);
+            ser5.ChartArea = "area5";
+            chart5.Series.Add(ser5);
+
+            panel5.Controls.Add(chart5);
+
+            // Immobilize final wash
+            Panel panel6 = new Panel();
+            panel6.Location = new Point(-110 + (Size.Width * 2 / 3), (2 * h) + 2);
+            panel6.Size = new Size(Size.Width / 3, h);
+            tabControl1.TabPages[17].Controls.Add(panel6);
+
+            Chart chart6 = new Chart();
+            chart6.Click += new EventHandler(Chart_RightClick);
+            chart6.Dock = DockStyle.Fill;
+            chart6.Text = "Immob Wash2";
+            chart6.Titles.Add("Immobilize: Final Wash");
+
+            ChartArea area6 = new ChartArea("area6");
+            area6.AxisY = new Axis(area6, AxisName.Y);
+            area6.AxisX = new Axis(area6, AxisName.X);
+            area6.AxisY.Title = "psi";
+            area6.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area6.AxisX.LabelStyle.Format = "hh:mm";
+            area6.AxisX.MajorGrid.LineWidth = area6.AxisY.MajorGrid.LineWidth = 0;
+            area6.AxisY.LabelStyle.Font = littleFont;
+            chart6.ChartAreas.Add(area6);
+
+            Series ser6 = new Series("ImmobWash2");
+            ser6.ChartType = SeriesChartType.FastLine;
+            double[] immobilize = thisRunLog.immobWash2.ToArray();
+            ser6.Points.DataBindXY(thisRunLog.immobWash2Times, immobilize);
+            area6.AxisY.Minimum = RoundDown(immobilize.Min(), 1);
+            area6.AxisY.Maximum = RoundUp(immobilize.Max(), 1);
+            ser6.ChartArea = "area6";
+            chart6.Series.Add(ser6);
+
+            panel6.Controls.Add(chart6);
+        }
+
+        private void GetImmobPressures2(int h, int wi, Point lo)
+        {
+            Panel panel16 = new Panel();
+            panel16.Location = lo;
+            panel16.Size = new Size(wi, h);
+            tabControl1.TabPages[17].Controls.Add(panel16);
+
+            Chart chart5 = new Chart();
+            chart5.Click += new EventHandler(Chart_ClickInteractive);
+            chart5.Dock = DockStyle.Fill;
+            chart5.Text = "Immob2";
+            chart5.Titles.Add("Immobilize");
+
+            ChartArea area5 = new ChartArea("area5");
+            area5.AxisY = new Axis(area5, AxisName.Y);
+            area5.AxisX = new Axis(area5, AxisName.X);
+            area5.AxisY.Title = "psi";
+            area5.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+            area5.AxisX.LabelStyle.Format = "hh:mm";
+            area5.AxisX.MajorGrid.LineWidth = area5.AxisY.MajorGrid.LineWidth = 0;
+            area5.AxisY.LabelStyle.Font = littleFont;
+            chart5.ChartAreas.Add(area5);
+
+            Series ser5 = new Series("Immob");
+            ser5.ChartType = SeriesChartType.FastLine;
+            double[] immob = thisRunLog.immob.ToArray();
+            ser5.Points.DataBindXY(thisRunLog.immobTimes, immob);
+            area5.AxisY.Minimum = RoundDown(immob.Min(), 0.5);
+            area5.AxisY.Maximum = RoundUp(immob.Max(), 0.5);
+            ser5.ChartArea = "area5";
+            chart5.Series.Add(ser5);
+
+            panel16.Controls.Add(chart5);
+        }
+
+        private System.Drawing.Color[] laneColors = new System.Drawing.Color[] { System.Drawing.Color.Blue,
+                                                                                 System.Drawing.Color.DarkMagenta,
+                                                                                 System.Drawing.Color.DarkGoldenrod,
+                                                                                 System.Drawing.Color.Red,
+                                                                                 System.Drawing.Color.LimeGreen,
+                                                                                 System.Drawing.Color.Black,
+                                                                                 System.Drawing.Color.DodgerBlue,
+                                                                                 System.Drawing.Color.Magenta,
+                                                                                 System.Drawing.Color.Gold,
+                                                                                 System.Drawing.Color.LightSalmon,
+                                                                                 System.Drawing.Color.Chartreuse,
+                                                                                 System.Drawing.Color.Silver };
         private void GetLanePressures()
         {
             Panel panel1 = new Panel();
@@ -2081,12 +2202,12 @@ namespace TS_General_QCmodule
 
             Series ser1 = new Series("Lane Pressure");
             ser1.ChartType = SeriesChartType.FastPoint;
-            int n = thisSlatClass.theseRunLogs.lanePressures.Count;
+            int n = thisRunLog.lanePressures.Count;
             List<Tuple<double, double>> vals = new List<Tuple<double, double>>(n);
             for(int i = 0; i < n; i++)
             {
                 double laneAsDouble = i + 1;
-                double[] temp = thisSlatClass.theseRunLogs.lanePressures.Where(x => x.Item1 == laneAsDouble)
+                double[] temp = thisRunLog.lanePressures.Where(x => x.Item1 == laneAsDouble)
                                                                         .Select(x => x.Item2)
                                                                         .ToArray();
                 for(int j = 0; j < temp.Length; j++)
@@ -2217,13 +2338,13 @@ namespace TS_General_QCmodule
 
         private void MessLogButton_Click(object sender, EventArgs e)
         {
-            if(File.Exists(thisSlatClass.theseRunLogs.messageLogPath))
+            if(File.Exists(thisRunLog.messageLogPath))
             {
                 try
                 {
                     using (System.Diagnostics.Process proc = new System.Diagnostics.Process())
                     {
-                        proc.StartInfo.FileName = thisSlatClass.theseRunLogs.messageLogPath;
+                        proc.StartInfo.FileName = thisRunLog.messageLogPath;
                         proc.Start();
                     }
                 }
@@ -2384,6 +2505,9 @@ namespace TS_General_QCmodule
                     break;
                 case "BufferA DBind":
                     StartInteractive3(thisRunLog.dBind.ToArray(), thisRunLog.dBindTimes.ToArray(), "psi", "Dynamic Bind");
+                    break;
+                case "Immob2":
+                    StartInteractive3(thisRunLog.immob.ToArray(), thisRunLog.immobTimes.ToArray(), "psi", "Dynamic Bind");
                     break;
                 case "Z vs Y":
                     int lane = (int)temp.Tag;
@@ -2586,8 +2710,8 @@ namespace TS_General_QCmodule
 
             checkList["High %Unstretched"] = thisSlatClass.percentUnstretched.Any(x => x > 20);
             checkList["Low %Valid"] = thisSlatClass.percentValid.Any(x => x < 50);
-            checkList["Possible Blockage"] = thisSlatClass.theseRunLogs.lanePressPass.Any(x => !x);
-            checkList["Possible Leak"] = thisSlatClass.theseRunLogs.laneLeakPass.Any(x => !x);
+            checkList["Possible Blockage"] = thisRunLog.lanePressPass != null ? thisRunLog.lanePressPass.Any(x => !x) : false;
+            checkList["Possible Leak"] = thisRunLog.laneLeakPass != null ? thisRunLog.laneLeakPass.Any(x => !x) : false;
 
             List<string> flags = checkList.Where(x => x.Value).Select(x => x.Key).ToList();
             flagList = new string[flags.Count][];
@@ -2722,9 +2846,12 @@ namespace TS_General_QCmodule
                     }
                     else
                     {
-                        string[] lines = File.ReadAllLines(thisRunLog.runHistoryPath);
-                        Document tablePage1 = GetTablePage(lines);
-                        AddMigraDocToPdf(doc, tablePage1, "Run History");
+                        if (File.Exists(thisRunLog.runHistoryPath))
+                        {
+                            string[] lines = File.ReadAllLines(thisRunLog.runHistoryPath);
+                            Document tablePage1 = GetTablePage(lines);
+                            AddMigraDocToPdf(doc, tablePage1, "Run History");
+                        }
                     }
                 }
 
@@ -2817,8 +2944,8 @@ namespace TS_General_QCmodule
                 
             }
             // Add rows for all fields in table
-            int len = lines.Length - 1;
-            for(int i = 1; i < len - 1; i++)
+            int len = lines.Length;
+            for(int i = 1; i < len; i++)
             {
                 Row row1 = table.AddRow();
                 row1.HeadingFormat = false;

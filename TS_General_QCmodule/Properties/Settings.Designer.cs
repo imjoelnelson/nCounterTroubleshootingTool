@@ -118,5 +118,17 @@ namespace TS_General_QCmodule.Properties {
                 this["ligBkgSubtract"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Program Files\\R\\R-3.3.2\\bin\\i386\\Rscript.exe")]
+        public string rHomePath {
+            get {
+                return ((string)(this["rHomePath"]));
+            }
+            set {
+                this["rHomePath"] = value;
+            }
+        }
     }
 }

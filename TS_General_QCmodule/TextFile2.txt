@@ -14,3 +14,16 @@ Scanning issues
 			Z height check (observed Z height {.MTX}, surface detection z-height {SD_XYZ.csv}, taught z-height {Registry.reg})
 			Edge detection {ED_XYZ.csv}
 			Image processing {NCP.log}
+
+
+
+Ideas for re-organizing layout:
+	Collect funcitons into two sections:
+		1 - Troubleshooting/Diagnosing
+			SLAT
+			Combine 3 table output, plus flags, plus analysis of files above into M/FLAT
+			Quick TS-Table
+		2 - Data Quality
+			Count bins stacked bar chart
+			Heatmap and clustering
+			Sample vs. sample scatter plot

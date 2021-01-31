@@ -46,7 +46,6 @@ namespace TS_General_QCmodule
             filesToLoad = new List<string>();
             loadedRLFs = new List<RlfClass>();
             Extensions = new string[] { "rcc", "mtx" };
-            importFromDir = true;
 
             // Load the codeclass translator
             codeClasses = new List<string>();
@@ -86,25 +85,30 @@ namespace TS_General_QCmodule
                 stringClassDictionary21.Add(fovClassPropertyList[i], fovClassPropertyNames[i]);
             }
 
-            // Create the lane gridview
+            // Create lane gridview
             GetLaneGV();
 
-            // Cartridge gridview holder
+            // Create Cartridge gridview
             GetCartGV();
 
-            // Adjust button panels to cart GV height
-            slatPanel.Location = new Point(75, maxHeight - slatPanel.Height - 52);
-            plotPanel.Location = new Point(75, slatPanel.Location.Y - plotPanel.Height - 15);
-            panel2.Location = new Point(75, plotPanel.Location.Y - panel2.Height - 15);
-            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 20;
+            // Create RLF gridview 
+            GetRlfGV();
 
-            // Import option tooltips
-            ToolTip tip1 = new ToolTip();
-            tip1.SetToolTip(pictureBox1, "Folder Import Option - Recursively opens all directories and zips in the selected folder\r\nand imports all files of types indicated by the MTX and RCC check boxes.");
-            tip1.AutoPopDelay = 60000; tip1.AutoPopDelay = 60000;
-            ToolTip tip2 = new ToolTip();
-            tip2.SetToolTip(pictureBox2, "File Import Option - Imports RCCs and MTX files selected. If a zip is selected,\r\nrecursively opens all zips and folders inside and imports all MTX and RCC files.");
-            tip2.AutoPopDelay = 60000;
+            // Adjust cart panel height
+            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 45;
+            panel2.Height = maxHeight - panel2.Location.Y - bottomMargin;
+
+            // Tool strip button tooltips
+            ToolTip dirload = new ToolTip();
+            dirload.SetToolTip(mainImportButton, "Load A Directory");
+            ToolTip fileLoad = new ToolTip();
+            fileLoad.SetToolTip(fileImportButton, "Load Selected Files");
+            ToolTip clearAll = new ToolTip();
+            clearAll.SetToolTip(clearButton, "Clear All");
+            ToolTip slatbut = new ToolTip();
+            slatbut.SetToolTip(SLATButton, "Run SLAT");
+            ToolTip mflatBut = new ToolTip();
+            mflatBut.SetToolTip(mFlatButton, "Run M/FLAT");
 
             // Get Version
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
@@ -114,6 +118,7 @@ namespace TS_General_QCmodule
             this.Text = $"nCounter QC Tool v{version}";
         }
 
+        #region Display Settings
         // Dimension holders for making sure windows fit current screen
         private Panel panel1 { get; set; }
         private Panel cartPanel { get; set; }
@@ -133,6 +138,7 @@ namespace TS_General_QCmodule
             ChangeDisplaySettings();
         }
 
+        private const int bottomMargin = 55;
         private void ChangeDisplaySettings()
         {
             Screen screen = Screen.FromControl(this);
@@ -140,33 +146,30 @@ namespace TS_General_QCmodule
             maxHeight = screen.WorkingArea.Bottom;
             this.Height = maxHeight;
             gv.Size = new Size(515, maxHeight - 125);
-            panel1.Size = new Size(518, maxHeight - 117);
+            int p1Height = maxHeight - panel1.Location.Y - bottomMargin;
+            panel1.Size = new Size(518, p1Height);
             // Adjust button panels to cart GV height
-            slatPanel.Location = new Point(75, maxHeight - slatPanel.Height - 52);
-            plotPanel.Location = new Point(75, slatPanel.Location.Y - plotPanel.Height - 15);
-            panel2.Location = new Point(75, plotPanel.Location.Y - panel2.Height - 15);
-            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 20;
+            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 45;
+            panel2.Height = maxHeight - panel2.Location.Y - bottomMargin;
         }
+        #endregion
 
         #region Cartridge and Lane DataGridViews
+        private static Font gvHeaderFont = new System.Drawing.Font(DefaultFont, FontStyle.Bold);
+
         /// <summary>
         /// <value>DataGridView to display all RCCs imported</value>
         /// </summary>
         private DBDataGridView gv { get; set; }
         /// <summary>
-        /// <value>DataGridView to display all cartridges represented by imported RCCs</value>
-        /// </summary>
-        private DBDataGridView gv2 { get; set; }
-
         /// <summary>
         /// Creates gridview for displaying loaded lanes, their selection status, whether they're associated with RCCs, MTX, or both
         /// </summary>
         private void GetLaneGV()
         {
             // Create the lane gridview
-            Font gvHeaderFont = new System.Drawing.Font(DefaultFont, FontStyle.Bold);
             gv = new DBDataGridView();
-            gv.Dock = DockStyle.None;
+            gv.Dock = DockStyle.Fill;
             gv.Location = new Point(1, 1);
             gv.AutoSize = true;
             // gv.Size = new Size(515, maxHeight - 125);   Moved to 
@@ -212,12 +215,15 @@ namespace TS_General_QCmodule
             gv.Columns["RCC"].HeaderCell.Style.Font = gvHeaderFont;
             gv.Columns["RCC"].ReadOnly = true;
             gv.Columns["RCC"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            gv.Click += new EventHandler(GV_Click);
+            gv.Paint += new PaintEventHandler(GV_Paint);
 
             // Lane gridview container
             panel1 = new Panel();
-            panel1.Location = new Point(418, 85);
+            panel1.Location = new Point(418, 105);
             panel1.AutoScroll = true;
-            panel1.Size = new Size(518, maxHeight - 117);
+            int p1Height = panel1.Location.Y - maxHeight - bottomMargin;
+            panel1.Size = new Size(518, p1Height);
             panel1.Controls.Add(gv);
             Controls.Add(panel1);
 
@@ -226,18 +232,20 @@ namespace TS_General_QCmodule
             rccLabel.Location = new Point(panel1.Location.X, panel1.Location.Y - 22);
             rccLabel.Size = new Size(200, 22);
             rccLabel.Text = "Lanes Imported";
-            rccLabel.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold);
+            rccLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             Controls.Add(rccLabel);
         }
 
+        /// <value>DataGridView to display all cartridges represented by imported RCCs</value>
+        /// </summary>
+        private DBDataGridView gv2 { get; set; }
         /// <summary>
         /// Creates gridview for displaying cartridges represented by the loaded lanes and their status with regards to selection
         /// </summary>
         private void GetCartGV()
         {
-            Font gvHeaderFont = new System.Drawing.Font(DefaultFont, FontStyle.Bold);
             cartPanel = new Panel();
-            cartPanel.Location = new Point(15, 87);
+            cartPanel.Location = new Point(15, 107);
             cartPanel.Size = new Size(385, 223);
             cartPanel.AutoScroll = true;
 
@@ -246,7 +254,7 @@ namespace TS_General_QCmodule
             cartLabel.Location = new Point(cartPanel.Location.X, cartPanel.Location.Y - 23);
             cartLabel.Size = new Size(200, 22);
             cartLabel.Text = "Cartridges Represented";
-            cartLabel.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold);
+            cartLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             Controls.Add(cartLabel);
 
             // Create cartridge gridview
@@ -286,8 +294,53 @@ namespace TS_General_QCmodule
 
             Controls.Add(cartPanel);
         }
-        #endregion
 
+        DBDataGridView gv3 { get; set; }
+        
+        private void GetRlfGV()
+        {
+            gv3 = new DBDataGridView();
+
+            Label rlfLabel = new Label();
+            rlfLabel.Location = new Point(panel2.Location.X, panel2.Location.Y - 23);
+            rlfLabel.Size = new Size(200, 22);
+            rlfLabel.Text = "RLFs Included";
+            rlfLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            Controls.Add(rlfLabel);
+
+            gv3 = new DBDataGridView();
+            gv3.Dock = DockStyle.Fill;
+            gv3.AutoGenerateColumns = false;
+            gv3.BackgroundColor = SystemColors.Window;
+            DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
+            col.Name = col.HeaderText = "RLF Name";
+            col.Width = 294;
+            col.HeaderCell.Style.Font = gvHeaderFont;
+            gv3.Columns.Add(col);
+            col = new DataGridViewTextBoxColumn();
+            col.Name = col.HeaderText = "Lane Count";
+            col.Width = 85;
+            col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            col.HeaderCell.Style.Font = gvHeaderFont;
+            gv3.Columns.Add(col);
+            panel2.Controls.Add(gv3);
+        }
+
+        private void UpdateRlfList()
+        {
+            if(gv3.Rows.Count > 0)
+            {
+                gv3.Rows.Clear();
+            }
+            List<string> rlfs = laneList.Select(x => x.RLF).Distinct().ToList();
+            for(int i = 0; i < rlfs.Count; i++)
+            {
+                int temp = laneList.Where(x => x.RLF == rlfs[i]).Count();
+                gv3.Rows.Add(new string[] { rlfs[i], laneList.Where(x => x.RLF.Equals(rlfs[i])).Count().ToString() });
+            }
+        }
+        #endregion
+        
         #region File Paths
         /// <summary>
         /// <value>Path to directory in ProgramData</value>
@@ -326,6 +379,11 @@ namespace TS_General_QCmodule
             "\\\\bis\\dsp"
         };
 
+        /// <summary>
+        /// <value>Path to the R-3.3.2 32-bit executeable</value>
+        /// </summary>
+        public static string RHomePath { get; set; }
+
         private void DirectoryCheck()
         {
             try
@@ -354,7 +412,7 @@ namespace TS_General_QCmodule
                     }
                 }
             }
-            catch(Exception er)
+            catch (Exception er)
             {
                 string message = "Problem creating application directory structure. Check that ProgramData is accessible";
                 MessageBox.Show(message, "Failed To Create App Directories", MessageBoxButtons.OK);
@@ -363,32 +421,65 @@ namespace TS_General_QCmodule
         #endregion
 
         #region Resource File Copy
-        private static Dictionary<string, string> filesToCopy = new Dictionary<string, string>()
+        private static List<Tuple<string, string>> FilesToCopy0 = new List<Tuple<string, string>>
         {
-            {resourcePath, "CodeClassTranslator.txt"},
-            {rlfPath, "n6_vRCC16.rlf" }
+            Tuple.Create("CodeClassTranslator", "CodeClassTranslator.txt"),
+            Tuple.Create("IntegratedRLF", "n6_vRCC16.rlf")
+        };
+        private static List<Tuple<string, string>> FilesToCopy = new List<Tuple<string, string>>()
+        {
+            Tuple.Create("Quick Guide", "Quick Start Guide - nCounter Troubleshooting Tool.docx"),
+            Tuple.Create("Fluidic Workflow Traces", "Fluidics_Traces.docx"),
+            Tuple.Create("Card Fluidics Schematic", "Fluidics Schematic.pdf")
         };
 
         private void fileCopyCheck()
         {
-            foreach (KeyValuePair<string, string> k in filesToCopy)
+            for(int i = 0; i < FilesToCopy0.Count; i++)
             {
-                if (!File.Exists($"{k.Key}\\{k.Value}"))
+                Tuple<string, string> temp = FilesToCopy0[i];
+                if (!File.Exists($"{resourcePath}\\{temp.Item2}"))
                 {
                     string pf86 = Environment.GetEnvironmentVariable("PROGRAMFILES");
-                    string file = $"{pf86}\\NanoString Technologies\\nCounter_Troubleshooting_Tool_Setup\\Resources\\{k.Value}";
+                    string file = $"{pf86}\\NanoString Technologies\\nCounter_Troubleshooting_Tool_Setup\\Resources\\{temp.Item2}";
+                    if (File.Exists(file))
+                    {
+                        try
+                        {
+                            File.Copy(file, $"{resourcePath}\\{temp.Item2}");
+                        }
+                        catch (Exception er)
+                        {
+                            MessageBox.Show($"Error copying {temp.Item2}:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}", "An Exception Has Occurred", MessageBoxButtons.OK);
+                            Close();
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < FilesToCopy.Count; i++)
+            {
+                Tuple<string, string> temp = FilesToCopy[i];
+                if (!File.Exists($"{resourcePath}\\{temp.Item2}"))
+                {
+                    string pf86 = Environment.GetEnvironmentVariable("PROGRAMFILES");
+                    string file = $"{pf86}\\NanoString Technologies\\nCounter_Troubleshooting_Tool_Setup\\Resources\\{temp.Item2}";
                     if(File.Exists(file))
                     {
                         try
                         {
-                            File.Copy(file, $"{k.Key}\\{k.Value}");
+                            File.Copy(file, $"{resourcePath}\\{temp.Item2}");
                         }
                         catch(Exception er)
                         {
-                            MessageBox.Show($"Error:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}", "An Exception Has Occurred", MessageBoxButtons.OK);
+                            MessageBox.Show($"Error copying {temp.Item2}:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}", "An Exception Has Occurred", MessageBoxButtons.OK);
                             Close();
                         }
                     }
+                }
+                if (File.Exists($"{resourcePath}\\{temp.Item2}"))
+                {
+                    helpToolStripMenuItem1.DropDownItems.Add(temp.Item1, null, On_Menu_Click);
                 }
             }
         }
@@ -608,19 +699,6 @@ namespace TS_General_QCmodule
                                                                  "Endogenous8s",
                                                                  "Housekeeping8s"};
 
-        private bool importFromDir;
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioButton2.Checked)
-            {
-                importFromDir = false;
-            }
-            else
-            {
-                importFromDir = true;
-            }
-        }
-
         private string[] Extensions { get; set; }
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
@@ -643,6 +721,134 @@ namespace TS_General_QCmodule
             {
                 Extensions[1] = "%";
             }
+        }
+
+        /// <summary>
+        /// Handles button click for "import from file" button; intitiates loading of all MTX and RCC files in directory
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void fileImportButton_Click(object sender, EventArgs e)
+        {
+            bool isDsp = false;
+
+            // Clear tmp directory
+            List<string> toDelete = Directory.EnumerateFiles(tmpPath, "*", SearchOption.AllDirectories).ToList();
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                try
+                {
+                    File.Delete(toDelete[i]);
+                }
+                catch
+                {
+
+                }
+            }
+            List<string> dirToDelete = Directory.EnumerateDirectories(tmpPath, "*", SearchOption.AllDirectories).ToList();
+            for (int i = 0; i < dirToDelete.Count; i++)
+            {
+                try
+                {
+                    Directory.Delete(dirToDelete[i], true);
+                }
+                catch
+                {
+
+                }
+            }
+
+            // Clear files to load repository
+            if (filesToLoad == null)
+            {
+                filesToLoad = new List<string>();
+            }
+            else
+            {
+                filesToLoad.Clear();
+            }
+
+            // Clear/initialize password list
+            if (passwordsEntered == null)
+            {
+                passwordsEntered = new List<string>();
+            }
+            else
+            {
+                passwordsEntered.Clear();
+            }
+
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                List<string> extNames = new List<string>();
+                List<string> exts = new List<string>();
+                if (Extensions.Contains("mtx"))
+                {
+                    extNames.Add("MTX");
+                    exts.Add("*.mtx");
+                }
+                if (Extensions.Contains("rcc"))
+                {
+                    extNames.Add("RCC");
+                    exts.Add("*.rcc");
+                }
+                extNames.Add("ZIP");
+                exts.Add("*.zip");
+                ofd.Filter = $"{string.Join("; ", extNames)}|{string.Join("; ", exts)}";
+                ofd.Multiselect = true;
+                ofd.RestoreDirectory = true;
+                ofd.Title = $"Select {string.Join(", ", extNames)} To Import";
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    List<string> selectedFiles = ofd.FileNames.ToList();
+                    if (selectedFiles.Count > 0)
+                    {
+                        GuiCursor.WaitCursor(() =>
+                        {
+                            if (checkBox1.Checked)
+                            {
+                                filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("rcc", StringComparison.InvariantCultureIgnoreCase)));
+                            }
+                            if (checkBox2.Checked)
+                            {
+                                filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("mtx", StringComparison.InvariantCultureIgnoreCase)));
+                            }
+                            List<string> zipsToUnzip = selectedFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                            int serial = 0;
+                            for (int i = 0; i < zipsToUnzip.Count; i++)
+                            {
+                                string tempDir = $"{tmpPath}\\{serial}";
+                                Directory.CreateDirectory(tempDir);
+                                GuiCursor.WaitCursor(() => { filesToLoad.AddRange(RecursivelyUnzip(zipsToUnzip[i], tempDir, Extensions.ToList())); });
+                                serial++;
+                            }
+
+                            // Check if DSP
+                            string dspPat = @"P\d{13}A_P";
+                            for (int i = 0; i < filesToLoad.Count; i++)
+                            {
+                                Match match = Regex.Match(filesToLoad[i], dspPat);
+                                if (match.Success)
+                                {
+                                    isDsp = true;
+                                    break;
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            Load_FilesToLoad(isDsp);
         }
 
         /// <summary>
@@ -704,124 +910,77 @@ namespace TS_General_QCmodule
                 passwordsEntered.Clear();
             }
 
-            // LOAD FROM DIRECTORY
-            if (importFromDir)
+            // Pull file paths from dir
+            using (FolderBrowserDialog cfd = new FolderBrowserDialog())
             {
-                // Pull file paths from dir
-                using (FolderBrowserDialog cfd = new FolderBrowserDialog())
+                cfd.Description = "Select Directory";
+                cfd.ShowNewFolderButton = true;
+                if (cfd.ShowDialog() == DialogResult.OK)
                 {
-                    cfd.Description = "Select Directory";
-                    cfd.ShowNewFolderButton = true;
-                    if (cfd.ShowDialog() == DialogResult.OK)
+                    string dirToOpen = cfd.SelectedPath;
+                    if(dirToOpen.EndsWith("RunLogs"))
                     {
-                        string dirToOpen = cfd.SelectedPath;
-                        filesToLoad.AddRange(GetFilesRecursivelyByExtension(dirToOpen, Extensions.ToList()));
+                        IEnumerable<string> contents = Directory.EnumerateFiles(dirToOpen, "*csv");
+                        string tempDir = dirToOpen.Substring(0, dirToOpen.LastIndexOf('\\'));
+                        string runHistPath = $"{tempDir}\\\\Services\\System\\RunHistory.csv";
+                        SprintRunLogClass runLogs = new SprintRunLogClass(contents.ToList(), runHistPath);
+                        SLATRunLogOnly RunLogOnlyReport = new SLATRunLogOnly(runLogs);
+                        RunLogOnlyReport.ShowDialog();
+                        return;
                     }
                     else
                     {
-                        filesToLoad.Clear();
-                        return;
+                        filesToLoad.AddRange(GetFilesRecursivelyByExtension(dirToOpen, Extensions.ToList()));
                     }
                 }
-
-                // Load files directly if 48 or less, or load those selected in FilePicker dialog
-                string dspPat = @"P\d{13}A_P";
-
-                GuiCursor.WaitCursor(() =>
+                else
                 {
-                    for (int i = 0; i < filesToLoad.Count; i++)
+                    filesToLoad.Clear();
+                    return;
+                }
+            }
+
+            // Check if DSP
+            string dspPat = @"P\d{13}A_P";
+            GuiCursor.WaitCursor(() =>
+            {
+                for (int i = 0; i < filesToLoad.Count; i++)
+                {
+                    Match match = Regex.Match(filesToLoad[i], dspPat);
+                    if (match.Success)
                     {
-                        Match match = Regex.Match(filesToLoad[i], dspPat);
-                        if (match.Success)
-                        {
-                            isDsp = true;
-                            break;
-                        }
+                        isDsp = true;
+                        break;
                     }
-                });
+                }
+            });
                 
-                if(filesToLoad.Count > 250)
-                {
-                    var result = MessageBox.Show("The directory contained more than 250 RCC and/or MTX files. Do you want to load them all?\r\nClick YES to load all files or click NO to cancel", "Large Number of Files Selected", MessageBoxButtons.YesNo);
-                    if(result == DialogResult.No)
-                    {
-                        return;
-                    }
-                }
-            }
-            // LOAD FROM FILES SELECTED IN OPENFILEDIALOG
-            else
+            if(filesToLoad.Count > 250)
             {
-                using (OpenFileDialog ofd = new OpenFileDialog())
+                var result = MessageBox.Show("The directory contained more than 250 RCC and/or MTX files. Do you want to load them all?\r\nClick YES to load all files or click NO to cancel", "Large Number of Files Selected", MessageBoxButtons.YesNo);
+                if(result == DialogResult.No)
                 {
-                    List<string> extNames = new List<string>();
-                    List<string> exts = new List<string>();
-                    if(Extensions.Contains("mtx"))
-                    {
-                        extNames.Add("MTX");
-                        exts.Add("*.mtx");
-                    }
-                    if(Extensions.Contains("rcc"))
-                    {
-                        extNames.Add("RCC");
-                        exts.Add("*.rcc");
-                    }
-                    extNames.Add("ZIP");
-                    exts.Add("*.zip");
-                    ofd.Filter = $"{string.Join("; ", extNames)}|{string.Join("; ", exts)}";
-                    ofd.Multiselect = true;
-                    ofd.RestoreDirectory = true;
-                    ofd.Title = $"Select {string.Join(", ", extNames)} To Import";
-                    GuiCursor.WaitCursor(() =>
-                    {
-                        if (ofd.ShowDialog() == DialogResult.OK)
-                        {
-                            List<string> selectedFiles = ofd.FileNames.ToList();
-                            if (selectedFiles.Count > 0)
-                            {
-                                if(checkBox1.Checked)
-                                {
-                                    filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("rcc", StringComparison.InvariantCultureIgnoreCase)));
-                                }
-                                if(checkBox2.Checked)
-                                {
-                                    filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("mtx", StringComparison.InvariantCultureIgnoreCase)));
-                                }
-                                List<string> zipsToUnzip = selectedFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                                int serial = 0;
-                                for (int i = 0; i < zipsToUnzip.Count; i++)
-                                {
-                                    string tempDir = $"{tmpPath}\\{serial}";
-                                    Directory.CreateDirectory(tempDir);
-                                    GuiCursor.WaitCursor(() => { filesToLoad.AddRange(RecursivelyUnzip(zipsToUnzip[i], tempDir, Extensions.ToList())); });
-                                    serial++;
-                                }
-                            }
-                            else
-                            {
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    });
+                    return;
                 }
             }
 
-            if(filesToLoad.Count > 0)
+            Load_FilesToLoad(isDsp);
+        }
+
+        private void Load_FilesToLoad(bool isDsp)
+        {
+            if (filesToLoad.Count > 0)
             {
-                if(isDsp)
+                if (isDsp)
                 {
-                    if(filesToLoad.Count <= 12) // CHANGE THIS TO CHECK, USING CARTTRANSLATOR, WHETHER FILES FROM DIFFERENT CARTRIDGES
+                    if (filesToLoad.Count <= 12) // CHANGE THIS TO CHECK, USING CARTTRANSLATOR, WHETHER FILES FROM DIFFERENT CARTRIDGES
                     {
                         LoadMtxAndRcc(filesToLoad);
                     }
                     else
                     {
                         var result = MessageBox.Show("Warning:\r\nMore than one cartridge's RCCs included. Make sure PKCs selected for each row apply to all included cartridges or expression in subsequent reports may be corrupt.\r\n\r\nDo you want to continue?", "Multiple Cartridges Included", MessageBoxButtons.YesNo);
-                        if(result == DialogResult.Yes)
+                        if (result == DialogResult.Yes)
                         {
                             LoadMtxAndRcc(filesToLoad);
                         }
@@ -836,18 +995,32 @@ namespace TS_General_QCmodule
                     LoadMtxAndRcc(filesToLoad);
                 }
             }
+            else
+            {
+                MessageBox.Show("Directory and its subdirectories contain no RCC or MTX files.\r\n\r\nIf you want to open run logs for a Sprint run click the Import button again and navigate directly to the Run Log folder or its contents.", "No MTX or RCC Detected", MessageBoxButtons.OK);
+            }
 
+            // Get cartridges from lanes imported for cartridge list
             List<CartridgeItem2> theseCarts = GetCartsFromLanes(laneList.ToList());
             cartList.Clear();
-            for(int i = 0; i < theseCarts.Count; i++)
+            for (int i = 0; i < theseCarts.Count; i++)
             {
                 cartList.Add(theseCarts[i]);
             }
-
             cartBindingSource.DataSource = cartList;
             cartBindingSource.ResetBindings(false);
 
-            laneList.OrderBy(x => x.cartID).ThenBy(x => x.LaneID);
+            // Sort lanes by cartID, Date, then LaneID
+            List<Lane> tempLaneList = laneList.OrderBy(x => x.cartID)
+                                               .ThenBy(x => x.Date)
+                                               .ThenBy(x => x.LaneID).ToList();
+            
+            // Populate lane GV data source
+            laneList.Clear();
+            for (int i = 0; i < tempLaneList.Count; i++)
+            {
+                laneList.Add(tempLaneList[i]);
+            }
             laneBindingSource.DataSource = laneList;
             laneBindingSource.ResetBindings(false);
         }
@@ -1548,36 +1721,68 @@ namespace TS_General_QCmodule
         /// <param name="e"></param>
         private void LaneList_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if(laneList.Count > 0)
+            IEnumerable<Lane> selectedLanes = laneList.Where(x => x.selected);
+            if (selectedLanes.Count() > 0)
             {
                 panel2.Enabled = true;
-                slatPanel.Enabled = true;
-                plotPanel.Enabled = true;
-                //button3.Enabled = true;
+
+                if (selectedLanes.Any(x => x.hasMTX))
+                {
+                    troubleshootingTableToolStripMenuItem.Enabled = true;
+                    fOVLaneAveragesToolStripMenuItem.Enabled = true;
+                    stringClassesToolStripMenuItem.Enabled = true;
+                    panel2.Enabled = true;
+                }
+                else
+                {
+                    troubleshootingTableToolStripMenuItem.Enabled = false;
+                    fOVLaneAveragesToolStripMenuItem.Enabled = false;
+                    stringClassesToolStripMenuItem.Enabled = false;
+                    panel2.Enabled = false;
+                }
+                if (selectedLanes.Any(x => x.hasMTX && x.isSprint))
+                {
+                    sLATToolStripMenuItem.Enabled = true;
+                    SLATButton.Enabled = true;
+                }
+                else
+                {
+                    sLATToolStripMenuItem.Enabled = false;
+                    SLATButton.Enabled = false;
+                }
+                if (selectedLanes.Any(x => x.hasRCC))
+                {
+                    binnedCountsBarplotToolStripMenuItem.Enabled = true;
+                    sampleVsToolStripMenuItem.Enabled = true;
+                    codeSummaryToolStripMenuItem.Enabled = true;
+
+                    IEnumerable<Lane> selectedRCCLanes = selectedLanes.Where(x => x.hasRCC);
+                    if (selectedRCCLanes.All(x => x.laneType != RlfClass.RlfType.dsp && x.laneType != RlfClass.RlfType.ps && x.laneType != RlfClass.RlfType.generic))
+                    {
+                        heatmapsToolStripMenuItem.Enabled = true;
+                    }
+                    else
+                    {
+                        heatmapsToolStripMenuItem.Enabled = false;
+                    }
+                }
+                else
+                {
+                    binnedCountsBarplotToolStripMenuItem.Enabled = false;
+                    heatmapsToolStripMenuItem.Enabled = false;
+                    sampleVsToolStripMenuItem.Enabled = false;
+                    codeSummaryToolStripMenuItem.Enabled = false;
+                }
             }
             else
             {
                 panel2.Enabled = false;
-                slatPanel.Enabled = false;
-                plotPanel.Enabled = false;
-                //button3.Enabled = false;
             }
-            if(laneList.Any(x => x.hasMTX))
-            {
-                tsTableButton.Enabled = true;
-            }
-            else
-            {
-                tsTableButton.Enabled = false;
-            }
-            if(laneList.Any(x => x.hasMTX && x.isSprint))
-            {
-                slatButton.Enabled = true;
-            }
-            else
-            {
-                slatButton.Enabled = false;
-            }
+        }
+
+        private void GV_Paint(object sender, PaintEventArgs e)
+        {
+            UpdateRlfList();
         }
 
         private void clearButton_Click(object sender, EventArgs e)
@@ -1633,11 +1838,128 @@ namespace TS_General_QCmodule
             }
         }
 
+        private void GV_Click(object sender, EventArgs e)
+        {
+            MouseEventArgs args = (MouseEventArgs)e;
+            if(args.Button == MouseButtons.Right)
+            {
+                DataGridView temp = sender as DataGridView;
+                Tuple<int, int> coords = GetMouseOverCoordinates(temp, args.X, args.Y);
+                if(coords.Item1 > 0 && coords.Item2 == 0)
+                {
+                    MenuItem[] items = new MenuItem[2];
+                    items[0] = new MenuItem("Uncheck Selected", Uncheck_Click);
+                    items[1] = new MenuItem("Check Selected", Check_Click);
+
+                    ContextMenu menu = new ContextMenu(items);
+                    menu.Show(temp, new Point(args.X, args.Y));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets mouseover row and column coordinates for right click event
+        /// </summary>
+        /// <param name="_X">e.X from mouseclick event</param>
+        /// <param name="_Y">e.Y from mouseclick event</param>
+        /// <returns></returns>
+        private Tuple<int, int> GetMouseOverCoordinates(DataGridView dgv, int _X, int _Y)
+        {
+            int currentMouseOverRow = dgv.HitTest(_X, _Y).RowIndex;
+            int currentMouseOverCol = dgv.HitTest(_X, _Y).ColumnIndex;
+
+            return Tuple.Create(currentMouseOverRow, currentMouseOverCol);
+        }
+
+        private void Uncheck_Click(object sender, EventArgs e)
+        {
+            DataGridViewSelectedCellCollection cells = gv.SelectedCells;
+            for(int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i].ColumnIndex == 0)
+                {
+                    laneList[cells[i].RowIndex].selected = false; ;
+                }
+            }
+            laneBindingSource.DataSource = laneList;
+            laneBindingSource.ResetBindings(false);
+        }
+
+        private void Check_Click(object sender, EventArgs e)
+        {
+            DataGridViewSelectedCellCollection cells = gv.SelectedCells;
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i].ColumnIndex == 0)
+                {
+                    laneList[cells[i].RowIndex].selected = true; ;
+                }
+            }
+            laneBindingSource.DataSource = laneList;
+            laneBindingSource.ResetBindings(false);
+        }
+
+        //Count bins button
+        private void button6_Click(object sender, EventArgs e)
+        {
+            var theseLanes = laneList.Where(x => x.selected && x.hasRCC).ToList();
+            int typeCount = theseLanes.Select(x => x.laneType).Distinct().Count();
+            if (typeCount == 1 && theseLanes.Count > 0)
+            {
+                CountBinsTable countBinChart = new CountBinsTable(theseLanes);
+                countBinChart.ShowDialog();
+            }
+            else
+            {
+                if(typeCount > 1)
+                {
+                    MessageBox.Show("The Count Bins analysis cannot be used with lanes of multiple types (miRNA, PlexSet, DSP, etc.). Select lanes of a single type and try again)", "Multiple Lane Types", MessageBoxButtons.OK);
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show("Either all lanes are de-selected or those selected only contain MTX data.", "No Lanes Selected", MessageBoxButtons.OK);
+                }
+            }
+        }
+
+        //Launch clustering and heatmap
         private void button3_Click(object sender, EventArgs e)
         {
-            using (BarPlotForm form = new BarPlotForm(laneList.Where(x => x.selected).ToList()))
+            List<Lane> input = laneList.Where(x => x.selected)
+                                       .OrderBy(x => x.cartID)
+                                       .ThenBy(x => x.LaneID).ToList();
+            if (input.Count > 1)
             {
-                form.ShowDialog();
+                HeatmapHelper helper = null;
+                GuiCursor.WaitCursor(() =>
+                {
+                    helper= new HeatmapHelper(input);
+                });
+                if (!helper.IsDisposed)
+                {
+                    helper.ShowDialog();
+                }
+            }
+            else
+            {
+                MessageBox.Show("At least two samples must be selected to run the clustering and heatmap.", "Insufficient Samples", MessageBoxButtons.OK);
+                return;
+            }
+        }
+
+        // Launch scatterplot
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if(laneList.Where(x => x.hasRCC && x.selected).Count() > 1)
+            {
+                SampleVsSampleScatter scatter = new SampleVsSampleScatter(laneList.ToList());
+                scatter.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Fewer than 2 lanes with RCC data are included.", "Insufficient Lanes", MessageBoxButtons.OK);
+                return;
             }
         }
         #endregion
@@ -1718,8 +2040,6 @@ namespace TS_General_QCmodule
             string table1File = string.Empty;
             List<Mtx> temp = laneList.Where(x => x.selected)
                                      .Select(x => x.thisMtx)
-                                     .OrderBy(x => x.cartID)
-                                     .ThenBy(x => x.laneID)
                                      .ToList();
             if (!temp.All(x => x == null))
             {
@@ -2048,59 +2368,35 @@ namespace TS_General_QCmodule
         // SLAT button
         private void slatButton_Click(object sender, EventArgs e)
         {
-            List<Lane> runLanes = new List<Lane>();
-
             List<Lane> sprintLanes = Form1.laneList.Where(x => x.isSprint && x.hasMTX && x.selected).ToList();
+            RunSlatAnalysis(sprintLanes);
+        }
+
+        private void RunSlatAnalysis(List<Lane> sprintLanes)
+        {
             List<string> sprintCartBarcodes = sprintLanes.Select(x => x.CartBarcode).Distinct().ToList();
             int count = sprintCartBarcodes.Count;
-            List<string> sprintRunNames = new List<string>(count);
             if (count > 1)
             {
                 List<CartridgeItem> cartItems = new List<CartridgeItem>(count);
                 for (int i = 0; i < count; i++)
                 {
                     // Get MessageLog file path
-                    string firstFile = sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ElementAt(0).thisMtx.filePath;
-                    string tempPath = firstFile.Substring(0, firstFile.LastIndexOf('\\'));
-                    string tempPath0 = tempPath.Substring(0, tempPath.LastIndexOf('\\'));
-                    string runLogPath = $"{tempPath0}\\RunLogs";
-                    string messagePath = Directory.EnumerateFiles(runLogPath).ElementAt(0);
+                    string messagePath = GetMessageLogPath(sprintLanes, sprintCartBarcodes[i]);
+                    if(messagePath != null)
+                    {
+                        // Scan message log for Run name and cart
+                        string sprintRunName = GetRunName(messagePath);
 
-                    // Scan message log for Run name and cart
-                    try
-                    {
-                        using (StreamReader sr = new StreamReader(messagePath))
-                        {
-                            string line = string.Empty;
-                            while (!sr.EndOfStream)
-                            {
-                                line = sr.ReadLine();
-                                if (line.Contains("RunName"))
-                                {
-                                    sprintRunNames.Add(line.Split('=')[1]);
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                    
-                    if(sprintRunNames.Count != 0)
-                    {
-                        CartridgeItem temp = new CartridgeItem(sprintCartBarcodes[i], sprintRunNames[i], sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ToList());
+                        // Generate cartridge item for display and picking
+                        CartridgeItem temp = new CartridgeItem(sprintCartBarcodes[i], sprintRunName, sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ToList());
                         cartItems.Add(temp);
                     }
-                    else
-                    {
-                        CartridgeItem temp = new CartridgeItem(sprintCartBarcodes[i], "NA", sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ToList());
-                        cartItems.Add(temp);
-                    }
-                    
                 }
                 using (SLATFilePicker picker = new SLATFilePicker(cartItems))
                 {
                     picker.ShowDialog();
                 }
-
             }
             else
             {
@@ -2110,11 +2406,60 @@ namespace TS_General_QCmodule
                 }
             }
         }
+
+        private string GetMessageLogPath(List<Lane> sprintLanes, string barcode)
+        {
+            string firstFile = sprintLanes.Where(x => x.CartBarcode == barcode).ElementAt(0).thisMtx.filePath;
+            string tempPath = firstFile.Substring(0, firstFile.LastIndexOf('\\'));
+            string tempPath0 = tempPath.Substring(0, tempPath.LastIndexOf('\\'));
+            string runLogPath = $"{tempPath0}\\RunLogs";
+
+            return Directory.EnumerateFiles(runLogPath).ElementAt(0);
+        }
+
+        private string GetRunName(string path)
+        {
+            try
+            {
+                using (StreamReader sr = new StreamReader(path))
+                {
+                    string line = string.Empty;
+                    while (!sr.EndOfStream)
+                    {
+                        line = sr.ReadLine();
+                        if (line.Contains("RunName"))
+                        {
+                            return line.Split('=')[1];
+                        }
+                    }
+                }
+
+                return "N/A";
+            }
+            catch
+            {
+                return "N/A";
+            }
+        }
+
+
         #endregion
 
-        private void button1_Click(object sender, EventArgs e)
+        #region HelpButton
+        private void On_Menu_Click(object sender, EventArgs e)
         {
-
+            ToolStripItem item = sender as ToolStripItem;
+            string name = item.Text;
+            Tuple<string, string> tup = FilesToCopy.Where(x => x.Item1 == name).First();
+            try
+            {
+                System.Diagnostics.Process.Start($"{resourcePath}\\{tup.Item2}");
+            }
+            catch(Exception er)
+            {
+                MessageBox.Show($"{tup.Item1} could not be opened due to the following exception:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}");
+            }
         }
+        #endregion
     }
 }
