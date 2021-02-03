@@ -21,6 +21,7 @@ namespace TS_General_QCmodule
 {
     public partial class Form1 : Form
     {
+        // Main constructor
         public Form1()
         {
             InitializeComponent();
@@ -35,7 +36,6 @@ namespace TS_General_QCmodule
 
             // Initialize some lists
             laneList = new BindingList<Lane>();
-            laneList.ListChanged += new ListChangedEventHandler(LaneList_ListChanged);
             laneBindingSource = new BindingSource();
             laneBindingSource.DataSource = laneList;
             cartList = new BindingList<CartridgeItem2>();
@@ -167,13 +167,18 @@ namespace TS_General_QCmodule
         /// </summary>
         private void GetLaneGV()
         {
+            // Lane gridview container
+            panel1 = new Panel();
+            panel1.Location = new Point(434, 105);
+            int p1Height = 105 - maxHeight - bottomMargin;
+            panel1.Size = new Size(518, p1Height);
+            panel1.AutoScroll = true;
+
             // Create the lane gridview
             gv = new DBDataGridView();
             gv.Dock = DockStyle.Fill;
-            gv.Location = new Point(1, 1);
-            gv.AutoSize = true;
+            gv.AutoSize = false;
             // gv.Size = new Size(515, maxHeight - 125);   Moved to 
-            gv.ScrollBars = ScrollBars.None;
             gv.AutoGenerateColumns = false;
             gv.BackgroundColor = SystemColors.Window;
             gv.DataSource = laneBindingSource;
@@ -216,14 +221,6 @@ namespace TS_General_QCmodule
             gv.Columns["RCC"].ReadOnly = true;
             gv.Columns["RCC"].SortMode = DataGridViewColumnSortMode.NotSortable;
             gv.Click += new EventHandler(GV_Click);
-            gv.Paint += new PaintEventHandler(GV_Paint);
-
-            // Lane gridview container
-            panel1 = new Panel();
-            panel1.Location = new Point(418, 105);
-            panel1.AutoScroll = true;
-            int p1Height = panel1.Location.Y - maxHeight - bottomMargin;
-            panel1.Size = new Size(518, p1Height);
             panel1.Controls.Add(gv);
             Controls.Add(panel1);
 
@@ -246,7 +243,7 @@ namespace TS_General_QCmodule
         {
             cartPanel = new Panel();
             cartPanel.Location = new Point(15, 107);
-            cartPanel.Size = new Size(385, 223);
+            cartPanel.Size = new Size(401, 223);
             cartPanel.AutoScroll = true;
 
             // Cart GV label
@@ -522,7 +519,9 @@ namespace TS_General_QCmodule
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            // Run display detection and setting adjustment
             ChangeDisplaySettings();
+            // Load properties
             string[] temp = Properties.Settings.Default.includedAnnotCols.Split(',');
             selectedProbeAnnotCols = temp.Select(x => Int32.Parse(x)).ToList();
             string[] temp1 = Properties.Settings.Default.includedHeaderRows.Split(',');
@@ -535,9 +534,9 @@ namespace TS_General_QCmodule
             flagTable = Properties.Settings.Default.includeFlagTable;
             dspFlagTable = Properties.Settings.Default.dspIncludeFlagTable;
             ligBkgSubtract = Properties.Settings.Default.ligBkgSubtract;
-
+            // Clear temp folder
             ClearTmp();
-
+            // Remove form load event to save memory
             this.Load -= Form1_Load; 
         }
 
@@ -1017,12 +1016,17 @@ namespace TS_General_QCmodule
             
             // Populate lane GV data source
             laneList.Clear();
-            for (int i = 0; i < tempLaneList.Count; i++)
+            for (int i = 0; i < tempLaneList.Count - 1; i++)
             {
                 laneList.Add(tempLaneList[i]);
             }
+            laneList.ListChanged += new ListChangedEventHandler(LaneList_ListChanged);
+            laneList.Add(tempLaneList[tempLaneList.Count - 1]);
+
             laneBindingSource.DataSource = laneList;
             laneBindingSource.ResetBindings(false);
+            UpdateTables();
+            
         }
 
         private int tempCounter;
@@ -1778,11 +1782,45 @@ namespace TS_General_QCmodule
             {
                 panel2.Enabled = false;
             }
+
+            laneList.ListChanged -= LaneList_ListChanged;
+        }
+
+        private void UpdateTables()
+        {
+            // So RLF list doesn't update until after all lanes are added
+            UpdateRlfList();
+            gv.Paint += new PaintEventHandler(GV_Paint);
+            gv2.Paint += new PaintEventHandler(GV2_Paint);
+            gv3.Paint += new PaintEventHandler(GV3_Paint);
         }
 
         private void GV_Paint(object sender, PaintEventArgs e)
         {
-            UpdateRlfList();
+            // remove dgv default cell selection
+            if(gv.CurrentCell != null)
+            {
+                gv.CurrentCell.Selected = false;
+            }
+            gv.Paint -= GV_Paint;
+        }
+
+        private void GV2_Paint(object sender, PaintEventArgs e)
+        {
+            if (gv2.CurrentCell != null)
+            {
+                gv2.CurrentCell.Selected = false;
+            }
+            gv2.Paint -= GV2_Paint;
+        }
+
+        private void GV3_Paint(object sender, PaintEventArgs e)
+        {
+            if (gv3.CurrentCell != null)
+            {
+                gv3.CurrentCell.Selected = false;
+            }
+            gv3.Paint -= GV3_Paint;
         }
 
         private void clearButton_Click(object sender, EventArgs e)

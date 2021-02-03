@@ -620,7 +620,7 @@ namespace TS_General_QCmodule
             int nCol = colNames.Length;
             bool rowCheck = mat.Length == nRow;
             bool colCheck = mat[0].Length == nCol;
-            bool annotCheck = annots != null ? annots.Length == nRow : true;
+            bool annotCheck = annots.Length > 0 ? annots.Length == nRow : true;
             if(rowCheck && colCheck && annotCheck)
             {
                 string[] result = new string[nRow + 1];
@@ -629,7 +629,7 @@ namespace TS_General_QCmodule
                 {
                     string[] temp = new string[nCol + 2];
                     temp[0] = rowNames[i];
-                    if(annots == null)
+                    if(annots.Length < 1)
                     {
                         temp[1] = "";
                     }

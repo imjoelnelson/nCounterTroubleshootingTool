@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace TS_General_QCmodule
 {
+    /// <summary>
+    /// <Class for cartridges displayed in SLAT file picker
+    /// </summary>
     public class CartridgeItem : INotifyPropertyChanged
     {
         public CartridgeItem(string barcode, List<string> associatedFiles)

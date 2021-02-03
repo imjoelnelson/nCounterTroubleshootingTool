@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace TS_General_QCmodule
 {
+    /// <summary>
+    /// Class for displaying cartridges in form1 cartridge dgv
+    /// </summary>
     public class CartridgeItem2 : INotifyPropertyChanged
     {
         public CartridgeItem2(string id, List<Lane> includedLanes)
