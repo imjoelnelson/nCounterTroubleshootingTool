@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace TS_General_QCmodule
     public partial class Form1 : Form
     {
         // Main constructor
-        public Form1()
+        public Form1(string[] args)
         {
             InitializeComponent();
 
@@ -33,11 +34,17 @@ namespace TS_General_QCmodule
             // Check/create directories and check/copy resources
             DirectoryCheck();
             fileCopyCheck();
+            tempCounter = 0;
+
+            // Check folder import starting directory path saved in settings
+            string startingDir = Properties.Settings.Default.StartingFolder;
+            StartingFolderCheck(startingDir);
 
             // Initialize some lists
             laneList = new BindingList<Lane>();
             laneBindingSource = new BindingSource();
             laneBindingSource.DataSource = laneList;
+            CartridgeBackList = new List<Lane>();
             cartList = new BindingList<CartridgeItem2>();
             cartBindingSource = new BindingSource();
             cartBindingSource.DataSource = cartList;
@@ -45,7 +52,8 @@ namespace TS_General_QCmodule
             failedRccList = new List<string>();
             filesToLoad = new List<string>();
             loadedRLFs = new List<RlfClass>();
-            Extensions = new string[] { "rcc", "mtx" };
+            RunLogDirectories = new List<string>();
+            SprintSystemDirectories = new List<string>();
 
             // Load the codeclass translator
             codeClasses = new List<string>();
@@ -85,24 +93,19 @@ namespace TS_General_QCmodule
                 stringClassDictionary21.Add(fovClassPropertyList[i], fovClassPropertyNames[i]);
             }
 
-            // Create lane gridview
-            GetLaneGV();
+            // Filter ComboBox
+            for(int i = 0; i < LaneFilter.PropsToSelect.Length; i++)
+            {
+                comboBox1.Items.Add(LaneFilter.PropsToSelect[i]);
+            }
+            comboBox1.SelectedIndexChanged += new EventHandler(ComboBox1_SelectedIndexChanged);
 
-            // Create Cartridge gridview
-            GetCartGV();
-
-            // Create RLF gridview 
-            GetRlfGV();
-
-            // Adjust cart panel height
-            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 45;
-            panel2.Height = maxHeight - panel2.Location.Y - bottomMargin;
+            // Creat Main DGV
+            GetMainGV();
 
             // Tool strip button tooltips
             ToolTip dirload = new ToolTip();
-            dirload.SetToolTip(mainImportButton, "Load A Directory");
-            ToolTip fileLoad = new ToolTip();
-            fileLoad.SetToolTip(fileImportButton, "Load Selected Files");
+            dirload.SetToolTip(mainImportButton, "Import Files");
             ToolTip clearAll = new ToolTip();
             clearAll.SetToolTip(clearButton, "Clear All");
             ToolTip slatbut = new ToolTip();
@@ -115,7 +118,24 @@ namespace TS_General_QCmodule
             FileVersionInfo info = FileVersionInfo.GetVersionInfo(assembly.Location);
             string version = info.FileVersion;
 
-            this.Text = $"nCounter QC Tool v{version}";
+            this.Text = $"nCounter Troubleshooting Tool v{version}";
+            if(this.Width > maxWidth)
+            {
+                this.WindowState = FormWindowState.Maximized;
+            }
+            textBox1.SelectionStart = 0;
+
+            // Clear temp folder
+            ClearTmp();
+
+            // Open directories/files if dropped on shortcut
+            if (args.Length > 0)
+            {
+                List<string> dirs = args.Where(x => File.GetAttributes(x).HasFlag(FileAttributes.Directory)).ToList();
+                List<string> files = args.Where(x => !dirs.Contains(x)).ToList();
+                dirs.ForEach(x => OpenDir(x));
+                ProcessFileLoad(files);
+            }
         }
 
         #region Display Settings
@@ -145,196 +165,121 @@ namespace TS_General_QCmodule
             maxWidth = screen.Bounds.Width;
             maxHeight = screen.WorkingArea.Bottom;
             this.Height = maxHeight;
-            gv.Size = new Size(515, maxHeight - 125);
-            int p1Height = maxHeight - panel1.Location.Y - bottomMargin;
-            panel1.Size = new Size(518, p1Height);
-            // Adjust button panels to cart GV height
-            cartPanel.Height = panel2.Location.Y - cartPanel.Location.Y - 45;
-            panel2.Height = maxHeight - panel2.Location.Y - bottomMargin;
         }
         #endregion
 
-        #region Cartridge and Lane DataGridViews
+        #region Main DataGridView
         private static Font gvHeaderFont = new System.Drawing.Font(DefaultFont, FontStyle.Bold);
 
-        /// <summary>
-        /// <value>DataGridView to display all RCCs imported</value>
-        /// </summary>
-        private DBDataGridView gv { get; set; }
-        /// <summary>
-        /// <summary>
-        /// Creates gridview for displaying loaded lanes, their selection status, whether they're associated with RCCs, MTX, or both
-        /// </summary>
-        private void GetLaneGV()
+        private DBDataGridView MainGv { get; set; }
+        private void GetMainGV()
         {
-            // Lane gridview container
-            panel1 = new Panel();
-            panel1.Location = new Point(434, 105);
-            int p1Height = 105 - maxHeight - bottomMargin;
-            panel1.Size = new Size(518, p1Height);
-            panel1.AutoScroll = true;
-
             // Create the lane gridview
-            gv = new DBDataGridView();
-            gv.Dock = DockStyle.Fill;
-            gv.AutoSize = false;
-            // gv.Size = new Size(515, maxHeight - 125);   Moved to 
-            gv.AutoGenerateColumns = false;
-            gv.BackgroundColor = SystemColors.Window;
-            gv.DataSource = laneBindingSource;
+            MainGv = new DBDataGridView(true);
+            MainGv.Dock = DockStyle.None;
+            MainGv.AutoSize = false;
+            MainGv.Size = new Size(1495, 52);
+            MainGv.AutoGenerateColumns = false;
+            MainGv.BackgroundColor = SystemColors.Window;
+            MainGv.DataSource = laneBindingSource;
+            // Selected CheckBox Column
             DataGridViewCheckBoxColumn column1 = new DataGridViewCheckBoxColumn();
             column1.Name = column1.HeaderText = "Selected";
             column1.DataPropertyName = "selected";
             column1.TrueValue = true;
             column1.FalseValue = false;
-            gv.Columns.Add(column1);
-            gv.Columns["selected"].Width = 70;
-            gv.Columns["selected"].HeaderCell.Style.Font = gvHeaderFont;
-            gv.Columns["selected"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            MainGv.Columns.Add(column1);
+            MainGv.Columns["selected"].Width = 60;
+            MainGv.Columns["selected"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["selected"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            // FileName Column
             DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn();
             column.Name = "Filename";
             column.HeaderText = "Lane Filename";
             column.DataPropertyName = "fileName";
-            gv.Columns.Add(column);
-            gv.Columns["Filename"].Width = 349;
-            gv.Columns["Filename"].HeaderCell.Style.Font = gvHeaderFont;
-            gv.Columns["Filename"].ReadOnly = true;
-            gv.Columns["Filename"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            MainGv.Columns.Add(column);
+            MainGv.Columns["Filename"].Width = 460;
+            MainGv.Columns["Filename"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["Filename"].ReadOnly = true;
+            MainGv.Columns["Filename"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "CartID";
+            column.HeaderText = "Cartridge ID";
+            column.DataPropertyName = "cartID";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["CartID"].Width = 300;
+            MainGv.Columns["CartID"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["CartID"].ReadOnly = true;
+            MainGv.Columns["CartID"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "CartBarcode";
+            column.HeaderText = "Cartridge Barcode";
+            column.DataPropertyName = "CartBarcode";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["CartBarcode"].Width = 115;
+            MainGv.Columns["CartBarcode"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["CartBarcode"].ReadOnly = true;
+            MainGv.Columns["CartBarcode"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "RLF";
+            column.HeaderText = "RLF";
+            column.DataPropertyName = "RLF";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["RLF"].Width = 270;
+            MainGv.Columns["RLF"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["RLF"].ReadOnly = true;
+            MainGv.Columns["RLF"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "Date";
+            column.HeaderText = "Date";
+            column.DataPropertyName = "Date";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["Date"].Width = 60;
+            MainGv.Columns["Date"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["Date"].ReadOnly = true;
+            MainGv.Columns["Date"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "Type";
+            column.HeaderText = "Instrument Type";
+            column.DataPropertyName = "TypeName";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["Type"].Width = 105;
+            MainGv.Columns["Type"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["Type"].ReadOnly = true;
+            MainGv.Columns["Type"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "Lane";
+            column.HeaderText = "Lane";
+            column.DataPropertyName = "laneID";
+            MainGv.Columns.Add(column);
+            MainGv.Columns["Lane"].Width = 40;
+            MainGv.Columns["Lane"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["Lane"].ReadOnly = true;
+            MainGv.Columns["Lane"].SortMode = DataGridViewColumnSortMode.NotSortable;
             column1 = new DataGridViewCheckBoxColumn();
             column1.Name = column1.HeaderText = "MTX";
             column1.DataPropertyName = "hasMtx";
             column1.TrueValue = true;
             column1.FalseValue = false;
-            gv.Columns.Add(column1);
-            gv.Columns["MTX"].Width = 40;
-            gv.Columns["MTX"].HeaderCell.Style.Font = gvHeaderFont;
-            gv.Columns["MTX"].ReadOnly = true;
-            gv.Columns["MTX"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            MainGv.Columns.Add(column1);
+            MainGv.Columns["MTX"].Width = 40;
+            MainGv.Columns["MTX"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["MTX"].ReadOnly = true;
+            MainGv.Columns["MTX"].SortMode = DataGridViewColumnSortMode.NotSortable;
             column1 = new DataGridViewCheckBoxColumn();
             column1.Name = column1.HeaderText = "RCC";
-            column1.DataPropertyName = "hasRcc";
+            column1.DataPropertyName = "hasRCC";
             column1.TrueValue = true;
             column1.FalseValue = false;
-            gv.Columns.Add(column1);
-            gv.Columns["RCC"].Width = 40;
-            gv.Columns["RCC"].HeaderCell.Style.Font = gvHeaderFont;
-            gv.Columns["RCC"].ReadOnly = true;
-            gv.Columns["RCC"].SortMode = DataGridViewColumnSortMode.NotSortable;
-            gv.Click += new EventHandler(GV_Click);
-            panel1.Controls.Add(gv);
-            Controls.Add(panel1);
-
-            // Lane gv label
-            Label rccLabel = new Label();
-            rccLabel.Location = new Point(panel1.Location.X, panel1.Location.Y - 22);
-            rccLabel.Size = new Size(200, 22);
-            rccLabel.Text = "Lanes Imported";
-            rccLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            Controls.Add(rccLabel);
-        }
-
-        /// <value>DataGridView to display all cartridges represented by imported RCCs</value>
-        /// </summary>
-        private DBDataGridView gv2 { get; set; }
-        /// <summary>
-        /// Creates gridview for displaying cartridges represented by the loaded lanes and their status with regards to selection
-        /// </summary>
-        private void GetCartGV()
-        {
-            cartPanel = new Panel();
-            cartPanel.Location = new Point(15, 107);
-            cartPanel.Size = new Size(401, 223);
-            cartPanel.AutoScroll = true;
-
-            // Cart GV label
-            Label cartLabel = new Label();
-            cartLabel.Location = new Point(cartPanel.Location.X, cartPanel.Location.Y - 23);
-            cartLabel.Size = new Size(200, 22);
-            cartLabel.Text = "Cartridges Represented";
-            cartLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            Controls.Add(cartLabel);
-
-            // Create cartridge gridview
-            gv2 = new DBDataGridView();
-            gv2.Dock = DockStyle.Fill;
-            gv2.AutoGenerateColumns = false;
-            gv2.BackgroundColor = SystemColors.Window;
-            gv2.DataSource = cartBindingSource;
-            DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn();
-            column.Name = column.HeaderText = "Cartridge ID";
-            column.Width = 246 - cartPanel.AutoScrollMargin.Width;
-            column.DataPropertyName = "cartID";
-            gv2.Columns.Add(column);
-            gv2.Columns["Cartridge ID"].HeaderCell.Style.Font = gvHeaderFont;
-            gv2.Columns["Cartridge ID"].SortMode = DataGridViewColumnSortMode.NotSortable;
-            gv2.Columns["Cartridge ID"].ReadOnly = true;
-            column = new DataGridViewTextBoxColumn();
-            column.Name = column.HeaderText = "Date";
-            column.Width = 65;
-            column.DataPropertyName = "date";
-            gv2.Columns.Add(column);
-            gv2.Columns["Date"].HeaderCell.Style.Font = gvHeaderFont;
-            gv2.Columns["Date"].SortMode = DataGridViewColumnSortMode.NotSortable;
-            gv2.Columns["Date"].ReadOnly = true;
-            DataGridViewCheckBoxColumn column1 = new DataGridViewCheckBoxColumn();
-            column1.Name = column1.HeaderText = "Selected";
-            column1.DataPropertyName = "selected";
-            column1.TrueValue = true;
-            column1.FalseValue = false;
-            gv2.Columns.Add(column1);
-            gv2.Columns["selected"].Width = 70;
-            gv2.Columns["selected"].HeaderCell.Style.Font = gvHeaderFont;
-            gv2.Columns["selected"].SortMode = DataGridViewColumnSortMode.NotSortable;
-            cartPanel.Controls.Add(gv2);
-            gv2.CellValueChanged += new DataGridViewCellEventHandler(GV2_CellValueChanged);
-            gv2.CellMouseUp += new DataGridViewCellMouseEventHandler(GV2_CellMouseUp);
-
-            Controls.Add(cartPanel);
-        }
-
-        DBDataGridView gv3 { get; set; }
-        
-        private void GetRlfGV()
-        {
-            gv3 = new DBDataGridView();
-
-            Label rlfLabel = new Label();
-            rlfLabel.Location = new Point(panel2.Location.X, panel2.Location.Y - 23);
-            rlfLabel.Size = new Size(200, 22);
-            rlfLabel.Text = "RLFs Included";
-            rlfLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            Controls.Add(rlfLabel);
-
-            gv3 = new DBDataGridView();
-            gv3.Dock = DockStyle.Fill;
-            gv3.AutoGenerateColumns = false;
-            gv3.BackgroundColor = SystemColors.Window;
-            DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-            col.Name = col.HeaderText = "RLF Name";
-            col.Width = 294;
-            col.HeaderCell.Style.Font = gvHeaderFont;
-            gv3.Columns.Add(col);
-            col = new DataGridViewTextBoxColumn();
-            col.Name = col.HeaderText = "Lane Count";
-            col.Width = 85;
-            col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            col.HeaderCell.Style.Font = gvHeaderFont;
-            gv3.Columns.Add(col);
-            panel2.Controls.Add(gv3);
-        }
-
-        private void UpdateRlfList()
-        {
-            if(gv3.Rows.Count > 0)
-            {
-                gv3.Rows.Clear();
-            }
-            List<string> rlfs = laneList.Select(x => x.RLF).Distinct().ToList();
-            for(int i = 0; i < rlfs.Count; i++)
-            {
-                int temp = laneList.Where(x => x.RLF == rlfs[i]).Count();
-                gv3.Rows.Add(new string[] { rlfs[i], laneList.Where(x => x.RLF.Equals(rlfs[i])).Count().ToString() });
-            }
+            MainGv.Columns.Add(column1);
+            MainGv.Columns["RCC"].Width = 40;
+            MainGv.Columns["RCC"].HeaderCell.Style.Font = gvHeaderFont;
+            MainGv.Columns["RCC"].ReadOnly = true;
+            MainGv.Columns["RCC"].SortMode = DataGridViewColumnSortMode.NotSortable;
+            MainGv.Click += new EventHandler(GV_Click);
+            MainGv.CurrentCellDirtyStateChanged += new EventHandler(GV_CurrentCellDirtyStateChanged);
+            mainGvPanel.Controls.Add(MainGv);
+            mainGvPanel.BringToFront();
         }
         #endregion
         
@@ -415,30 +360,99 @@ namespace TS_General_QCmodule
                 MessageBox.Show(message, "Failed To Create App Directories", MessageBoxButtons.OK);
             }
         }
+
+        private void StartingFolderCheck(string path)
+        {
+            if(Directory.Exists(path))
+            {
+                Properties.Settings.Default.StartingFolder = path;
+                Properties.Settings.Default.Save();
+            }
+            else
+            {
+                string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                if(Directory.Exists(userPath))
+                {
+                    Properties.Settings.Default.StartingFolder = userPath;
+                    Properties.Settings.Default.Save();
+                }
+                else
+                {
+                    Properties.Settings.Default.StartingFolder = "C:\\Users";
+                    Properties.Settings.Default.Save();
+                }
+            }
+        }
         #endregion
 
         #region Resource File Copy
         private static List<Tuple<string, string>> FilesToCopy0 = new List<Tuple<string, string>>
         {
             Tuple.Create("CodeClassTranslator", "CodeClassTranslator.txt"),
-            Tuple.Create("IntegratedRLF", "n6_vRCC16.rlf")
+            Tuple.Create("IntegratedRLF", "n6_vRCC16.rlf"),
+            Tuple.Create("HeatmapScript", "AgglomAndHeatmap.R"),
+            Tuple.Create("PCAScript", "PCA.R"),
+            Tuple.Create("G2LAT_Flag_Thresholds", "G2LAT_Thresholds.txt"),
+            Tuple.Create("bitops package", "bitops_1.0-6.zip"),
+            Tuple.Create("caTools package", "caTools_1.17.1.zip"),
+            Tuple.Create("gdata package", "gdata_2.18.0.zip"),
+            Tuple.Create("gplots package", "gplots_3.0.1.zip"),
+            Tuple.Create("gtools package", "gtools_3.5.0.zip")
         };
         private static List<Tuple<string, string>> FilesToCopy = new List<Tuple<string, string>>()
         {
             Tuple.Create("Quick Guide", "Quick Start Guide - nCounter Troubleshooting Tool.docx"),
             Tuple.Create("Fluidic Workflow Traces", "Fluidics_Traces.docx"),
-            Tuple.Create("Card Fluidics Schematic", "Fluidics Schematic.pdf")
+            Tuple.Create("Card Fluidics Schematic", "Fluidics Schematic.pdf"),
+            Tuple.Create("Max/Flex (Gen2) Troubleshooing Workflow", "Log Troubleshooting.pdf")
+        };
+        private static List<Tuple<string, string>> PKCsToCopy = new List<Tuple<string, string>>()
+        {
+            Tuple.Create("Hs_ImmuneCellProfile PKC", "Hs_P_ImmuneCellProfile_v1.1.pkc"),
+            Tuple.Create("Hs_NeuralCellProfile PKC", "Hs_P_NeuralCellProfile_v1.0.pkc"),
+            Tuple.Create("MarsAllMm PKC", "Mars_Mm_All_v2.0.pkc"),
+            Tuple.Create("Mm_ImmuneCellProfile PKC", "Mm_P_ImmuneCellProfile_v1.0.pkc"),
+            Tuple.Create("Mm_NeuralCellProfile PKC", "Mm_P_NeuralCellProfile_v1.0.pkc")
         };
 
         private void fileCopyCheck()
         {
+            // Delete resource files if firstRun == true and resource path exists to replace with updated files
+            bool firstRun = Properties.Settings.Default.FirstRun;
+            if(firstRun)
+            {
+                if(Directory.Exists(resourcePath))
+                {
+                    try
+                    {
+                        IEnumerable<string> resourcePaths = Directory.EnumerateFiles(resourcePath);
+                        foreach(string s in resourcePaths)
+                        {
+                            File.Delete(s);
+                        }
+                    }
+                    catch(Exception er)
+                    {
+                        IEnumerable<string> rScripts = Directory.EnumerateFiles(resourcePath, "*.R", SearchOption.TopDirectoryOnly);
+                        if (rScripts.Count() > 0)
+                        {
+                            MessageBox.Show($"The following files could not be removed during installation:\r\n\r\n{string.Join("\r\n", rScripts.Select(x => Path.GetFileName(x)))}\r\n\r\nPlease close any instances of R and remove these files manually from the folder {resourcePath}", "Warning", MessageBoxButtons.OK);
+                        }
+                    }
+                }
+                // Don't run again
+                Properties.Settings.Default.FirstRun = false;
+                Properties.Settings.Default.Save();
+            }
+            
+            // Copy any files missing from resource path from folder in ProgramFiles
             for(int i = 0; i < FilesToCopy0.Count; i++)
             {
                 Tuple<string, string> temp = FilesToCopy0[i];
                 if (!File.Exists($"{resourcePath}\\{temp.Item2}"))
                 {
                     string pf86 = Environment.GetEnvironmentVariable("PROGRAMFILES");
-                    string file = $"{pf86}\\NanoString Technologies\\nCounter_Troubleshooting_Tool_Setup\\Resources\\{temp.Item2}";
+                    string file = $"{pf86}\\NanoString TAS\\nCounter_Troubleshooting_Tool\\ResourceFiles\\{temp.Item2}";
                     if (File.Exists(file))
                     {
                         try
@@ -454,13 +468,14 @@ namespace TS_General_QCmodule
                 }
             }
 
+            // Copy help files missing from resourcePath from folder in ProgramFiles
             for (int i = 0; i < FilesToCopy.Count; i++)
             {
                 Tuple<string, string> temp = FilesToCopy[i];
                 if (!File.Exists($"{resourcePath}\\{temp.Item2}"))
                 {
                     string pf86 = Environment.GetEnvironmentVariable("PROGRAMFILES");
-                    string file = $"{pf86}\\NanoString Technologies\\nCounter_Troubleshooting_Tool_Setup\\Resources\\{temp.Item2}";
+                    string file = $"{pf86}\\NanoString TAS\\nCounter_Troubleshooting_Tool\\ResourceFiles\\{temp.Item2}";
                     if(File.Exists(file))
                     {
                         try
@@ -479,9 +494,37 @@ namespace TS_General_QCmodule
                     helpToolStripMenuItem1.DropDownItems.Add(temp.Item1, null, On_Menu_Click);
                 }
             }
+
+            // Copy any missing PKCs
+            for(int i = 0; i < PKCsToCopy.Count; i++)
+            {
+                Tuple<string, string> temp = PKCsToCopy[i];
+                if(!File.Exists($"{pkcPath}\\{temp.Item2}"))
+                {
+                    string pf86 = Environment.GetEnvironmentVariable("PROGRAMFILES");
+                    string file = $"{pf86}\\NanoString TAS\\nCounter_Troubleshooting_Tool\\ResourceFiles\\{temp.Item2}";
+                    if (File.Exists(file))
+                    {
+                        try
+                        {
+                            File.Copy(file, $"{pkcPath}\\{temp.Item2}");
+                        }
+                        catch (Exception er)
+                        {
+                            MessageBox.Show($"Error copying {temp.Item2}:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}", "An Exception Has Occurred", MessageBoxButtons.OK);
+                        }
+                    }
+                }
+            }
+
+            if(!File.Exists($"{resourcePath}\\CorePKCList.txt"))
+            {
+                string[] baseList = PKCsToCopy.Select(x => Path.GetFileNameWithoutExtension(x.Item2)).ToArray();
+                File.WriteAllLines($"{resourcePath}\\CorePKCList.txt", baseList);
+            }
         }
         #endregion
-
+         
         #region app settings and form load event`
         // Codesumtable app settings
         /// <summary>
@@ -534,8 +577,6 @@ namespace TS_General_QCmodule
             flagTable = Properties.Settings.Default.includeFlagTable;
             dspFlagTable = Properties.Settings.Default.dspIncludeFlagTable;
             ligBkgSubtract = Properties.Settings.Default.ligBkgSubtract;
-            // Clear temp folder
-            ClearTmp();
             // Remove form load event to save memory
             this.Load -= Form1_Load; 
         }
@@ -578,6 +619,11 @@ namespace TS_General_QCmodule
                     Directory.Delete(dirToDelete[i], true);
                 }
                 catch { }
+            }
+
+            if(Directory.EnumerateDirectories(tmpPath, "*", SearchOption.AllDirectories).Count() == 0)
+            {
+                tempCounter = 0;
             }
         }
 
@@ -627,7 +673,11 @@ namespace TS_General_QCmodule
 
         #region Load RCC and MTX files
         /// <summary>
-        /// <value>List of objects that define lanes and contain the MTX file and or RCC for that lane</value>
+        /// <value>List of loaded Lane objects</value>
+        /// </summary>
+        private static List<Lane> CartridgeBackList { get; set; }
+        /// <summary>
+        /// <value>List of Lane objects displayed in main form1 DataGridView</value>
         /// </summary>
         public static BindingList<Lane> laneList { get; set; }
         /// <summary>
@@ -649,6 +699,11 @@ namespace TS_General_QCmodule
         /// <summary>
         /// <value>Collects any RCC filenames that resulted in exceptions when creating their RCC objects</value>
         /// </summary>
+        /// <summary>
+        /// List of RCC and/or MTX files in the directory and subdirectories selected, potentially for loading depending on results of the FilePicker, if the Picker is to be run
+        /// </summary>
+        public static List<string> filesToLoad { get; set; }
+        
         private List<string> failedRccList { get; set; }
         public static string[] codeClassOrder = new string[] { "Endogenous",
                                                                "Positive",
@@ -698,30 +753,6 @@ namespace TS_General_QCmodule
                                                                  "Endogenous8s",
                                                                  "Housekeeping8s"};
 
-        private string[] Extensions { get; set; }
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if(checkBox1.Checked)
-            {
-                Extensions[0] = "rcc";
-            }
-            else
-            {
-                Extensions[0] = "%";
-            }
-        }
-        private void checkBox2_CheckedChanged(object sender, EventArgs e)
-        {
-            if(checkBox2.Checked)
-            {
-                Extensions[1] = "mtx";
-            }
-            else
-            {
-                Extensions[1] = "%";
-            }
-        }
-
         /// <summary>
         /// Handles button click for "import from file" button; intitiates loading of all MTX and RCC files in directory
         /// </summary>
@@ -729,35 +760,7 @@ namespace TS_General_QCmodule
         /// <param name="e"></param>
         private void fileImportButton_Click(object sender, EventArgs e)
         {
-            bool isDsp = false;
-
-            // Clear tmp directory
-            List<string> toDelete = Directory.EnumerateFiles(tmpPath, "*", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < toDelete.Count; i++)
-            {
-                try
-                {
-                    File.Delete(toDelete[i]);
-                }
-                catch
-                {
-
-                }
-            }
-            List<string> dirToDelete = Directory.EnumerateDirectories(tmpPath, "*", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < dirToDelete.Count; i++)
-            {
-                try
-                {
-                    Directory.Delete(dirToDelete[i], true);
-                }
-                catch
-                {
-
-                }
-            }
-
-            // Clear files to load repository
+            // Clear/initialize files to load repository
             if (filesToLoad == null)
             {
                 filesToLoad = new List<string>();
@@ -777,117 +780,138 @@ namespace TS_General_QCmodule
                 passwordsEntered.Clear();
             }
 
+            List<string> selectedFiles = new List<string>();
+
+            bool isDsp = false;
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                List<string> extNames = new List<string>();
-                List<string> exts = new List<string>();
-                if (Extensions.Contains("mtx"))
-                {
-                    extNames.Add("MTX");
-                    exts.Add("*.mtx");
-                }
-                if (Extensions.Contains("rcc"))
-                {
-                    extNames.Add("RCC");
-                    exts.Add("*.rcc");
-                }
-                extNames.Add("ZIP");
-                exts.Add("*.zip");
-                ofd.Filter = $"{string.Join("; ", extNames)}|{string.Join("; ", exts)}";
+                ofd.Filter = "RCC, MTX, and ZIP|*.rcc;*.mtx;*.zip";
                 ofd.Multiselect = true;
                 ofd.RestoreDirectory = true;
-                ofd.Title = $"Select {string.Join(", ", extNames)} To Import";
+                ofd.Title = $"Select Files To Import";
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    List<string> selectedFiles = ofd.FileNames.ToList();
-                    if (selectedFiles.Count > 0)
-                    {
-                        GuiCursor.WaitCursor(() =>
-                        {
-                            if (checkBox1.Checked)
-                            {
-                                filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("rcc", StringComparison.InvariantCultureIgnoreCase)));
-                            }
-                            if (checkBox2.Checked)
-                            {
-                                filesToLoad.AddRange(selectedFiles.Where(x => x.EndsWith("mtx", StringComparison.InvariantCultureIgnoreCase)));
-                            }
-                            List<string> zipsToUnzip = selectedFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                            int serial = 0;
-                            for (int i = 0; i < zipsToUnzip.Count; i++)
-                            {
-                                string tempDir = $"{tmpPath}\\{serial}";
-                                Directory.CreateDirectory(tempDir);
-                                GuiCursor.WaitCursor(() => { filesToLoad.AddRange(RecursivelyUnzip(zipsToUnzip[i], tempDir, Extensions.ToList())); });
-                                serial++;
-                            }
-
-                            // Check if DSP
-                            string dspPat = @"P\d{13}A_P";
-                            for (int i = 0; i < filesToLoad.Count; i++)
-                            {
-                                Match match = Regex.Match(filesToLoad[i], dspPat);
-                                if (match.Success)
-                                {
-                                    isDsp = true;
-                                    break;
-                                }
-                            }
-                        });
-                    }
-                    else
-                    {
-                        return;
-                    }
+                    selectedFiles.AddRange(ofd.FileNames);
                 }
                 else
                 {
                     return;
                 }
+
+                if (selectedFiles.Count < 1)
+                {
+                    return;
+                }
+
+                // Get selected files to be loaded
+                filesToLoad.AddRange(selectedFiles);
+
+                // Recursively unzip any selected zips and add any files with type defined in extension list
+                List<string> zipsToUnzip = new List<string>();
+                string[] extensions = new string[] { ".rcc", ".mtx", ".zip" };
+                if (extensions.Contains(".zip"))
+                {
+                    zipsToUnzip.AddRange(selectedFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList());
+                }
+                int serial = 0;
+                for (int i = 0; i < zipsToUnzip.Count; i++)
+                {
+                    string tempDir = $"{tmpPath}\\{serial}";
+                    Directory.CreateDirectory(tempDir);
+                    try
+                    {
+                        GuiCursor.WaitCursor(() => { filesToLoad.AddRange(RecursivelyUnzip(zipsToUnzip[i], tempDir)); });
+                    }
+                    catch(Exception er)
+                    {
+                        MessageBox.Show($"Could not unzip {zipsToUnzip[i]} due to an exception:\r\n\r\n{er.Message}\r\n{er.StackTrace}", "Unzip Error", MessageBoxButtons.OK);
+                        return;
+                    }
+                    serial++;
+                }
+
+                // Check if DSP
+                string dspPat = @"P\d{13}A_P";
+                for (int i = 0; i < filesToLoad.Count; i++)
+                {
+                    Match match = Regex.Match(filesToLoad[i], dspPat);
+                    if (match.Success)
+                    {
+                        isDsp = true;
+                        break;
+                    }
+                }
+            }
+            
+
+            // Load the files, i.e. create RCC, MTX, and cartridge objects
+            GuiCursor.WaitCursor(() =>
+            {
+                Load_FilesToLoad(isDsp);
+            });
+        }
+
+        // Duplicated for dropping files on shortcut
+        private void ProcessFileLoad(List<string> selectedFiles)
+        {
+            // Get selected files to be loaded
+            filesToLoad.AddRange(selectedFiles);
+
+            // Recursively unzip any selected zips and add any files with type defined in extension list
+            List<string> zipsToUnzip = new List<string>();
+            string[] extensions = new string[] { ".rcc", ".mtx", ".zip" };
+            if (extensions.Contains(".zip"))
+            {
+                GuiCursor.WaitCursor(() => {
+                    zipsToUnzip.AddRange(selectedFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList());
+                });
+            }
+            int serial = 0;
+            for (int i = 0; i < zipsToUnzip.Count; i++)
+            {
+                string tempDir = $"{tmpPath}\\{serial}";
+                Directory.CreateDirectory(tempDir);
+                try
+                {
+                    GuiCursor.WaitCursor(() => { filesToLoad.AddRange(RecursivelyUnzip(zipsToUnzip[i], tempDir)); });
+                }
+                catch (Exception er)
+                {
+                    MessageBox.Show($"Could not unzip {zipsToUnzip[i]} due to an exception:\r\n\r\n{er.Message}\r\n{er.StackTrace}", "Unzip Error", MessageBoxButtons.OK);
+                    return;
+                }
+                serial++;
             }
 
-            Load_FilesToLoad(isDsp);
+            // Check if DSP
+            bool isDsp = new bool();
+            string dspPat = @"P\d{13}A_P";
+            for (int i = 0; i < filesToLoad.Count; i++)
+            {
+                Match match = Regex.Match(filesToLoad[i], dspPat);
+                if (match.Success)
+                {
+                    isDsp = true;
+                    break;
+                }
+            }
+
+            // Load the files, i.e. create RCC, MTX, and cartridge objects
+            GuiCursor.WaitCursor(() =>
+            {
+                Load_FilesToLoad(isDsp);
+            });
         }
 
         /// <summary>
-        /// List of RCC and/or MTX files in the directory and subdirectories selected, potentially for loading depending on results of the FilePicker, if the Picker is to be run
-        /// </summary>
-        public static List<string> filesToLoad { get; set; }
-        /// <summary>
-        /// Handles button click for "import from directory" button; intitiates loading of all MTX and RCC files in directory
+        /// Handles button click for "import from directory" menu strip item; intitiates loading of all MTX and RCC files in directory
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void mainImportButton_Click(object sender, EventArgs e)
         {
             bool isDsp = false;
-
-            // Clear tmp directory
-            List<string> toDelete = Directory.EnumerateFiles(tmpPath, "*", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < toDelete.Count; i++)
-            {
-                try
-                {
-                    File.Delete(toDelete[i]);
-                }
-                catch
-                {
-
-                }
-            }
-            List<string> dirToDelete = Directory.EnumerateDirectories(tmpPath, "*", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < dirToDelete.Count; i++)
-            {
-                try
-                {
-                    Directory.Delete(dirToDelete[i], true);
-                }
-                catch
-                {
-
-                }
-            }
 
             // Clear files to load repository
             if (filesToLoad == null)
@@ -910,27 +934,26 @@ namespace TS_General_QCmodule
             }
 
             // Pull file paths from dir
+            string dirToOpen = string.Empty;
             using (FolderBrowserDialog cfd = new FolderBrowserDialog())
             {
-                cfd.Description = "Select Directory";
+                cfd.Description = "Select a directory to recursively import all RCCs, MTX, and/or ZIPs from";
                 cfd.ShowNewFolderButton = true;
+                string startPath = Properties.Settings.Default.StartingFolder;
+                if(Directory.Exists(startPath))
+                {
+                    cfd.SelectedPath = startPath;
+                }
                 if (cfd.ShowDialog() == DialogResult.OK)
                 {
-                    string dirToOpen = cfd.SelectedPath;
-                    if(dirToOpen.EndsWith("RunLogs"))
+                    string tempPath = cfd.SelectedPath;
+                    if(Directory.Exists(tempPath))
                     {
-                        IEnumerable<string> contents = Directory.EnumerateFiles(dirToOpen, "*csv");
-                        string tempDir = dirToOpen.Substring(0, dirToOpen.LastIndexOf('\\'));
-                        string runHistPath = $"{tempDir}\\\\Services\\System\\RunHistory.csv";
-                        SprintRunLogClass runLogs = new SprintRunLogClass(contents.ToList(), runHistPath);
-                        SLATRunLogOnly RunLogOnlyReport = new SLATRunLogOnly(runLogs);
-                        RunLogOnlyReport.ShowDialog();
-                        return;
+                        dirToOpen = cfd.SelectedPath;
+                        Properties.Settings.Default.StartingFolder = dirToOpen;
+                        Properties.Settings.Default.Save();
                     }
-                    else
-                    {
-                        filesToLoad.AddRange(GetFilesRecursivelyByExtension(dirToOpen, Extensions.ToList()));
-                    }
+                    
                 }
                 else
                 {
@@ -939,7 +962,32 @@ namespace TS_General_QCmodule
                 }
             }
 
+            OpenDir(dirToOpen);
+        }
+
+        private void OpenDir(string dir)
+        {
+            if (dir.EndsWith("RunLogs"))
+            {
+                IEnumerable<string> contents = Directory.EnumerateFiles(dir, "*csv");
+                string tempDir = dir.Substring(0, dir.LastIndexOf('\\'));
+                string runHistPath = $"{tempDir}\\\\Services\\System\\RunHistory.csv";
+                SprintRunLogClass runLogs = new SprintRunLogClass(contents.ToList(), runHistPath);
+                using (SLATRunLogOnly RunLogOnlyReport = new SLATRunLogOnly(runLogs))
+                {
+                    RunLogOnlyReport.ShowDialog();
+                }
+
+                return;
+            }
+            else
+            {
+                string[] extensions = new string[] { ".rcc", ".mtx", ".zip" };
+                filesToLoad.AddRange(GetFilesRecursivelyByExtension(dir, extensions.ToList()));
+            }
+
             // Check if DSP
+            bool isDsp = new bool();
             string dspPat = @"P\d{13}A_P";
             GuiCursor.WaitCursor(() =>
             {
@@ -953,35 +1001,46 @@ namespace TS_General_QCmodule
                     }
                 }
             });
-                
-            if(filesToLoad.Count > 250)
+
+            // In case user accidentally selects a directory with lots of subdirectories containing LOTS of MTX and RCC
+            if (filesToLoad.Count > 250)
             {
                 var result = MessageBox.Show("The directory contained more than 250 RCC and/or MTX files. Do you want to load them all?\r\nClick YES to load all files or click NO to cancel", "Large Number of Files Selected", MessageBoxButtons.YesNo);
-                if(result == DialogResult.No)
+                if (result == DialogResult.No)
                 {
                     return;
                 }
             }
 
-            Load_FilesToLoad(isDsp);
+            // Unzip any zips and create RCC and MTX objexts from included files
+            GuiCursor.WaitCursor(() =>
+            {
+                Load_FilesToLoad(isDsp);
+            });
         }
 
+        /// <summary>
+        /// Loads RCC and MTX files as RCC and MTX objects, identifies cartridges represented and populates cart and lane DGVs
+        /// </summary>
+        /// <param name="isDsp">bool indicating whether DSP files included</param>
         private void Load_FilesToLoad(bool isDsp)
         {
             if (filesToLoad.Count > 0)
             {
                 if (isDsp)
                 {
-                    if (filesToLoad.Count <= 12) // CHANGE THIS TO CHECK, USING CARTTRANSLATOR, WHETHER FILES FROM DIFFERENT CARTRIDGES
+                    LoadMtxAndRcc(filesToLoad);
+                    if(CartridgeBackList.Where(x => x.laneType == RlfClass.RlfType.dsp)
+                                        .Select(x => x.cartID).Distinct().Count() > 1)
                     {
-                        LoadMtxAndRcc(filesToLoad);
-                    }
-                    else
-                    {
-                        var result = MessageBox.Show("Warning:\r\nMore than one cartridge's RCCs included. Make sure PKCs selected for each row apply to all included cartridges or expression in subsequent reports may be corrupt.\r\n\r\nDo you want to continue?", "Multiple Cartridges Included", MessageBoxButtons.YesNo);
-                        if (result == DialogResult.Yes)
+                        var result = MessageBox.Show("Warning:\r\nMore than one cartridge's RCCs included. Make sure PKCs selected for each row apply to all included cartridges or expression in subsequent reports may be corrupt.\r\n\r\nDo you want to continue?", "Multiple Cartridges", MessageBoxButtons.YesNo);
+                        if(result == DialogResult.Yes)
                         {
                             LoadMtxAndRcc(filesToLoad);
+                            if (CartridgeBackList.Count < 1)
+                            {
+                                return;
+                            }
                         }
                         else
                         {
@@ -992,107 +1051,201 @@ namespace TS_General_QCmodule
                 else
                 {
                     LoadMtxAndRcc(filesToLoad);
+                    if (CartridgeBackList.Count < 1)
+                    {
+                        return;
+                    }
                 }
             }
             else
             {
-                MessageBox.Show("Directory and its subdirectories contain no RCC or MTX files.\r\n\r\nIf you want to open run logs for a Sprint run click the Import button again and navigate directly to the Run Log folder or its contents.", "No MTX or RCC Detected", MessageBoxButtons.OK);
+                // Check if running pressure traces on Sprint RunLogs
+                SprintRunLogsRecovery();
             }
 
-            // Get cartridges from lanes imported for cartridge list
-            List<CartridgeItem2> theseCarts = GetCartsFromLanes(laneList.ToList());
-            cartList.Clear();
-            for (int i = 0; i < theseCarts.Count; i++)
-            {
-                cartList.Add(theseCarts[i]);
-            }
-            cartBindingSource.DataSource = cartList;
-            cartBindingSource.ResetBindings(false);
+            // Get cartridges from lanes imported for cartridge list and filter duplicate lanes; populate cart DGV binding source
+            List<CartridgeItem2> theseCarts = GetCartsFromLanes(CartridgeBackList);
 
             // Sort lanes by cartID, Date, then LaneID
-            List<Lane> tempLaneList = laneList.OrderBy(x => x.cartID)
-                                               .ThenBy(x => x.Date)
-                                               .ThenBy(x => x.LaneID).ToList();
-            
+            List<Lane> tempLaneList = CartridgeBackList.OrderBy(x => x.cartID)
+                                                       .ThenBy(x => x.Date)
+                                                       .ThenBy(x => x.LaneID).ToList();
+
             // Populate lane GV data source
             laneList.Clear();
-            for (int i = 0; i < tempLaneList.Count - 1; i++)
+            CartridgeBackList.Clear();
+            if (tempLaneList.Count > 0)
             {
-                laneList.Add(tempLaneList[i]);
+                CartridgeBackList.AddRange(tempLaneList);
+                for (int i = 0; i < CartridgeBackList.Count - 1; i++)
+                {
+                    laneList.Add(CartridgeBackList[i]);
+                }
+                laneList.ListChanged += new ListChangedEventHandler(LaneList_ListChanged); // CRITICAL TO KEEP THIS HERE TO AVOID UNNECESSARY UPDATING BUT STILL UPDATE BECAUSE OF FOLLOWING LINE
+                laneList.Add(CartridgeBackList[CartridgeBackList.Count - 1]); // Triggers list changed once upon load
+                laneBindingSource.DataSource = laneList;
+                laneBindingSource.ResetBindings(false);
             }
-            laneList.ListChanged += new ListChangedEventHandler(LaneList_ListChanged);
-            laneList.Add(tempLaneList[tempLaneList.Count - 1]);
-
-            laneBindingSource.DataSource = laneList;
-            laneBindingSource.ResetBindings(false);
-            UpdateTables();
-            
         }
 
-        private int tempCounter;
+        private static int tempCounter;
+        /// <summary>
+        /// Run method for opening all folders and zips in selected directory and enumerating RCCs and MTX
+        /// </summary>
+        /// <param name="directoryPath">Directory to enumerate files from</param>
+        /// <param name="extensions">Patterns for enumeration to collect</param>
+        /// <returns>List of enumerated files containing the given patterns (extensions)</returns>
         private List<string> GetFilesRecursivelyByExtension(string directoryPath, List<string> extensions)
         {
-            tempCounter = 0;
             List<string> temp = new List<string>();
             List<string> temp0 = Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories).ToList();
-            for (int i = 0; i < extensions.Count; i++)
+            if(extensions.Contains(".rcc"))
             {
-                temp.AddRange(temp0.Where(x => x.EndsWith(extensions[i], StringComparison.InvariantCultureIgnoreCase) && !x.Contains("_MACOSX")));
+                temp.AddRange(temp0.Where(x => x.EndsWith(".rcc", StringComparison.InvariantCultureIgnoreCase)));
+            }
+            if(extensions.Contains(".mtx"))
+            {
+                temp.AddRange(temp0.Where(x => x.EndsWith(".mtx", StringComparison.InvariantCultureIgnoreCase)));
             }
 
+            // Unzip archives and add files
             List<string> zipsToUnzip = temp0.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase) 
                                                     && !x.EndsWith("syslogs.zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
             for (int i = 0; i < zipsToUnzip.Count; i++)
             {
-                List<string> unzipped = RecursivelyUnzip(zipsToUnzip[i], tmpPath, extensions);
-                temp.AddRange(unzipped.Where(x => !x.Contains("_MACOSX")));
-                tempCounter++;
+                try
+                {
+                    List<string> unzipped = RecursivelyUnzip(zipsToUnzip[i], tmpPath);
+                    temp.AddRange(unzipped.Where(x => !x.Contains("_MACOSX")));
+                    tempCounter++;
+                }
+                catch(Exception er)
+                {
+                    MessageBox.Show($"Zip file {zipsToUnzip[i]} could not be unzipped due to an exception:\r\n\r\n{er.Message}\r\n{er.StackTrace}", "Unzip Error", MessageBoxButtons.OK);
+                }
             }
 
             //return checkForDupes(temp);
             return temp;
         }
 
-        private List<string> passwordsEntered { get; set; }
-        private List<string> RecursivelyUnzip(string zipPath, string tempPath, List<string> extensions) 
+        // Get Directories for functions that don't start with MTX, RCC, or Zip files
+        /// <summary>
+        /// List of Sprint RunLog directories to be used if no MTX found (provides list to run pressure traces on)
+        /// </summary>
+        private List<string> RunLogDirectories { get; set; }
+        /// <summary>
+        /// List of Sprint System directories for pulling RunHistories for cartridge logging
+        /// </summary>
+        private List<string> SprintSystemDirectories { get; set; }
+        /// <summary>
+        /// Recursively searches a directory for System directory, specifically for Sprint logs
+        /// </summary>
+        /// <param name="directoryPath">Directory to enumerate directories in</param>
+        /// <param name="patterns">Seach patterns for desired directories</param>
+        /// <returns></returns>
+        private void GetDirectoriesRecursively(string directoryPath)
         {
-            List<string> temp = new List<string>();
+            if(Directory.Exists(directoryPath))
+            {
+                IEnumerable<string> dirs = Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories);
+                if(dirs.Count() > 0)
+                {
+                    //RunLogDirectories.AddRange(dirs.Where(x => x.EndsWith("RunLogs")));
+                    SprintSystemDirectories.AddRange(dirs.Where(x => x.EndsWith("System")));
+                }
+            }
+        }
+
+    private List<string> passwordsEntered { get; set; }
+        /// <summary>
+        /// Method for recuresively unzipping and searching archives and directories, respectively, for RCCs and MTX
+        /// </summary>
+        /// <param name="zipPath">"Root" zip folder that you'll recursively open</param>
+        /// <param name="tempPath">Path to temp folder where zips are extracted to</param>
+        /// <param name="extensions">Filter for file types to be imported</param>
+        /// <returns></returns>
+        private List<string> RecursivelyUnzip(string zipPath, string tempPath) 
+        {
+
+            // Initialize initial zip object, path collector, and unzip queue
+            List<string> restultOut = new List<string>();
             ZipFile topZip = new ZipFile(zipPath);
             Queue<ZipFile> toUnzip = new Queue<ZipFile>();
             toUnzip.Enqueue(topZip);
 
+            // Recursing loop
             while(toUnzip.Count > 0)
             {
-                ZipFile current = toUnzip.Dequeue();
-                string tempDir = $"{tmpPath}\\{tempCounter.ToString()}";
+                ZipFile current = toUnzip.Dequeue(); // Current zip to extract
+                string tempDir = $"{tempPath}\\{tempCounter.ToString()}"; // Path to temp directory to extract to
                 Directory.CreateDirectory(tempDir);
                 try
                 {
-                    if(current.Entries.Any(x => x.FileName.Contains("MTXFiles")) && current.Entries.Any(x => x.FileName.Contains("RunLogs")))
+                    // Extract (and if Sprint, extract with SprintLogs password
+                    if (current.Entries.Any(x => x.FileName.Contains("MTXFiles")) && current.Entries.Any(x => x.FileName.Contains("RunLogs")))
                     {
                         current.Password = "SprintLogs";
                         GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
                     }
                     else
                     {
-                        if (!current.Entries.Any(x => x.FileName.StartsWith("CleaningPress")) && !current.Entries.Any(x => x.FileName.StartsWith("ElutionPress")))
-                        {
-                            GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
-                        }
+                        // Non-Sprint-specific extraction function
+                        GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
                     }
                 }
-                catch
+                catch  // Exception likely due to incorrect or missing password
                 {
-                    if(passwordsEntered.Count > 0)
+                    // Avoid trying to extract Prep Station or GeoMx logs within directories for performance purposes
+                    Match match = Regex.Match(current.Name, @"\d\d\d\d(D|G|E)\d\d\d\d");
+                    if(!match.Success)
                     {
-                        try
+                        // Check for passwords used for previous zips so user doesn't have to continuously enter
+                        if (passwordsEntered.Count > 0)
                         {
-                            current.Password = passwordsEntered[passwordsEntered.Count - 1];
-                            GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
+                            try
+                            {
+                                // Use last password entered
+                                current.Password = passwordsEntered[passwordsEntered.Count - 1];
+                                GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
+                            }
+                            catch // Exception again likely due to incorrect password
+                            {
+                                // Password entry form for user-entered password
+                                using (ZipPasswordEnter zpe = new ZipPasswordEnter(current.Name))
+                                {
+                                    if (zpe.ShowDialog() == DialogResult.OK)
+                                    {
+                                        current.Password = zpe.password;
+                                        try
+                                        {
+                                            GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
+                                            passwordsEntered.Add(zpe.password);
+                                        }
+                                        catch // User-entered password failed
+                                        {
+                                            var result = MessageBox.Show("The password was incorrect.", "Password Error", MessageBoxButtons.OK);
+                                            if (result == DialogResult.OK)
+                                            {
+                                                return restultOut;
+                                            }
+                                            else
+                                            {
+                                                return restultOut;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return restultOut;
+                                    }
+                                }
+                            }
                         }
-                        catch
+                        else
                         {
-                            using (ZipPasswordEnter zpe = new ZipPasswordEnter())
+                            // No passwords entered previously - bring up form for user to enter password
+                            using (ZipPasswordEnter zpe = new ZipPasswordEnter(current.Name))
                             {
                                 if (zpe.ShowDialog() == DialogResult.OK)
                                 {
@@ -1102,78 +1255,80 @@ namespace TS_General_QCmodule
                                         GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
                                         passwordsEntered.Add(zpe.password);
                                     }
-                                    catch
+                                    catch // User-entered password failed
                                     {
-                                        var result = MessageBox.Show("The password was incorrect.", "Password Error", MessageBoxButtons.OK);
-                                        if (result == DialogResult.OK)
-                                        {
-                                            return temp;
-                                        }
-                                        else
-                                        {
-                                            return temp;
-                                        }
+                                        MessageBox.Show("The password was incorrect.", "Password Error", MessageBoxButtons.OK);
+                                        return restultOut;
                                     }
                                 }
                                 else
                                 {
-                                    return temp;
+                                    return restultOut;
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        using (ZipPasswordEnter zpe = new ZipPasswordEnter())
-                        {
-                            if (zpe.ShowDialog() == DialogResult.OK)
-                            {
-                                current.Password = zpe.password;
-                                try
-                                {
-                                    GuiCursor.WaitCursor(() => { current.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently); });
-                                    passwordsEntered.Add(zpe.password);
-                                }
-                                catch
-                                {
-                                    var result = MessageBox.Show("The password was incorrect.", "Password Error", MessageBoxButtons.OK);
-                                    if (result == DialogResult.OK)
-                                    {
-                                        return temp;
-                                    }
-                                    else
-                                    {
-                                        return temp;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                return temp;
-                            }
-                        }
-                    }
                 }
-                List<string> dirFiles = Directory.EnumerateFiles(tempDir, "*", SearchOption.AllDirectories).ToList();
-                for(int i = 0; i < extensions.Count; i++)
+
+                
+                // Enumerate directories and files
+                List<string> dirs = Directory.EnumerateDirectories(tempDir, "*", SearchOption.TopDirectoryOnly).Where(x => !x.Contains("_MACOSX")).ToList();
+                List<string> zips = Directory.EnumerateFiles(tempDir, "*", SearchOption.TopDirectoryOnly)
+                                             .Where(x => x.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                                             .ToList();
+                // Add RCCs and MTX from top of zip to result
+                restultOut.AddRange(Directory.EnumerateFiles(tempDir, "*", SearchOption.TopDirectoryOnly)
+                                                 .Where(x => x.EndsWith(".mtx", StringComparison.OrdinalIgnoreCase)
+                                                     || x.EndsWith(".rcc", StringComparison.OrdinalIgnoreCase)));
+
+                // Process zips
+                for (int i = 0; i < zips.Count; i++)
                 {
-                    temp.AddRange(dirFiles.Where(x => x.EndsWith(extensions[i], StringComparison.InvariantCultureIgnoreCase)));
+                    ZipFile temp = new ZipFile(zips[i]);
+                    toUnzip.Enqueue(temp);
                 }
-                List<string> zipPaths = dirFiles.Where(x => x.EndsWith("zip", StringComparison.InvariantCultureIgnoreCase)).ToList();
-                for(int i = 0; i < zipPaths.Count; i++)
+
+                // Process dirs (enumerate from one at a time to avoid slow down with directories containing enormous numbers of files)
+                Queue<string> dirsToBrowse = new Queue<string>(dirs.Count);
+                dirs.ForEach(x => dirsToBrowse.Enqueue(x));
+                while (dirsToBrowse.Count > 0)
                 {
-                    ZipFile tempZip = new ZipFile(zipPaths[i]);
-                    toUnzip.Enqueue(tempZip);
+                    string currentDir = dirsToBrowse.Dequeue();
+                    // Enqueue subdirs for later enumeration
+                    Directory.EnumerateDirectories(currentDir).ToList().ForEach(x => dirsToBrowse.Enqueue(x));
+                    restultOut.AddRange(Directory.EnumerateFiles(currentDir, "*", SearchOption.TopDirectoryOnly)
+                                                 .Where(x => x.EndsWith(".mtx", StringComparison.OrdinalIgnoreCase)
+                                                     || x.EndsWith(".rcc", StringComparison.OrdinalIgnoreCase)));
+                    Directory.EnumerateFiles(currentDir, "*", SearchOption.TopDirectoryOnly)
+                             .Where(x => x.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                             .ToList()
+                             .ForEach(x => toUnzip.Enqueue(new ZipFile(x)));
                 }
                 tempCounter++;
             }
 
-            return temp;
+            return restultOut;
+        }
+
+        private Tuple<string, string> PairRunHistoryWithSerial(string runLogs, string path)
+        {
+            List<string> lines = File.ReadLines(runLogs).Take(20).ToList();
+            string[] sep = new string[] { ", " };
+            string serialLine = lines.Where(x => x.Split(sep, StringSplitOptions.None)[1].StartsWith("Serial")).FirstOrDefault();
+            string serial = serialLine.Substring(9);
+            if(serial.Length == 9)
+            {
+                return Tuple.Create(serial, path);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private enum IsParsedPS { TRUE, FALSE, NULL };
         /// <summary>
-        /// Extracts cartridgeitem2 objects from imported lanes and resolves ambiguity when there are multiple lanes with the same name (merging RCCs and MTX, separating rescans by date, and removing unresolvable lanes)
+        /// Extracts cartridgeitem2 objects from imported lanes and resolves ambiguity when there are multiple lanes with the same name (First merges Lanes created by RCCs, then lanes created by MTX, and then merges lanes with RCC and MTX for the same lane into a single lane object, combines probe content, and updates the associated RlfClass)
         /// </summary>
         /// <param name="_lanes">The list of lanes being imported</param>
         /// <returns>A list of cartridge2item objects for displaying on gv2</returns>
@@ -1221,7 +1376,7 @@ namespace TS_General_QCmodule
                                             Tuple<Lane, List<Lane>> temp = MergeLanes(lanesWithRccToMerge);
                                             for(int k = 0; k < temp.Item2.Count; k++)
                                             {
-                                                laneList.Remove(temp.Item2[k]);
+                                                CartridgeBackList.Remove(temp.Item2[k]);
                                             }
                                             if(temp.Item1 == null)
                                             {
@@ -1245,7 +1400,7 @@ namespace TS_General_QCmodule
                                             Tuple<Lane, List<Lane>> temp = MergeLanes(lanesWithRccToMerge);
                                             for (int k = 0; k < temp.Item2.Count; k++)
                                             {
-                                                laneList.Remove(temp.Item2[k]);
+                                                CartridgeBackList.Remove(temp.Item2[k]);
                                             }
                                             if (temp.Item1 == null)
                                             {
@@ -1271,7 +1426,7 @@ namespace TS_General_QCmodule
                                         Tuple<Lane, List<Lane>> temp = MergeLanes(lanesWithMtxToMerge);
                                         for (int k = 0; k < temp.Item2.Count; k++)
                                         {
-                                            laneList.Remove(temp.Item2[k]);
+                                            CartridgeBackList.Remove(temp.Item2[k]);
                                         }
                                         if (temp.Item1 == null)
                                         {
@@ -1289,20 +1444,53 @@ namespace TS_General_QCmodule
 
                                     if(rccLaneToKeep.Count == 1 && mtxLaneToKeep.Count == 1)
                                     {
+                                        // Get codeclasses to pull from MTX)
                                         string[] codeClassesToAdd = codeClassTranslator.Where(x => x.rccType == rccLaneToKeep[0].laneType && x.classActive == RlfClass.classActives.mtx)
                                                                            .Select(x => x.codeClass).ToArray();
+                                        // Add Mtx probe content to lane content
                                         rccLaneToKeep[0].AddMtx(mtxLaneToKeep[0].thisMtx, codeClassesToAdd);
+                                        // Add Mtx probe content to RlfClass
+                                        if(!rccLaneToKeep[0].thisRlfClass.containsMtxCodes)
+                                        {
+                                            rccLaneToKeep[0].thisRlfClass.UpdateRLF(null, mtxLaneToKeep[0].thisMtx);
+                                        }
                                         if(rccLaneToKeep[0].matched == TS_General_QCmodule.Lane.tristate.TRUE)
                                         {
-                                            laneList.Remove(mtxLaneToKeep[0]);
-                                            rccLaneToKeep[0].thisMtx.parentLane = rccLaneToKeep[0];
+                                            CartridgeBackList.Remove(mtxLaneToKeep[0]);
                                         }
                                         else
                                         {
                                             unresolvedLanes.Add($"cartridge: {cartsIn[j].cartId} Date: {cartsIn[j].lanes[0].Date} Lane: {laneIDs[i]}");
-                                            laneList.Remove(rccLaneToKeep[0]);
-                                            laneList.Remove(mtxLaneToKeep[0]);
+                                            CartridgeBackList.Remove(rccLaneToKeep[0]);
+                                            CartridgeBackList.Remove(mtxLaneToKeep[0]);
                                         }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if(lanesWithMtxToMerge.Count > 1)
+                                {
+                                    List<Lane> mtxLaneToKeep = new List<Lane>(1);
+                                    if (lanesWithMtxToMerge.Count > 1)
+                                    {
+                                        Tuple<Lane, List<Lane>> temp = MergeLanes(lanesWithMtxToMerge);
+                                        for (int k = 0; k < temp.Item2.Count; k++)
+                                        {
+                                            CartridgeBackList.Remove(temp.Item2[k]);
+                                        }
+                                        if (temp.Item1 == null)
+                                        {
+                                            unresolvedLanes.Add($"cartridge: {cartsIn[j].cartId} Date: {cartsIn[j].lanes[0].Date} Lane: {laneIDs[i]}");
+                                        }
+                                        else
+                                        {
+                                            mtxLaneToKeep.Add(temp.Item1);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        mtxLaneToKeep.Add(lanesWithMtxToMerge[0]);
                                     }
                                 }
                             }
@@ -1310,7 +1498,7 @@ namespace TS_General_QCmodule
                     }
                     // Adjust lane lists in cartridges after merging and compile resolved cartridges for out
                     cartsIn[j].lanes.Clear();
-                    cartsIn[j].lanes = laneList.Where(x => x.cartID == cartsIn[j].cartId).ToList();
+                    cartsIn[j].lanes = CartridgeBackList.Where(x => x.cartID == cartsIn[j].cartId).ToList();
                     if(cartsIn[j].lanes.Count > 0)
                     {
                         cartsOut.Add(cartsIn[j]);
@@ -1341,14 +1529,14 @@ namespace TS_General_QCmodule
             }
             else
             {
-                string[] targetToCheck = lanesToMerge[0].probeContent.Where(x => !x[5].Equals("0") &&
-                                                                                 !x[5].Equals("1"))
+                string[] targetToCheck = lanesToMerge[0].probeContent.Where(x => !x[TS_General_QCmodule.Lane.Count].Equals("0") &&
+                                                                                 !x[TS_General_QCmodule.Lane.Count].Equals("1"))
                                                                      .FirstOrDefault();
                 if(targetToCheck != null)
                 {
                     for(int i = 1; i < lanesToMerge.Count; i++)
                     {
-                        if(targetToCheck[5] != lanesToMerge[i].probeContent.Where(x => x[3].Equals(targetToCheck[3])).Select(x => x[5]).FirstOrDefault())
+                        if(targetToCheck[5] != lanesToMerge[i].probeContent.Where(x => x[TS_General_QCmodule.Lane.Name].Equals(targetToCheck[TS_General_QCmodule.Lane.Name])).Select(x => x[TS_General_QCmodule.Lane.Count]).FirstOrDefault())
                         {
                             return Tuple.Create<Lane, List<Lane>>(null, lanesToMerge);
                         }
@@ -1375,10 +1563,8 @@ namespace TS_General_QCmodule
             // If no MTX or RCC files found
             if (dir1.Count < 1 && dir2.Count < 1)
             {
-                string message2 = "No MTX or RCC files were found in this directory. Check that you are opening the intended folder.";
-                string cap2 = "No Files Found";
-                MessageBoxButtons buttons2 = MessageBoxButtons.OK;
-                MessageBox.Show(message2, cap2, buttons2);
+                // Check if running pressure traces on Sprint RunLogs
+                SprintRunLogsRecovery();
             }
 
             // Load RCCs found
@@ -1408,7 +1594,54 @@ namespace TS_General_QCmodule
         }
 
         /// <summary>
-        /// Populates the form's laneList with Lane objects from a List of MTX paths, and populates failedRCCList for any that result in exceptions
+        /// If no MTX found, directs user to browse to RunLogs folder so RunLogs portion of SLAT can be run
+        /// </summary>
+        private void SprintRunLogsRecovery()
+        {
+            string message2 = "No MTX or RCC files were found in this directory or its subdirectorties.\r\n\r\nWere you trying to check pressure traces from Sprint RunLogs?";
+            string cap2 = "No MTX or RCCs Found";
+            MessageBoxButtons buttons2 = MessageBoxButtons.YesNo;
+            var result = MessageBox.Show(message2, cap2, buttons2);
+            if (result == DialogResult.No)
+            {
+                filesToLoad.Clear();
+                return;
+            }
+            else
+            {
+                // Recover for Sprint runlog analysis
+                string dirToOpen = string.Empty;
+                using (FolderBrowserDialog cfd = new FolderBrowserDialog())
+                {
+                    cfd.Description = "Browse To RunLogs Directory";
+                    cfd.ShowNewFolderButton = true;
+                    if (cfd.ShowDialog() == DialogResult.OK)
+                    {
+                        dirToOpen = cfd.SelectedPath;
+                    }
+                    else
+                    {
+                        filesToLoad.Clear();
+                        return;
+                    }
+                }
+                if (dirToOpen.EndsWith("RunLogs"))
+                {
+                    IEnumerable<string> contents = Directory.EnumerateFiles(dirToOpen, "*csv");
+                    string tempDir = dirToOpen.Substring(0, dirToOpen.LastIndexOf('\\'));
+                    string runHistPath = $"{tempDir}\\\\Services\\System\\RunHistory.csv";
+                    SprintRunLogClass runLogs = new SprintRunLogClass(contents.ToList(), runHistPath);
+                    using (SLATRunLogOnly RunLogOnlyReport = new SLATRunLogOnly(runLogs))
+                    {
+                        RunLogOnlyReport.ShowDialog();
+                    }
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Populates the form's CartridgeBackingList with Lane objects from a List of MTX paths, and populates failedRCCList for any that result in exceptions
         /// </summary>
         /// <param name="directory">List of MTX paths</param>
         private void loadMtx(List<string> directory)
@@ -1418,53 +1651,11 @@ namespace TS_General_QCmodule
                 try
                 {
                     string[] lines = File.ReadAllLines(directory[i]);
-                    RlfClass temp0 = GetRlfClass(lines, false);
-                    Mtx temp = new Mtx(directory[i], lines, temp0);
-                    Lane temp1 = new TS_General_QCmodule.Lane(temp);
-                    temp.parentLane = temp1;
-                    temp1.thisRlfClass = temp0;
-                    laneList.Add(temp1);
-                }
-                catch (Exception er)
-                {
-                failedMtxList.Add($"{directory[i]}\t{er.Message}");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds or updates lanes in laneList that already contains lanes, using list of MTX paths. Updates if MTX filename matches an RCC that has been loaded (and updates RLF with new codeclasses) otherwise creates new MTX object and RLFCLass
-        /// </summary>
-        /// <param name="directory">List of MTX paths</param>
-        private void addMtx(List<string> directory)
-        {
-            for (int i = 0; i < directory.Count; i++)
-            {
-                try
-                {
-                    string[] rccLines = File.ReadAllLines(directory[i]);
-                    RlfClass temp0 = GetRlfClass(rccLines, false);
-                    Mtx temp = new Mtx(directory[i], rccLines, temp0);
-                    if (!temp0.containsMtxCodes)
-                    {
-                        temp0.UpdateRLF(null, temp);
-                    }
-
-                    Lane temp1 = laneList.Where(x => x.fileName == temp.fileName).FirstOrDefault();
-                    if (temp1 == null)
-                    {
-                        Lane temp2 = new Lane(temp);
-                        temp.parentLane = temp2;
-                        temp2.thisRlfClass = temp0;
-                        laneList.Add(temp2);
-                    }
-                    else
-                    {
-                        string[] codeClassesToAdd = codeClassTranslator.Where(x => x.rccType == temp1.laneType && x.classActive == RlfClass.classActives.mtx)
-                                                                       .Select(x => x.codeClass).ToArray();
-                        temp1.AddMtx(temp, codeClassesToAdd);
-                        temp.parentLane = temp1;
-                    }
+                    RlfClass tempRlfClass = GetRlfClass(lines, false);
+                    Mtx tempMtx = new Mtx(directory[i], lines, tempRlfClass);
+                    Lane tempLane = new TS_General_QCmodule.Lane(tempMtx);
+                    tempLane.thisRlfClass = tempRlfClass;
+                    CartridgeBackList.Add(tempLane);
                 }
                 catch (Exception er)
                 {
@@ -1539,7 +1730,7 @@ namespace TS_General_QCmodule
         }
 
         /// <summary>
-        /// Populates the form's laneList with Lane objects from a List of RCC paths, and populates failedRCCList for any that result in exceptions
+        /// Populates the form's CartridgeBackingList with Lane objects from a List of RCC paths, and populates failedRCCList for any that result in exceptions
         /// </summary>
         /// <param name="directory">List of RCC paths</param>
         private void loadRccs(List<string> directory)
@@ -1550,52 +1741,15 @@ namespace TS_General_QCmodule
                 {
                     int len = directory.Count;
                     string[] rccLines = File.ReadAllLines(directory[i]);
-                    RlfClass temp0 = GetRlfClass(rccLines, true);
-                    Rcc temp = new Rcc(directory[i], rccLines, temp0);
-                    Lane temp1 = new Lane(temp);
-                    temp.parentLane = temp1;
-                    temp1.thisRlfClass = temp0;
-                    laneList.Add(temp1);
-                }
-                catch (Exception er)
-                {
-                    failedRccList.Add($"{directory[i]}\t{er.Message}");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds or updates lanes in laneList that already contains lanes. Updates if RCC filename matches an MTX that has been loaded (and updates RLF with new codeclasses) otherwise creates new RCC object and RLFCLass
-        /// </summary>
-        /// <param name="directory">List of RCC paths</param>
-        private void addRccs(List<string> directory)
-        {
-            for (int i = 0; i < directory.Count; i++)
-            {
-                try
-                {
-                    string[] rccLines = File.ReadAllLines(directory[i]);
-                    RlfClass temp0 = GetRlfClass(rccLines, true);
-                    Rcc temp = new Rcc(directory[i], rccLines, temp0);
-                    if (!temp0.containsRccCodes)
+                    RlfClass tempRlfClass = GetRlfClass(rccLines, true);
+                    Rcc tempRcc = new Rcc(directory[i], rccLines, tempRlfClass);
+                    if(!tempRlfClass.containsRccCodes)
                     {
-                        temp0.UpdateRLF(temp, null);
+                        tempRlfClass.UpdateRLF(tempRcc, null);
                     }
-                    Lane temp1 = laneList.Where(x => x.fileName == temp.fileName).FirstOrDefault();
-                    if (temp1 == null)
-                    {
-                        Lane temp2 = new Lane(temp);
-                        temp.parentLane = temp2;
-                        temp2.thisRlfClass = temp0;
-                        laneList.Add(temp2);
-                    }
-                    else
-                    {
-                        string[] codeClassesToAdd = codeClassTranslator.Where(x => x.rccType == temp1.laneType && x.classActive == RlfClass.classActives.rcc)
-                                                                       .Select(x => x.codeClass).ToArray();
-                        temp1.AddRcc(temp, codeClassesToAdd);
-                        temp.parentLane = temp1;
-                    }
+                    Lane tempLane = new Lane(tempRcc);
+                    tempLane.thisRlfClass = tempRlfClass;
+                    CartridgeBackList.Add(tempLane);
                 }
                 catch (Exception er)
                 {
@@ -1609,14 +1763,14 @@ namespace TS_General_QCmodule
         /// </summary>
         public static List<string> codeClasses { get; set; }
         /// <summary>
-        /// Adds unique
+        /// Adds unique codeclasses to codeClasses list
         /// </summary>
         public static void GetCodeClasses()
         {
             List<string> temp = new List<string>();
-            for (int i = 0; i < laneList.Count; i++)
+            for (int i = 0; i < CartridgeBackList.Count; i++)
             {
-                temp.AddRange(laneList[i].codeClasses);
+                temp.AddRange(CartridgeBackList[i].codeClasses);
             }
             temp.AddRange(codeClasses); //To ensure that 'Distinct' is applied to anything already in the codeClasses list
             codeClasses.Clear();
@@ -1625,7 +1779,7 @@ namespace TS_General_QCmodule
 
         public static void UpdateProbeContent(RlfClass updatedRLF)
         {
-            List<Lane> lanesToUpdate = Form1.laneList.Where(x => x.RLF.Equals(updatedRLF.name, StringComparison.OrdinalIgnoreCase)).ToList();
+            List<Lane> lanesToUpdate = CartridgeBackList.Where(x => x.RLF.Equals(updatedRLF.name, StringComparison.OrdinalIgnoreCase)).ToList();
             List<RlfRecord> notExtended = updatedRLF.content.Where(x => x.CodeClass != "Reserved" && x.CodeClass != "Extended").ToList();
             int len = notExtended.Count;
             if (updatedRLF.thisRLFType == RlfClass.RlfType.ps)
@@ -1693,139 +1847,246 @@ namespace TS_General_QCmodule
         #endregion
 
         #region Other Form1 Events
-        // Event Handler for cartridge gridview selected checkbox checked changed event
-        private void GV2_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        // Ends editing on checkbox clicked to update list
+        private void GV_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if (e.ColumnIndex == gv2.Columns["selected"].Index && e.RowIndex != -1)
+            DataGridView gv = sender as DataGridView;
+            if (gv.CurrentCell.ColumnIndex == gv.Columns["selected"].Index && gv.CurrentCell.RowIndex > -1)
             {
-                if ((bool)gv2.Rows[e.RowIndex].Cells[e.ColumnIndex].Value)
-                {
-                    cartList[e.RowIndex].lanes.ToList().ForEach(x => x.selected = true);
-                }
-                else
-                {
-                    cartList[e.RowIndex].lanes.ToList().ForEach(x => x.selected = false);
-                }
-            }
-        }
-        // Ends editing on mouse button up to allow checked change event to trigger
-        private void GV2_CellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            // End of edition on each click on column of checkbox
-            if (e.ColumnIndex == gv2.Columns["selected"].Index && e.RowIndex != -1)
-            {
-                gv2.EndEdit();
+                gv.EndEdit();
+                textBox1.Text = $"Lanes Loaded: {laneList.Count} |  Selected: {laneList.Where(x => x.selected).Count()}";
             }
         }
 
-        /// <summary>
-        /// Sets which buttons available based on functions that are appropriate for loaded files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void LaneList_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            LaneListChanged();
+        }
+
+        /// <summary>
+        /// Sets controls to only allow functions available given the content of the selected lanes
+        /// </summary>
+        private void LaneListChanged()
         {
             IEnumerable<Lane> selectedLanes = laneList.Where(x => x.selected);
             if (selectedLanes.Count() > 0)
             {
-                panel2.Enabled = true;
+                codeSummaryToolStripMenuItem.Enabled = true;
+                comboBox1.Enabled = true;
 
                 if (selectedLanes.Any(x => x.hasMTX))
                 {
                     troubleshootingTableToolStripMenuItem.Enabled = true;
                     fOVLaneAveragesToolStripMenuItem.Enabled = true;
                     stringClassesToolStripMenuItem.Enabled = true;
-                    panel2.Enabled = true;
+
+                    if (selectedLanes.Any(x => x.isSprint))
+                    {
+                        sLATToolStripMenuItem.Enabled = true;
+                        SLATButton.Enabled = true;
+                    }
+                    else
+                    {
+                        sLATToolStripMenuItem.Enabled = false;
+                        SLATButton.Enabled = false;
+                    }
+
+                    if(selectedLanes.Any(x => !x.isSprint))
+                    {
+                        mFlatButton.Enabled = true;
+                        mFLATToolStripMenuItem.Enabled = true;
+                    }
+                    else
+                    {
+                        mFlatButton.Enabled = false;
+                        mFLATToolStripMenuItem.Enabled = false;
+                    }
                 }
                 else
                 {
                     troubleshootingTableToolStripMenuItem.Enabled = false;
                     fOVLaneAveragesToolStripMenuItem.Enabled = false;
                     stringClassesToolStripMenuItem.Enabled = false;
-                    panel2.Enabled = false;
-                }
-                if (selectedLanes.Any(x => x.hasMTX && x.isSprint))
-                {
-                    sLATToolStripMenuItem.Enabled = true;
-                    SLATButton.Enabled = true;
-                }
-                else
-                {
-                    sLATToolStripMenuItem.Enabled = false;
-                    SLATButton.Enabled = false;
+                    mFlatButton.Enabled = false;
+                    mFLATToolStripMenuItem.Enabled = false;
                 }
                 if (selectedLanes.Any(x => x.hasRCC))
                 {
                     binnedCountsBarplotToolStripMenuItem.Enabled = true;
                     sampleVsToolStripMenuItem.Enabled = true;
-                    codeSummaryToolStripMenuItem.Enabled = true;
 
                     IEnumerable<Lane> selectedRCCLanes = selectedLanes.Where(x => x.hasRCC);
-                    if (selectedRCCLanes.All(x => x.laneType != RlfClass.RlfType.dsp && x.laneType != RlfClass.RlfType.ps && x.laneType != RlfClass.RlfType.generic))
+                    if(selectedRCCLanes.All(x => x.laneType != RlfClass.RlfType.dsp && x.laneType != RlfClass.RlfType.ps))
                     {
-                        heatmapsToolStripMenuItem.Enabled = true;
+                        pCAToolStripMenuItem.Enabled = true;
+                        if (selectedRCCLanes.All(x => x.laneType != RlfClass.RlfType.generic))
+                        {
+                            heatmapsToolStripMenuItem.Enabled = true;
+                        }
+                        else
+                        {
+                            heatmapsToolStripMenuItem.Enabled = false;
+                        }
                     }
                     else
                     {
+                        pCAToolStripMenuItem.Enabled = false;
                         heatmapsToolStripMenuItem.Enabled = false;
                     }
                 }
                 else
                 {
-                    binnedCountsBarplotToolStripMenuItem.Enabled = false;
-                    heatmapsToolStripMenuItem.Enabled = false;
-                    sampleVsToolStripMenuItem.Enabled = false;
-                    codeSummaryToolStripMenuItem.Enabled = false;
+                    if (selectedLanes.Any(x => x.hasMTX && !x.hasRCC && (x.RLF.IndexOf("prosigna", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                                || x.RLF.IndexOf("pam50", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                                || x.RLF.IndexOf("lst", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                                || x.RLF.IndexOf("anti-pd1", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                                || x.RLF.IndexOf("dsp", StringComparison.InvariantCultureIgnoreCase) > -1)))
+                    {
+                        binnedCountsBarplotToolStripMenuItem.Enabled = true;
+                        heatmapsToolStripMenuItem.Enabled = true;
+                        sampleVsToolStripMenuItem.Enabled = true;
+                    }
+                    else
+                    {
+                        binnedCountsBarplotToolStripMenuItem.Enabled = false;
+                        heatmapsToolStripMenuItem.Enabled = false;
+                        sampleVsToolStripMenuItem.Enabled = false;
+                    }
                 }
             }
             else
             {
-                panel2.Enabled = false;
+                SLATButton.Enabled = false;
+                mFlatButton.Enabled = false;
+                troubleshootingTableToolStripMenuItem.Enabled = false;
+                fOVLaneAveragesToolStripMenuItem.Enabled = false;
+                stringClassesToolStripMenuItem.Enabled = false;
+                codeSummaryToolStripMenuItem.Enabled = false;
+                sLATToolStripMenuItem.Enabled = false;
+                mFLATToolStripMenuItem.Enabled = false;
+                binnedCountsBarplotToolStripMenuItem.Enabled = false;
+                heatmapsToolStripMenuItem.Enabled = false;
+                sampleVsToolStripMenuItem.Enabled = false;
+                comboBox1.Enabled = false;
             }
-
+            int p1Height = 27 + (22 * laneList.Count);
+            MainGv.Height = Math.Max(52, p1Height);
+            textBox1.Text = $"Lanes Loaded: {laneList.Count} |  Selected: {laneList.Where(x => x.selected).Count()}";
             laneList.ListChanged -= LaneList_ListChanged;
         }
 
-        private void UpdateTables()
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // So RLF list doesn't update until after all lanes are added
-            UpdateRlfList();
-            gv.Paint += new PaintEventHandler(GV_Paint);
-            gv2.Paint += new PaintEventHandler(GV2_Paint);
-            gv3.Paint += new PaintEventHandler(GV3_Paint);
+            switch(comboBox1.SelectedIndex)
+            {
+                case 0: // No Filter
+                    LaneFilter filter = new LaneFilter(CartridgeBackList, "None", null);
+                    GetFilteredLanes(filter);
+                    break;
+                case 1: // Cartridge ID
+                    using (LaneSelect select = new LaneSelect(CartridgeBackList, 1))
+                    {
+                        if(select.ShowDialog() == DialogResult.OK)
+                        {
+                            LaneFilter filter1 = new LaneFilter(CartridgeBackList, "Cartridge ID", select.SelectedTerms);
+                            GetFilteredLanes(filter1);
+                        }
+                    }
+                    break;
+                case 2: // Cartridge Barcode
+                    using (LaneSelect select = new LaneSelect(CartridgeBackList, 2))
+                    {
+                        if(!select.IsDisposed)
+                        {
+                            if (select.ShowDialog() == DialogResult.OK)
+                            {
+                                LaneFilter filter2 = new LaneFilter(CartridgeBackList, "Cartridge Barcode", select.SelectedTerms);
+                                GetFilteredLanes(filter2);
+                            }
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                    break;
+                case 3: // RLF
+                    using (LaneSelect select = new LaneSelect(CartridgeBackList, 3))
+                    {
+                        if (select.ShowDialog() == DialogResult.OK)
+                        {
+                            LaneFilter filter3 = new LaneFilter(CartridgeBackList, "RLF", select.SelectedTerms);
+                            GetFilteredLanes(filter3);
+                        }
+                    }
+                    break;
+                case 4: // Date Range
+                    using (DateSelect select = new DateSelect())
+                    {
+                        if (select.ShowDialog() == DialogResult.OK)
+                        {
+                            LaneFilter filter4 = new LaneFilter(CartridgeBackList, "Date Range", new string[] { select.SelectedStart, select.SelectedEnd });
+                            GetFilteredLanes(filter4);
+                        }
+                    }
+                    break;
+                case 5: // Instrument Type
+                    using (LaneSelect select = new LaneSelect(CartridgeBackList, 5))
+                    {
+                        if (select.ShowDialog() == DialogResult.OK)
+                        {
+                            LaneFilter filter5 = new LaneFilter(CartridgeBackList, "Instrument Type", select.SelectedTerms);
+                            GetFilteredLanes(filter5);
+                        }
+                    }
+                    break;
+                case 6: // Lane Number
+                    using (LaneSelect select = new LaneSelect(CartridgeBackList, 6))
+                    {
+                        if (select.ShowDialog() == DialogResult.OK)
+                        {
+                            LaneFilter filter6 = new LaneFilter(CartridgeBackList, "Lane Numbers", select.SelectedTerms);
+                            GetFilteredLanes(filter6);
+                        }
+                    }
+                    break;
+            }
+            MainGv.Focus();
         }
 
-        private void GV_Paint(object sender, PaintEventArgs e)
+        private void GetFilteredLanes(LaneFilter filter)
         {
-            // remove dgv default cell selection
-            if(gv.CurrentCell != null)
+            laneList.Clear();
+            List<Lane> filteredLanes = filter.LanesOut;
+            for(int i = 0; i < filteredLanes.Count; i++)
             {
-                gv.CurrentCell.Selected = false;
+                laneList.Add(filteredLanes[i]);
             }
-            gv.Paint -= GV_Paint;
-        }
-
-        private void GV2_Paint(object sender, PaintEventArgs e)
-        {
-            if (gv2.CurrentCell != null)
-            {
-                gv2.CurrentCell.Selected = false;
-            }
-            gv2.Paint -= GV2_Paint;
-        }
-
-        private void GV3_Paint(object sender, PaintEventArgs e)
-        {
-            if (gv3.CurrentCell != null)
-            {
-                gv3.CurrentCell.Selected = false;
-            }
-            gv3.Paint -= GV3_Paint;
+            laneBindingSource.DataSource = laneList;
+            laneBindingSource.ResetBindings(false);
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
+            // Clear tmp folders
+            ClearTmp();
+
+            // Disable controls
+            codeSummaryToolStripMenuItem.Enabled = false;
+            fOVLaneAveragesToolStripMenuItem.Enabled = false;
+            stringClassesToolStripMenuItem.Enabled = false;
+            troubleshootingTableToolStripMenuItem.Enabled = false;
+            sLATToolStripMenuItem.Enabled = false;
+            mFLATToolStripMenuItem.Enabled = false;
+            binnedCountsBarplotToolStripMenuItem.Enabled = false;
+            heatmapsToolStripMenuItem.Enabled = false;
+            sampleVsToolStripMenuItem.Enabled = false;
+            SLATButton.Enabled = false;
+            mFlatButton.Enabled = false;
+
+            // Clear lists
             filesToLoad.Clear();
+            CartridgeBackList.Clear();
             laneList.Clear();
             laneBindingSource.Clear();
             cartList.Clear();
@@ -1834,12 +2095,28 @@ namespace TS_General_QCmodule
             failedMtxList.Clear();
             codeClasses.Clear();
             loadedRLFs.Clear();
+            RunLogDirectories.Clear();
+            SprintSystemDirectories.Clear();
             GC.Collect();
+
+            comboBox1.SelectedIndex = 0;
+            textBox1.Text = "Lanes Loaded: 0 |  Selected: 0";
+            MainGv.Height = 52;
         }
 
         private void tsTableButton_Click(object sender, EventArgs e)
         {
-            TroubleshootingTable table = new TroubleshootingTable(laneList.Where(x => x.selected).ToList());
+            List<Lane> lanes = laneList.Where(x => x.selected && x.hasMTX).ToList();
+            if(lanes.Any(x => x.laneType == RlfClass.RlfType.dsp))
+            {
+                if (lanes.Any(x => x.laneType != RlfClass.RlfType.dsp))
+                {
+                    MessageBox.Show("DSP RCCs and other nCounter RCCs cannot be combined in the same troubleshooting table. Deselect one type or the other.", "Incompatible Lanes", MessageBoxButtons.OK);
+                    return;
+                }
+            }
+
+            TroubleshootingTable table = new TroubleshootingTable(lanes);
 
             if (table.writeString == null)
             {
@@ -1883,11 +2160,14 @@ namespace TS_General_QCmodule
             {
                 DataGridView temp = sender as DataGridView;
                 Tuple<int, int> coords = GetMouseOverCoordinates(temp, args.X, args.Y);
-                if(coords.Item1 > 0 && coords.Item2 == 0)
+                if(coords.Item1 > -1 && coords.Item2 == 0)
                 {
                     MenuItem[] items = new MenuItem[2];
                     items[0] = new MenuItem("Uncheck Selected", Uncheck_Click);
                     items[1] = new MenuItem("Check Selected", Check_Click);
+
+                    items[0].Tag = temp;
+                    items[1].Tag = temp;
 
                     ContextMenu menu = new ContextMenu(items);
                     menu.Show(temp, new Point(args.X, args.Y));
@@ -1900,7 +2180,7 @@ namespace TS_General_QCmodule
         /// </summary>
         /// <param name="_X">e.X from mouseclick event</param>
         /// <param name="_Y">e.Y from mouseclick event</param>
-        /// <returns></returns>
+        /// <returns>Tuple<int, int> giving row (Item1) and column (Item2)</int></returns>
         private Tuple<int, int> GetMouseOverCoordinates(DataGridView dgv, int _X, int _Y)
         {
             int currentMouseOverRow = dgv.HitTest(_X, _Y).RowIndex;
@@ -1911,6 +2191,8 @@ namespace TS_General_QCmodule
 
         private void Uncheck_Click(object sender, EventArgs e)
         {
+            MenuItem item = sender as MenuItem;
+            DataGridView gv = item.Tag as DataGridView;
             DataGridViewSelectedCellCollection cells = gv.SelectedCells;
             for(int i = 0; i < cells.Count; i++)
             {
@@ -1921,10 +2203,13 @@ namespace TS_General_QCmodule
             }
             laneBindingSource.DataSource = laneList;
             laneBindingSource.ResetBindings(false);
+            textBox1.Text = $"Lanes Loaded: {laneList.Count} |  Selected: {laneList.Where(x => x.selected).Count()}";
         }
 
         private void Check_Click(object sender, EventArgs e)
         {
+            MenuItem item = sender as MenuItem;
+            DataGridView gv = item.Tag as DataGridView;
             DataGridViewSelectedCellCollection cells = gv.SelectedCells;
             for (int i = 0; i < cells.Count; i++)
             {
@@ -1935,21 +2220,33 @@ namespace TS_General_QCmodule
             }
             laneBindingSource.DataSource = laneList;
             laneBindingSource.ResetBindings(false);
+            textBox1.Text = $"Lanes Loaded: {laneList.Count} |  Selected: {laneList.Where(x => x.selected).Count()}";
         }
+        #endregion
 
+        #region Data Quality buttons
         //Count bins button
         private void button6_Click(object sender, EventArgs e)
         {
-            var theseLanes = laneList.Where(x => x.selected && x.hasRCC).ToList();
-            int typeCount = theseLanes.Select(x => x.laneType).Distinct().Count();
-            if (typeCount == 1 && theseLanes.Count > 0)
+            var input = GetLanesForDataQuality(laneList.ToList());
+            int typeCount = input.Select(x => x.laneType).Distinct().Count();
+            if (typeCount == 1 && input.Count > 0)
             {
-                CountBinsTable countBinChart = new CountBinsTable(theseLanes);
-                countBinChart.ShowDialog();
+                using (CountBinsTable countBinChart = new CountBinsTable(input))
+                {
+                    if(countBinChart.ConstructorComplete)
+                    {
+                        countBinChart.ShowDialog();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
             }
             else
             {
-                if(typeCount > 1)
+                if (typeCount > 1)
                 {
                     MessageBox.Show("The Count Bins analysis cannot be used with lanes of multiple types (miRNA, PlexSet, DSP, etc.). Select lanes of a single type and try again)", "Multiple Lane Types", MessageBoxButtons.OK);
                     return;
@@ -1957,6 +2254,7 @@ namespace TS_General_QCmodule
                 else
                 {
                     MessageBox.Show("Either all lanes are de-selected or those selected only contain MTX data.", "No Lanes Selected", MessageBoxButtons.OK);
+                    return;
                 }
             }
         }
@@ -1964,19 +2262,20 @@ namespace TS_General_QCmodule
         //Launch clustering and heatmap
         private void button3_Click(object sender, EventArgs e)
         {
-            List<Lane> input = laneList.Where(x => x.selected)
-                                       .OrderBy(x => x.cartID)
-                                       .ThenBy(x => x.LaneID).ToList();
+            // Collect lanes with RCCs or, if having only MTX, use Dx RLFs (basically lanes where probelist will contain endogenous and HKs)
+            List<Lane> input = GetLanesForDataQuality(laneList.ToList()).OrderBy(x => x.cartID)
+                                                                        .ThenBy(x => x.LaneID)
+                                                                        .ToList();
+
+            // If 2 or more lanes present, open heatmap dialog 
             if (input.Count > 1)
             {
-                HeatmapHelper helper = null;
-                GuiCursor.WaitCursor(() =>
+                using (HeatmapHelper helper = new HeatmapHelper(input))
                 {
-                    helper= new HeatmapHelper(input);
-                });
-                if (!helper.IsDisposed)
-                {
-                    helper.ShowDialog();
+                    if (!helper.IsDisposed)
+                    {
+                        helper.ShowDialog();
+                    }
                 }
             }
             else
@@ -1989,15 +2288,79 @@ namespace TS_General_QCmodule
         // Launch scatterplot
         private void button4_Click(object sender, EventArgs e)
         {
-            if(laneList.Where(x => x.hasRCC && x.selected).Count() > 1)
+            List<Lane> input = GetLanesForDataQuality(laneList.ToList());
+            if (input.Count() > 1)
             {
-                SampleVsSampleScatter scatter = new SampleVsSampleScatter(laneList.ToList());
-                scatter.ShowDialog();
+                using (SampleVsSampleScatter scatter = new SampleVsSampleScatter(input))
+                {
+                    if(scatter != null)
+                    {
+                        scatter.ShowDialog();
+                    }
+                }
             }
             else
             {
                 MessageBox.Show("Fewer than 2 lanes with RCC data are included.", "Insufficient Lanes", MessageBoxButtons.OK);
                 return;
+            }
+        }
+
+        private List<Lane> GetLanesForDataQuality(List<Lane> input)
+        {
+            List<Lane> result = input.Where(x => x.hasRCC && x.selected).ToList();
+            result.AddRange(input.Where(x => x.selected && x.hasMTX && !x.hasRCC && (x.RLF.IndexOf("prosigna", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                 || x.RLF.IndexOf("pam50", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                 || x.RLF.IndexOf("lst", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                 || x.RLF.IndexOf("anti-pd1", StringComparison.InvariantCultureIgnoreCase) > -1
+                                                                                 || x.RLF.IndexOf("dsp", StringComparison.InvariantCultureIgnoreCase) > -1)));
+            return result;
+        }
+
+        // Launch PCA
+        private void pCAToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            List<string> RLFs = laneList.Where(x => x.selected && x.hasRCC)
+                                        .Select(x => x.RLF)
+                                        .Distinct().ToList();
+            if (RLFs.Count > 1)
+            {
+                using (RlfSelectForm selectForm = new RlfSelectForm(laneList.Where(x => x.selected && x.hasRCC).ToList(), RLFs))
+                {
+                    selectForm.Text = "Select An RLF To Run PCA";
+                    selectForm.ShowDialog();
+                }
+                // FOR CROSS-RLF PCA ONCE IMPLEMENTED
+                //var result = MessageBox.Show("Selected lanes contain multiple RLFs. Do you intend to run cross-RLF PCA?", "Multiple RLFs", MessageBoxButtons.YesNo);
+                //if (result == DialogResult.Yes)
+                //{
+                //    if (RLFs.Count < 3)
+                //    {
+                //        // Run cross-RLF with both
+                //    }
+                //    else
+                //    {
+                //        // Users selects RLFs to include
+                //    }
+                //}
+                //else
+                //{
+                //    if (result == DialogResult.No)
+                //    {
+                //        // User selects one RLF to include
+                //    }
+                //    else
+                //    {
+                //        return;
+                //    }
+                //}
+            }
+            else
+            {
+                using (PCAForm pca = new PCAForm(laneList.Where(x => x.selected && x.hasRCC).ToList()))
+                {
+                    pca.ShowDialog();
+                }
             }
         }
         #endregion
@@ -2076,7 +2439,7 @@ namespace TS_General_QCmodule
         private void saveTableButton_Click(object sender, EventArgs e)
         {
             string table1File = string.Empty;
-            List<Mtx> temp = laneList.Where(x => x.selected)
+            List<Mtx> temp = laneList.Where(x => x.selected && x.hasMTX)
                                      .Select(x => x.thisMtx)
                                      .ToList();
             if (!temp.All(x => x == null))
@@ -2224,7 +2587,7 @@ namespace TS_General_QCmodule
         private void saveTable2button_Click(object sender, EventArgs e)
         {
             string table2File = string.Empty;
-            List<Mtx> temp = laneList.Where(x => x.selected)
+            List<Mtx> temp = laneList.Where(x => x.selected && x.hasMTX)
                                      .OrderBy(x => x.cartID)
                                      .ThenBy(x => x.LaneID)
                                      .Select(x => x.thisMtx).ToList();
@@ -2274,19 +2637,23 @@ namespace TS_General_QCmodule
         #endregion
 
         #region CodeSum table export and button
-        List<string> theseProbeGroups { get; set; }
+        private static List<string> theseProbeGroups { get; set; }
         private void saveTable3Button_Click(object sender, EventArgs e)
         {
             // Get RLFClass list
             List<Lane> theseLanes = laneList.Where(x => x.selected).ToList();
-            IEnumerable<string> includedRLFs = theseLanes.Select(x => x.RLF).Distinct();
-            List<RlfClass> RLFsIncluded = loadedRLFs.Where(x => includedRLFs.Contains(x.name, StringComparer.OrdinalIgnoreCase))
-                                                           .OrderBy(x => x.content.Count)
-                                                           .ToList();
+            IEnumerable<string> includedRLFs = theseLanes.Where(x => x.selected)
+                                                         .Select(x => x.RLF).Distinct();
+            List<RlfClass> RLFsIncluded = loadedRLFs.Where(x => includedRLFs.Contains(x.name, StringComparer.InvariantCultureIgnoreCase))
+                                                    .OrderBy(x => x.content.Count)
+                                                    .ToList();
+            List<string> codeClassesIncluded = RLFsIncluded.SelectMany(x => x.content.Select(y => y.CodeClass))
+                                                                                     .Distinct()
+                                                                                     .ToList();
             // Open nCounter or DSP codesum dialog
             if (RLFsIncluded.All(x => x.thisRLFType != RlfClass.RlfType.dsp))
             {
-                using (CodeClassSelectDiaglog codeSumDialog = new CodeClassSelectDiaglog(theseLanes, codeClasses, RLFsIncluded))
+                using (CodeClassSelectDiaglog codeSumDialog = new CodeClassSelectDiaglog(theseLanes, codeClassesIncluded, RLFsIncluded))
                 {
                     codeSumDialog.ShowDialog();
                 }
@@ -2298,10 +2665,14 @@ namespace TS_General_QCmodule
                     List<HybCodeReader> loadedReaders = loadPKCs();
                     if (loadedReaders != null)
                     {
-                        using (DspCodeSumTableDialog codeSumDialog = new DspCodeSumTableDialog(loadedReaders))
+                        using (DspCodeSumTableDialog codeSumDialog = new DspCodeSumTableDialog(loadedReaders, laneList.Where(x => x.selected && x.thisRlfClass.thisRLFType == RlfClass.RlfType.dsp).ToList()))
                         {
                             codeSumDialog.ShowDialog();
                         }
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
                 else
@@ -2318,10 +2689,10 @@ namespace TS_General_QCmodule
             } 
         }
 
-        private List<HybCodeReader> loadPKCs()
+        public static List<HybCodeReader> loadPKCs()
         {
             List<HybCodeReader> temp = new List<HybCodeReader>(10);
-            using (EnterPKCs2 p = new EnterPKCs2(pkcPath))
+            using (EnterPKCs2 p = new EnterPKCs2(pkcPath, false))
             {
                 if (p.ShowDialog() == DialogResult.OK)
                 {
@@ -2345,7 +2716,7 @@ namespace TS_General_QCmodule
                         theseProbeGroups.AddRange(temp.SelectMany(x => x.ProbeGroups.Keys));
                         return temp;
                     }
-                    catch(Exception er)
+                    catch (Exception er)
                     {
                         string message = $"Warning:\r\nThere was a problem loading one or more of the selected PKCs due to an exception\r\nat:\r\n{er.StackTrace}";
                         MessageBox.Show(message, "Error Loading PKCs", MessageBoxButtons.OK);
@@ -2354,7 +2725,20 @@ namespace TS_General_QCmodule
                 }
                 else
                 {
-                    return null;
+                    // Skip PKC and codeclass selection dialogs and open generic DSP table based on DSP IDs
+                    if(p.DialogResult == DialogResult.Abort)
+                    {
+                        List<Lane> input = laneList.Where(x => x.selected)
+                                                     .OrderBy(x => x.cartID)
+                                                     .ThenBy(x => x.LaneID)
+                                                     .ToList();
+                        GenericDSPCodeSumTable table = new GenericDSPCodeSumTable(input);
+                        return null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
             }
         }
@@ -2406,8 +2790,11 @@ namespace TS_General_QCmodule
         // SLAT button
         private void slatButton_Click(object sender, EventArgs e)
         {
-            List<Lane> sprintLanes = Form1.laneList.Where(x => x.isSprint && x.hasMTX && x.selected).ToList();
-            RunSlatAnalysis(sprintLanes);
+            IEnumerable<Lane> sprintLanes = Form1.laneList.Where(x => x.isSprint && x.hasMTX && x.selected);
+            if(sprintLanes.Count() > 0)
+            {
+                RunSlatAnalysis(sprintLanes.ToList());
+            }
         }
 
         private void RunSlatAnalysis(List<Lane> sprintLanes)
@@ -2427,7 +2814,7 @@ namespace TS_General_QCmodule
                         string sprintRunName = GetRunName(messagePath);
 
                         // Generate cartridge item for display and picking
-                        CartridgeItem temp = new CartridgeItem(sprintCartBarcodes[i], sprintRunName, sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ToList());
+                        CartridgeItem temp = new CartridgeItem(sprintCartBarcodes[i], sprintRunName, sprintLanes.Where(x => x.CartBarcode == sprintCartBarcodes[i]).ToList(), true);
                         cartItems.Add(temp);
                     }
                 }
@@ -2483,6 +2870,50 @@ namespace TS_General_QCmodule
 
         #endregion
 
+        #region MFLAT button
+        private void mFlatButton_Click(object sender, EventArgs e)
+        {
+            IEnumerable<Lane> MflatLanes = laneList.Where(x => !x.isSprint && x.selected && x.hasMTX);
+            if(MflatLanes.Count() > 0)
+            {
+                MFLATRun(MflatLanes.OrderBy(x => x.LaneID).ToList());
+            }
+        }
+
+        private void MFLATRun(List<Lane> lanes)
+        {
+            List<CartridgeItem> carts = GetCartsAndDates(lanes);
+            if(carts.Count > 1)
+            {
+                using (SLATFilePicker picker = new SLATFilePicker(carts, false))
+                {
+                    picker.ShowDialog();
+                }
+            }
+            else
+            {
+                using (MflatForm form = new MflatForm(lanes))
+                {
+                    form.ShowDialog();
+                }
+            }
+        }
+
+        public List<CartridgeItem> GetCartsAndDates(List<Lane> lanes)
+        {
+            var carts = lanes.GroupBy(x => new { x.cartID, x.Date }).Distinct();
+            List<CartridgeItem> result = new List<CartridgeItem>(carts.Count());//carts.Select(x => new CartridgeItem(x.Key.cartID, x.Key.Date, lanes.Where(y => y.cartID == x.Key.cartID && y.Date == x.Key.Date).ToList(), false)).ToList();
+            foreach (var g in carts)
+            {
+                string id = g.Key.cartID;
+                string date = g.Key.Date;
+                List<Lane> lns = lanes.Where(x => x.cartID == id && x.Date == date).ToList();
+                result.Add(new CartridgeItem(id, date, lns, false));
+            }
+            return result;
+        }
+        #endregion
+
         #region HelpButton
         private void On_Menu_Click(object sender, EventArgs e)
         {
@@ -2493,11 +2924,12 @@ namespace TS_General_QCmodule
             {
                 System.Diagnostics.Process.Start($"{resourcePath}\\{tup.Item2}");
             }
-            catch(Exception er)
+            catch (Exception er)
             {
                 MessageBox.Show($"{tup.Item1} could not be opened due to the following exception:\r\n{er.Message}\r\nat:\r\n{er.StackTrace}");
             }
         }
+
         #endregion
     }
 }

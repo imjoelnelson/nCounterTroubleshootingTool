@@ -50,7 +50,10 @@ namespace TS_General_QCmodule
 
             // Add page content
             GetPressures();
-            GetLanePressures();
+            if(ThisRunLog.lanePressures.Count > 1)
+            {
+                GetLanePressures();
+            }
             GetRunHistory();
             GetMessageLogButton();
 
@@ -98,7 +101,7 @@ namespace TS_General_QCmodule
         private DBDataGridView gv0 { get; set; }
         private void GetSummaryGV0()
         {
-            gv0 = new DBDataGridView();
+            gv0 = new DBDataGridView(true);
             gv0.Location = Home;
             gv0.Size = new Size(483, 201);
             gv0.Font = bigFont;
@@ -291,45 +294,78 @@ namespace TS_General_QCmodule
 
             panel8.Controls.Add(chart8);
 
-            Panel panel9 = new Panel();
-            panel9.Location = new Point(panel8.Location.X + panel8.Width + 15, (3 * h) + 3);
-            panel9.Size = new Size(Size.Width / 4, Size.Height / 6);
-            TabControl1.TabPages[1].Controls.Add(panel9);
+            if(ThisRunLog.heater1.Count > 0 || ThisRunLog.heater2.Count > 0)
+            {
+                Panel panel9 = new Panel();
+                panel9.Location = new Point(panel8.Location.X + panel8.Width + 15, (3 * h) + 3);
+                panel9.Size = new Size(Size.Width / 4, Size.Height / 6);
+                TabControl1.TabPages[1].Controls.Add(panel9);
 
-            Chart chart9 = new Chart();
-            chart9.Click += new EventHandler(Chart_RightClick);
-            chart9.Dock = DockStyle.Fill;
-            chart9.Text = "Heat";
-            chart9.Titles.Add("Heaters");
+                Chart chart9 = new Chart();
+                chart9.Click += new EventHandler(Chart_RightClick);
+                chart9.Dock = DockStyle.Fill;
+                chart9.Text = "Heat";
+                chart9.Titles.Add("Heaters");
 
-            ChartArea area9 = new ChartArea("area9");
-            area9.AxisY = new Axis(area9, AxisName.Y);
-            area9.AxisX = new Axis(area9, AxisName.X);
-            area9.AxisY.Title = "";
-            area9.AxisX.IntervalType = DateTimeIntervalType.Minutes;
-            area9.AxisX.LabelStyle.Format = "hh:mm";
-            area9.AxisX.MajorGrid.LineWidth = area9.AxisY.MajorGrid.LineWidth = 0;
-            area9.AxisY.LabelStyle.Font = littleFont;
-            chart9.ChartAreas.Add(area9);
+                ChartArea area9 = new ChartArea("area9");
+                area9.AxisY = new Axis(area9, AxisName.Y);
+                area9.AxisX = new Axis(area9, AxisName.X);
+                area9.AxisY.Title = "";
+                area9.AxisX.IntervalType = DateTimeIntervalType.Minutes;
+                area9.AxisX.LabelStyle.Format = "hh:mm";
+                area9.AxisX.MajorGrid.LineWidth = area9.AxisY.MajorGrid.LineWidth = 0;
+                area9.AxisY.LabelStyle.Font = littleFont;
+                chart9.ChartAreas.Add(area9);
 
-            Series ser9a = new Series("Heater1");
-            ser9a.ChartType = SeriesChartType.FastLine;
-            double[] heat1 = ThisRunLog.heater1.Where((x, i) => i % 7 == 0).ToArray();
-            ser9a.Points.DataBindXY(Enumerable.Range(1, heat1.Length).ToArray(), heat1);
-            ser9a.ChartArea = "area9";
-            chart9.Series.Add(ser9a);
+                double[] mins = new double[2];
+                double[] maxs = new double[2];
+                if (ThisRunLog.heater1.Count > 0)
+                {
+                    Series ser9a = new Series("Heater1");
+                    ser9a.ChartType = SeriesChartType.FastLine;
+                    double[] heat1 = ThisRunLog.heater1.Where((x, i) => i % 7 == 0).ToArray();
+                    ser9a.Points.DataBindXY(Enumerable.Range(1, heat1.Length).ToArray(), heat1);
+                    ser9a.ChartArea = "area9";
+                    chart9.Series.Add(ser9a);
+                    mins[0] = heat1.Min();
+                    maxs[0] = heat1.Max();
+                }
+                else
+                {
+                    mins[0] = -1;
+                    maxs[0] = -1;
+                }
 
-            Series ser9b = new Series("Heater2");
-            ser9b.ChartType = SeriesChartType.FastLine;
-            double[] heat2 = ThisRunLog.heater2.Where((x, i) => i % 7 == 0).ToArray();
-            ser9b.Points.DataBindXY(Enumerable.Range(1, heat2.Length).ToArray(), heat2);
-            ser9b.ChartArea = "area9";
-            chart9.Series.Add(ser9b);
+                if(ThisRunLog.heater2.Count > 0)
+                {
+                    Series ser9b = new Series("Heater2");
+                    ser9b.ChartType = SeriesChartType.FastLine;
+                    double[] heat2 = ThisRunLog.heater2.Where((x, i) => i % 7 == 0).ToArray();
+                    ser9b.Points.DataBindXY(Enumerable.Range(1, heat2.Length).ToArray(), heat2);
+                    ser9b.ChartArea = "area9";
+                    chart9.Series.Add(ser9b);
+                    mins[1] = heat2.Min();
+                    maxs[1] = heat2.Max();
+                }
+                else
+                {
+                    mins[1] = -1;
+                    maxs[1] = -1;
+                }
 
-            area9.AxisY.Minimum = new double[] { heat1.Min(), heat2.Min() }.Min() - 1;
-            area9.AxisY.Maximum = new double[] { heat1.Max(), heat2.Max() }.Max() + 1;
+                if(mins.All(x => x > -1))
+                {
+                    area9.AxisY.Minimum = mins.Min();
+                    area9.AxisY.Maximum = maxs.Max();
+                }
+                else
+                {
+                    area9.AxisY.Minimum = mins.Where(x => x > -1).First();
+                    area9.AxisY.Maximum = maxs.Where(x => x > -1).First();
+                }
 
-            panel9.Controls.Add(chart9);
+                panel9.Controls.Add(chart9);
+            }
         }
 
         private void GetBufferPressures(int h)
@@ -778,7 +814,7 @@ namespace TS_General_QCmodule
                 return;
             }
             List<string[]> matrixList = ThisRunLog.runHistory;
-            gv4 = new DBDataGridView();
+            gv4 = new DBDataGridView(true);
             gv4.Name = "gv4";
             gv4.Click += new EventHandler(GV_Click);
             gv4.ReadOnly = true;

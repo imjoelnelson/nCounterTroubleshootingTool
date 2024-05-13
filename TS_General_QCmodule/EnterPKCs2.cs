@@ -54,14 +54,27 @@ namespace TS_General_QCmodule
                 BackgroundImageLayout = ImageLayout.Stretch;
             }
         }
-        public EnterPKCs2(string pkcDirPath)
+        public EnterPKCs2(string pkcDirPath, bool isCoreOnly)
         {
             InitializeComponent();
+
+            IsCoreOnly = isCoreOnly;
 
             List<DisplayItem> collector = new List<DisplayItem>();
             collector.AddRange(Directory.EnumerateFiles(pkcDirPath, "*.json").Select(x => new DisplayItem(x)));
             collector.AddRange(Directory.EnumerateFiles(pkcDirPath, "*.pkc").Select(x => new DisplayItem(x)));
-            savedPKClist = new BindingList<DisplayItem>(collector);
+
+            if(isCoreOnly)
+            {
+                string[] coreList = File.ReadAllLines($"{Form1.resourcePath}\\CorePKCList.txt");
+                savedPKClist = new BindingList<DisplayItem>(collector.Where(x => coreList.Contains(x.name)).ToArray());
+                this.Text = "Choose Core Probe Kit Config File(s)";
+            }
+            else
+            {
+                savedPKClist = new BindingList<DisplayItem>(collector);
+            }
+
             savedPKCsource = new BindingSource();
             savedPKCsource.DataSource = savedPKClist;
             savedPkcListBox.DataSource = savedPKClist;
@@ -74,6 +87,7 @@ namespace TS_General_QCmodule
             Font thisFont = new Font("Microsoft Sans Serif", 11.25F);
             boxList = new List<ReaderListBox>(8);
             readerLists = new BindingList<DisplayItem>[8];
+
             for (int i = 0; i < 8; i++)
             {
                 // Add BoundList
@@ -101,10 +115,12 @@ namespace TS_General_QCmodule
             helptip.AutoPopDelay = 20000;
         }
 
+        public BindingList<DisplayItem>[] readerLists { get; set; }
         private BindingList<DisplayItem> savedPKClist { get; set; }
         private BindingSource savedPKCsource { get; set; }
         private List<ReaderListBox> boxList { get; set; }
-        public BindingList<DisplayItem>[] readerLists { get; set; }
+        private bool IsCoreOnly { get; set; }
+
 
         private void listBox_DoubleClick(object sender, EventArgs e)
         {
@@ -127,26 +143,56 @@ namespace TS_General_QCmodule
 
         private void newPKCButton_Click(object sender, EventArgs e)
         {
+            string file;
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Filter = "PKC; JSON|*.pkc; *.json";
+                ofd.Filter = "PKC|*.pkc";
                 ofd.RestoreDirectory = true;
+                ofd.Multiselect = false;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    string filePath = ofd.FileName;
-                    string savePath0 = $"{Form1.pkcPath}\\{filePath.Substring(filePath.LastIndexOf('\\') + 1)}";
-                    string savePath = $"{savePath0.Substring(0, savePath0.LastIndexOf('.'))}.json";
-                    File.Copy(filePath, savePath);
-                    savedPKClist.Add(new DisplayItem(filePath));
-                    savedPKCsource.DataSource = savedPKClist;
-                    savedPKCsource.ResetBindings(false);
+                    file = ofd.FileName;
                 }
+                else
+                {
+                    file = string.Empty;
+                    return;
+                }    
+            }
+
+            string fileName = Path.GetFileNameWithoutExtension(file);
+            string savePath = $"{Form1.pkcPath}\\{fileName}.pkc";
+            
+            try
+            {
+                File.Copy(file, savePath, true);
+            }
+            catch(Exception er)
+            {
+                MessageBox.Show($"{er.Message}\r\n\r\n{er.StackTrace}", "File Copy Error", MessageBoxButtons.OK);
+                return;
+            }
+
+            savedPKClist.Add(new DisplayItem(savePath));
+            savedPKCsource.DataSource = savedPKClist;
+            savedPKCsource.ResetBindings(false);
+            HybCodeReader reader = new HybCodeReader(file);
+            // Add PKC to list of core PKCs if Hyb_POS target included
+            if (reader.Targets.Any(x => x.DisplayName.Equals("hyb-pos", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                List<string> coreList = File.ReadAllLines($"{Form1.resourcePath}\\CorePKCList.txt").ToList();
+                coreList.Add(fileName);
             }
         }
 
         public Dictionary<string, List<int>> passReadersToForm1 { get; set; }
         private void okButton_Click(object sender, EventArgs e)
         {
+            if(readerLists.All(x => x == null))
+            {
+                MessageBox.Show("No PKCs selected for any of the rows. Select a PKC and double click in all of the row boxes (A-H) that it applies to, then click 'Continue'.", "No PKC Selected", MessageBoxButtons.OK);
+                return;
+            }
             passReadersToForm1 = new Dictionary<string, List<int>>(20);
             for (int i = 0; i < 8; i++)
             {
@@ -169,28 +215,32 @@ namespace TS_General_QCmodule
             this.Close();
         }
 
-        private void worksheetButton_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog ofd = new OpenFileDialog())
-            {
-                ofd.Title = "Select Worksheet File";
-                ofd.Filter = "TXT|*.txt";
-                ofd.RestoreDirectory = true;
-                ofd.Multiselect = false;
-                if(ofd.ShowDialog() == DialogResult.OK)
-                {
-                    LabWorksheetReader reader = new LabWorksheetReader(ofd.FileName);
-                    for(int i = 0; i < 8; i++)
-                    {
-                        List<string> temp0 = reader.pkcList[i];
-                        for(int j = 0; j < temp0.Count; j++)
-                        {
-                            readerLists[i].Add(new DisplayItem(temp0[j]));
-                            boxList[i].ClearSelected();
-                        }
-                    }
-                }
-            }
-        }
+        //private void worksheetButton_Click(object sender, EventArgs e)
+        //{
+        //    using (OpenFileDialog ofd = new OpenFileDialog())
+        //    {
+        //        ofd.Title = "Select Worksheet File";
+        //        ofd.Filter = "TXT|*.txt";
+        //        ofd.RestoreDirectory = true;
+        //        ofd.Multiselect = false;
+        //        if(ofd.ShowDialog() == DialogResult.OK)
+        //        {
+        //            LabWorksheetReader reader = new LabWorksheetReader(ofd.FileName);
+        //            for(int i = 0; i < 8; i++)
+        //            {
+        //                List<string> temp0 = reader.pkcList[i];
+        //                for(int j = 0; j < temp0.Count; j++)
+        //                {
+        //                    readerLists[i].Add(new DisplayItem(temp0[j]));
+        //                    boxList[i].ClearSelected();
+        //                }
+        //            }
+        //        }
+        //        else
+        //        {
+        //            return;
+        //        }
+        //    }
+        //}
     }
 }

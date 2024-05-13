@@ -25,15 +25,19 @@ namespace TS_General_QCmodule
             RHomePath = CheckRHomePath(Properties.Settings.Default.rHomePath);
             if(RHomePath == null)
             {
-                MessageBox.Show("Cannot find the R executeable to run the heatmap script. Find the R location to use heatmap function.", "Rscript.exe Not Found", MessageBoxButtons.OK);
-                this.Close();
+                RHomePath = RNotFound();
+                if(RHomePath == null)
+                {
+                    this.Close();
+                }
             }
 
             // Get Selected Content
             List<RlfClass> includedRLFs = lanes.Select(x => x.thisRlfClass).Distinct().ToList();
             List<string> selectedContent = new List<string>();
-            if (includedRLFs.Count > 1)
+            if (includedRLFs.Count > 1) // CROSS CODESET
             {
+                IsCrossCodeset = true;
                 bool check = CheckLanes(includedRLFs);
                 if (!check)
                 {
@@ -41,23 +45,31 @@ namespace TS_General_QCmodule
                     this.Close();
                 }
                 else
-                {
-                    selectedContent.AddRange(GetCrossCodesetSelected(includedRLFs).Item1);
-                    HKs = GetCrossCodesetSelected(includedRLFs).Item2.ToArray();
+                {                  
+                    // Get content
+                    CrossCodesetProbeIDs = GetCrossCodesetSelected(includedRLFs);
+
+                    // Get data matrix
+                    Dat = GetDataMatrixFromLanes(lanes, CrossCodesetProbeIDs.Select(x => x.Item1).ToList(), IsCrossCodeset);
                 }
             }
-            else
+            else // SINGLE RLF
             {
+                // Get content
                 selectedContent.AddRange(includedRLFs[0].content.Where(x => x.CodeClass.StartsWith("Endo")
                                                                          || x.CodeClass.StartsWith("Hou")
-                                                                         || x.CodeClass.StartsWith("prot", StringComparison.CurrentCultureIgnoreCase))
+                                                                         || x.CodeClass.StartsWith("dsp", StringComparison.InvariantCultureIgnoreCase)
+                                                                         || x.CodeClass.StartsWith("prot", StringComparison.InvariantCultureIgnoreCase))
                                                                 .Select(x => x.Name));
-                HKs = includedRLFs[0].content.Where(x => x.CodeClass.StartsWith("Hou"))
-                                             .Select(x=> x.Name).ToArray();
-            }
+                if(includedRLFs[0].thisRLFType != RlfClass.RlfType.miRNA)
+                {
+                    HKs = includedRLFs[0].content.Where(x => x.CodeClass.StartsWith("Hou"))
+                                             .Select(x => x.Name).ToArray();
+                }
 
-            // Get data matrix
-            Dat = GetDataMatrixFromLanes(lanes, selectedContent);
+                // Get data matrix
+                Dat = GetDataMatrixFromLanes(lanes, selectedContent.Distinct().ToList(), IsCrossCodeset);
+            }
 
             // Get ComboBox1 items
             comboBox1.Items.Add("Euclidean Distance");
@@ -66,7 +78,10 @@ namespace TS_General_QCmodule
             // Get ComboBox2 items
             comboBox2.Items.Add(new Item2("FOV Counted", lanes.Select(x => new AnnotItem(x.fileName, x.FovCounted.ToString())).ToArray()));
             comboBox2.Items.Add(new Item2("Binding Density", lanes.Select(x => new AnnotItem(x.fileName, x.BindingDensity.ToString())).ToArray()));
-            comboBox2.Items.Add(new Item2("POS Geomean", lanes.Select(x => new AnnotItem(x.fileName, x.CalculatePosGeoMean().ToString())).ToArray()));
+            lanes.ForEach(x => x.GetPosGeoMean());
+            comboBox2.Items.Add(new Item2("POS Geomean", lanes.Select(x => new AnnotItem(x.fileName, x.PosGeoMean.ToString())).ToArray()));
+            comboBox1.SelectedIndexChanged += new EventHandler(ComboBox1_SelectedIndexChanged);
+            UserAnnotIsCategorical = new bool[] { false, false, false }.ToList();
         }
 
         private List<Item1> combo1Items { get; set; }
@@ -99,14 +114,43 @@ namespace TS_General_QCmodule
             }
         }
 
+        // For multi RLF
+        private List<Tuple<string, bool>> CrossCodesetProbeIDs { get; set; }
+        private bool IsCrossCodeset { get; set; }
+        // For single RLF
         private string[] HKs { get; set; }
+
         private List<Lane> Lanes { get; set; }
         private string RHomePath { get; set; }
         private Tuple<string[], string[], double[][]> Dat { get; set; }
         private bool ApplyThresh { get; set; }
         private bool SymCor { get; set; }
 
-        private string CheckRHomePath(string path)
+        private string RNotFound()
+        {
+            var result = MessageBox.Show("Couldn't find R. Do you want to download R-3.3.2?", "", MessageBoxButtons.YesNo);
+            if(result == DialogResult.Yes)
+            {
+                using (RDownloadLink page = new RDownloadLink())
+                {
+                    if(page.ShowDialog() == DialogResult.OK)
+                    {
+                        string path = CheckRHomePath($"{GetUserDir()}\\Documents\\R\\R-3.3.2");
+                        return path;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static string CheckRHomePath(string path)
         {
             if(File.Exists(path))
             {
@@ -114,27 +158,105 @@ namespace TS_General_QCmodule
             }
             else
             {
-                OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Filter = "Rscript.exe|*Rscript.exe";
-                ofd.Multiselect = false;
-                if(ofd.ShowDialog() == DialogResult.OK)
+                try
                 {
-                    string newPath = ofd.FileName;
-                    if (File.Exists(newPath))
+                    using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE"))
                     {
-                        Properties.Settings.Default.rHomePath = newPath;
-                        Properties.Settings.Default.Save();
-                        return newPath;
+                        using (Microsoft.Win32.RegistryKey rKey = key.OpenSubKey("R-Core"))
+                        {
+                            if (rKey != null)
+                            {
+                                using (Microsoft.Win32.RegistryKey rKey2 = rKey.OpenSubKey("R"))
+                                {
+                                    if (rKey2 != null)
+                                    {
+                                        using (Microsoft.Win32.RegistryKey versionKey = rKey2.OpenSubKey("3.3.2"))
+                                        {
+                                            if (versionKey != null)
+                                            {
+                                                string path2 = versionKey.GetValue("InstallPath").ToString();
+                                                if (path2 != null)
+                                                {
+                                                    if(Directory.Exists(path2))
+                                                    {
+                                                        IEnumerable<string> result = Directory.EnumerateFiles(path2, "bin\\i386\\Rscript.exe");
+                                                        if (result.Count() > 0)
+                                                        {
+                                                            return result.First();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    else
+
+                    using(Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE"))
                     {
-                        return null;
+                        using (Microsoft.Win32.RegistryKey rKey = key.OpenSubKey("R-Core"))
+                        {
+                            if (rKey != null)
+                            {
+                                using (Microsoft.Win32.RegistryKey rKey2 = rKey.OpenSubKey("R"))
+                                {
+                                    if (rKey2 != null)
+                                    {
+                                        using (Microsoft.Win32.RegistryKey versionKey = rKey2.OpenSubKey("3.3.2"))
+                                        {
+                                            if (versionKey != null)
+                                            {
+                                                string path2 = versionKey.GetValue("InstallPath").ToString();
+                                                if (path2 != null)
+                                                {
+                                                    if (Directory.Exists(path2))
+                                                    {
+                                                        IEnumerable<string> result = Directory.EnumerateFiles(path2, "bin\\i386\\Rscript.exe");
+                                                        if (result.Count() > 0)
+                                                        {
+                                                            return result.First();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-                else
-                {
                     return null;
                 }
+                catch(Exception er)
+                {
+                    MessageBox.Show($"{er.Message}\r\n\r\n at: {er.StackTrace}", "Exception Finding R Location", MessageBoxButtons.OK);
+                    return null;
+                }
+            }
+        }
+
+        private string GetUserDir()
+        {
+            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                string result1 = Directory.GetParent(path).ToString();
+                if(Directory.Exists(result1))
+                {
+                    return result1;
+                }
+            }
+
+            string path2 = System.Environment.GetEnvironmentVariable("USERPROFILE");
+            if(Directory.Exists(path2))
+            {
+                return path2;
+            }
+            else
+            {
+                return null;
             }
         }
         
@@ -147,8 +269,13 @@ namespace TS_General_QCmodule
             }
             else
             {
-                EnterRLFs enterRLFs = new EnterRLFs(rlfs.Select(x => x.name).ToList(), Form1.loadedRLFs);
-                if(rlfs.All(x => enterRLFs.loadedRLFs.Contains(x.name)))
+                IEnumerable<string> includedRLFs = Lanes.Where(x => x.selected)
+                                                        .Select(x => x.RLF).Distinct();
+                List<RlfClass> RLFsIncluded = Form1.loadedRLFs.Where(x => includedRLFs.Contains(x.name, StringComparer.OrdinalIgnoreCase))
+                                                              .OrderBy(x => x.content.Count)
+                                                              .ToList();
+                var notLoaded = LoadProbeIDsForCrossCodeset(RLFsIncluded, Lanes);
+                if(notLoaded.Count < 1)
                 {
                     return true;
                 }
@@ -159,20 +286,232 @@ namespace TS_General_QCmodule
             }
         }
 
-        private Tuple<List<string>, List<string>> GetCrossCodesetSelected(List<RlfClass> rlfs)
+        #region LoadRLFs from files (ported from CodeClassSelectDialog; should encapsulate in a class)
+        private List<string> LoadProbeIDsForCrossCodeset(List<RlfClass> rlfList, List<Lane> listOfLanes)
         {
-            List<RlfRecord> totContent = rlfs.SelectMany(x => x.content).ToList();
-            List<List<string>> idLists = rlfs.Select(x => x.content.Select(y => y.ProbeID).ToList()).ToList();
-            List<string> ids = idLists.SelectMany(x => x).Distinct().Where(y => idLists.All(z => z.Contains(y))).ToList();
+            Queue<RlfClass> rlfQueue = new Queue<RlfClass>(rlfList);
+            List<string> rlfsToBrowse = new List<string>();
+            while (rlfQueue.Count != 0 || rlfsToBrowse.Count > 0)
+            {
+                if (rlfQueue.Count > 0)
+                {
+                    RlfClass currentRlfClass = rlfQueue.Dequeue();
+                    if (currentRlfClass.containsMtxCodes || currentRlfClass.containsRccCodes)
+                    {
+                        Form1.UpdateSavedRLFs();
+                        string rlfToLoad = Form1.savedRLFs.Where(x => Path.GetFileNameWithoutExtension(x).Equals(currentRlfClass.name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                        if (rlfToLoad != null)
+                        {
+                            currentRlfClass.UpdateRlf(rlfToLoad);
+                            UpdateProbeContent(currentRlfClass);
+                        }
+                        else
+                        {
+                            bool check = PullRlfFromRepos(currentRlfClass.name);
+                            if (check)
+                            {
+                                rlfQueue.Enqueue(currentRlfClass);
+                            }
+                            else
+                            {
+                                rlfsToBrowse.Add(currentRlfClass.name);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (EnterRLFs enterRlfs = new EnterRLFs(rlfsToBrowse, rlfList.Where(x => rlfsToBrowse.Contains(x.name, StringComparer.OrdinalIgnoreCase)).ToList()))
+                    {
+                        if (enterRlfs.ShowDialog() == DialogResult.OK)
+                        {
+                            for (int i = rlfsToBrowse.Count - 1; i > -1; i--)
+                            {
+                                if (enterRlfs.loadedRLFs.Contains(rlfsToBrowse[i], StringComparer.OrdinalIgnoreCase))
+                                {
+                                    rlfsToBrowse.RemoveAt(i);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
 
-            return Tuple.Create(totContent.Where(x => (x.CodeClass.StartsWith("Endo")
-                                                    || x.CodeClass.StartsWith("Hou")
-                                                    || x.CodeClass.StartsWith("prot",StringComparison.CurrentCultureIgnoreCase))
-                                                    && ids.Contains(x.ProbeID))
-                                          .Select(x => x.Name)
-                                          .ToList(),
-                                totContent.Where(x => x.CodeClass.StartsWith("Hou"))
-                                          .Select(x => x.Name).ToList());
+            return rlfsToBrowse;
+        }
+
+        public static void UpdateProbeContent(RlfClass updatedRLF)
+        {
+            List<Lane> lanesToUpdate = Form1.laneList.Where(x => x.RLF.Equals(updatedRLF.name, StringComparison.OrdinalIgnoreCase)).ToList();
+            List<RlfRecord> notExtended = updatedRLF.content.Where(x => x.CodeClass != "Reserved" && x.CodeClass != "Extended").ToList();
+            int len = notExtended.Count;
+            if (updatedRLF.thisRLFType == RlfClass.RlfType.ps)
+            {
+                List<RlfRecord> uniqueContent = notExtended.Where(x => x.CodeClass.Contains('1') || x.CodeClass.StartsWith("Pos") || x.CodeClass.StartsWith("Neg") || x.CodeClass.StartsWith("Puri")).ToList();
+                len = uniqueContent.Count;
+                Dictionary<string, string> nameIDMatches = new Dictionary<string, string>(len);
+                for (int j = 0; j < len; j++)
+                {
+                    RlfRecord temp = uniqueContent[j];
+                    nameIDMatches.Add(temp.Name, temp.ProbeID);
+                }
+                for (int j = 0; j < lanesToUpdate.Count; j++)
+                {
+                    lanesToUpdate[j].AddProbeIDsToProbeContent(nameIDMatches);
+                }
+            }
+            else
+            {
+                if (updatedRLF.thisRLFType == RlfClass.RlfType.miRGE)
+                {
+                    List<Tuple<string, Dictionary<string, string>>> codeClassNameIDMatches = new List<Tuple<string, Dictionary<string, string>>>();
+                    List<string> CodeClasses = notExtended.Select(x => x.CodeClass).Distinct().ToList();
+                    for (int i = 0; i < CodeClasses.Count; i++)
+                    {
+                        List<RlfRecord> temp = notExtended.Where(x => x.CodeClass.Equals(CodeClasses[i])).ToList();
+                        Dictionary<string, string> temp1 = new Dictionary<string, string>();
+                        for (int j = 0; j < temp.Count; j++)
+                        {
+                            temp1.Add(temp[j].Name, temp[j].ProbeID);
+                        }
+                        codeClassNameIDMatches.Add(Tuple.Create(CodeClasses[i], temp1));
+                    }
+                    for (int k = 0; k < lanesToUpdate.Count; k++)
+                    {
+                        lanesToUpdate[k].AddProbeIDsToProbeContent(codeClassNameIDMatches);
+                    }
+                }
+                else
+                {
+                    Dictionary<string, string> nameIDMatches = new Dictionary<string, string>(len);
+                    for (int j = 0; j < len; j++)
+                    {
+                        RlfRecord temp1 = notExtended[j];
+                        nameIDMatches.Add(temp1.Name, temp1.ProbeID);
+                    }
+                    for (int j = 0; j < lanesToUpdate.Count; j++)
+                    {
+                        lanesToUpdate[j].AddProbeIDsToProbeContent(nameIDMatches);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Searches RLF repositories for input rlf name and creates RLFClass if found
+        /// </summary>
+        /// <param name="targetRlf">name of the input RLF w/o extension</param>
+        /// <returns>An RLFClass with name == targerRLF</returns>
+        private bool PullRlfFromRepos(string targetRlf)
+        {
+            if (Directory.Exists(Form1.rlfReposPaths[0]))
+            {
+                string dirName = targetRlf.Substring(0, targetRlf.LastIndexOf('_'));
+                List<int> searchOrder = new List<int>(4);
+                if (dirName.StartsWith("N2_"))
+                {
+                    searchOrder.AddRange(new int[] { 1, 0 });
+                }
+                else
+                {
+                    if (dirName.StartsWith("PBS"))
+                    {
+                        searchOrder.AddRange(new int[] { 2, 0 });
+                    }
+                    else
+                    {
+                        searchOrder.AddRange(new int[] { 0, 1, 2, 3 });
+                    }
+                }
+                int n0 = searchOrder.Count;
+                List<string> temp0 = new List<string>(1);
+                for (int i = 0; i < n0; i++)
+                {
+                    if (i == 0 || Directory.Exists(Form1.rlfReposPaths[searchOrder[i]]))
+                    {
+                        var dir = Directory.EnumerateDirectories(Form1.rlfReposPaths[searchOrder[i]], $"*{dirName}.*");
+                        int n = dir.Count();
+                        if (n > 0 && n < 2)
+                        {
+                            var checkRLFinDir = Directory.EnumerateFiles(dir.ElementAt(0), $"*{targetRlf}.*");
+                            if (checkRLFinDir.Count() != 0)
+                            {
+                                temp0.AddRange(checkRLFinDir);
+                            }
+                            else
+                            {
+                                string archivePath = $"{dir.ElementAt(0)}\\archive";
+                                if (Directory.Exists(archivePath))
+                                {
+                                    var checkRLFarchive = Directory.EnumerateFiles($"{dir.ElementAt(0)}\\archive", $"*{targetRlf}.*");
+                                    temp0.AddRange(checkRLFarchive);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (temp0.Count > 0)
+                {
+                    string newFilePath = string.Empty;
+                    try
+                    {
+                        newFilePath = $"{Form1.rlfPath}\\{Path.GetFileName(temp0[0])}";
+                        if (!File.Exists(newFilePath))
+                        {
+                            File.Copy(temp0[0], newFilePath);
+                            Form1.UpdateSavedRLFs();
+                        }
+                        return true;
+                    }
+                    catch (Exception er)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// Gets cross codeset probe content, returning only those probes with probe IDs present in all included codesets
+        /// </summary>
+        /// <param name="rlfs">List of RlfClasses for all included RLFs</param>
+        /// <returns>Tuple containing a list of all content to be included as well as a list of the HKs</returns>
+        private List<Tuple<string, bool>> GetCrossCodesetSelected(List<RlfClass> rlfs)
+        {
+            IEnumerable<RlfRecord> totContent = rlfs.SelectMany(x => x.content).Distinct();
+            IEnumerable<IEnumerable<string>> idLists = rlfs.Select(x => x.content.Select(y => y.ProbeID));
+            var ids = idLists.Skip(1)
+                             .Aggregate(new HashSet<string>(idLists.First().ToList()),
+                                (h, e) => { h.IntersectWith(e); return h; });
+
+            IEnumerable<string> result0 = ids.Select(x => rlfs[0].content.Where(y => y.ProbeID == x).First()).Where(y => y.CodeClass.StartsWith("Endo")
+                                                                                                                     || y.CodeClass.StartsWith("Hou")
+                                                                                                                     || y.CodeClass.StartsWith("prot", StringComparison.InvariantCultureIgnoreCase))
+                                                                         .Select(y => y.ProbeID);
+
+            int count = result0.Count();
+            List<Tuple<string, bool>> result = new List<Tuple<string, bool>>(count);
+            for(int i = 0; i < count; i++)
+            {
+                string temp = result0.ElementAt(i);
+                bool temp1 = rlfs.SelectMany(x => x.content).Where(x => x.ProbeID == temp).All(x => x.CodeClass.StartsWith("Hou"));
+
+                result.Add(Tuple.Create(temp, temp1));
+            }
+
+            return result.ToList();
         }
 
         /// <summary>
@@ -182,23 +521,66 @@ namespace TS_General_QCmodule
         /// <param name="select">probes for clustering to be based on</param>
         /// <param name="logTrans">bool indicating whether data should be log transformed before clustering</param>
         /// <returns>Tuple of string[], string[] double[][]; Item1 = rownames (lane filename); item2 = probenames; item3 = counts or log transformed countsas doubles</returns>
-        private Tuple<string[], string[], double[][]> GetDataMatrixFromLanes(List<Lane> lanes, List<string> select)
+        private Tuple<string[], string[], double[][]> GetDataMatrixFromLanes(List<Lane> lanes, List<string> select, bool crossCodeset)
         {
             string[] fileNames = lanes.Select(X => X.fileName).ToArray();
-            double[][] tempMat = new double[lanes.Count][];
+            List<string> resultFileNames = new List<string>(fileNames.Length);
+            List<double[]> resultMat = new List<double[]>(lanes.Count);
+            bool allPresent = true;
+            int colInd = -1;
+            if(crossCodeset)
+            {
+                colInd = Lane.probeID;
+            }
+            else
+            {
+                colInd = Lane.Name;
+            }
             for (int i = 0; i < lanes.Count; i++)
             {
                 double[] temp = new double[select.Count];
                 for (int j = 0; j < select.Count; j++)
                 {
-                    string temp0 = lanes[i].probeContent.Where(x => x[3] == select[j]).Select(x => x[5]).First();
-                    double val = double.Parse(temp0);
-                    temp[j] = !val.Equals(0) ? val : 1;
+                    string[] temp0 = lanes[i].probeContent.Where(x => x[colInd] == select[j]).FirstOrDefault();
+                    if(temp0 != null)
+                    {
+                        double val = double.Parse(temp0[Lane.Count]);
+                        temp[j] = !val.Equals(0) ? val : 1;
+                    }
+                    else
+                    {
+                        temp[j] = -1;
+                    }
                 }
-                tempMat[i] = temp;
+                if(temp.All(x => x > -1))
+                {
+                    resultMat.Add(temp);
+                    resultFileNames.Add(fileNames[i]);
+                }
+                else
+                {
+                    allPresent = false;
+                }
             }
 
-            return Tuple.Create(fileNames, select.ToArray(), tempMat);
+            if(allPresent && resultFileNames.Count == resultMat.Count)
+            {
+                return Tuple.Create(resultFileNames.ToArray(), select.ToArray(), resultMat.ToArray());
+            }
+            else
+            {
+                string message = string.Empty;
+                if(resultFileNames.Count == resultMat.Count)
+                {
+                    MessageBox.Show("Error: Mismatch between data matrix and sample names. Email Joel with the data to troubleshoot.", "Data Matrix Error", MessageBoxButtons.OK);
+                    return null;
+                }
+                else
+                {
+                    MessageBox.Show("One or more lanes could not be included due to missing probe information.", "Missing Probe(s)", MessageBoxButtons.OK);
+                    return Tuple.Create(resultFileNames.ToArray(), select.ToArray(), resultMat.ToArray());
+                }
+            }
         }
 
         private Tuple<string[], string[], double[][]> ThresholdData(Tuple<string[], string[], double[][]> input, int thresh, double obsfreq, bool doThresh)
@@ -238,8 +620,6 @@ namespace TS_General_QCmodule
                     }
                     resultMat[i] = temp.ToArray();
                 }
-
-                File.WriteAllLines("C:\\Users\\jnelson\\Desktop\\TESTFILE.csv", resultName);
 
                 return Tuple.Create(input.Item1, resultName.ToArray(), resultMat);
             }
@@ -336,7 +716,7 @@ namespace TS_General_QCmodule
                             temp[i][j] = 0;
                         }
                         else
-                        {
+                        {   
                             temp[j][i] = temp[i][j] = MathNet.Numerics.Distance.Euclidean(elements[i], elements[j]);
                         }
                     }
@@ -378,7 +758,22 @@ namespace TS_General_QCmodule
                         }
                         else
                         {
-                            temp[j][i] = temp[i][j] = MathNet.Numerics.Distance.Pearson(logTrans[i], logTrans[j]);
+                            double val = MathNet.Numerics.Distance.Pearson(logTrans[i], logTrans[j]);
+                            if(!double.IsNaN(val) && !double.IsPositiveInfinity(val))
+                            {
+                                temp[j][i] = temp[i][j] = val;
+                            }
+                            else
+                            {
+                                if(double.IsNaN(val))
+                                {
+                                    temp[j][i] = temp[i][j] = 1;
+                                }
+                                else
+                                {
+                                    temp[j][i] = temp[i][j] = 0;
+                                }
+                            }
                         }
                         
                     }
@@ -417,7 +812,22 @@ namespace TS_General_QCmodule
                         }
                         else
                         {
-                            temp[j][i] = temp[i][j] = GetSpearmanDist(elements[i].ToList(), elements[j].ToList());
+                            double val = GetSpearmanDist(elements[i].ToList(), elements[j].ToList());
+                            if (!double.IsNaN(val) && !double.IsPositiveInfinity(val))
+                            {
+                                temp[j][i] = temp[i][j] = val;
+                            }
+                            else
+                            {
+                                if (double.IsNaN(val))
+                                {
+                                    temp[j][i] = temp[i][j] = 1;
+                                }
+                                else
+                                {
+                                    temp[j][i] = temp[i][j] = 0;
+                                }
+                            }
                         }
                     }
                 }
@@ -528,11 +938,32 @@ namespace TS_General_QCmodule
             return result;
         }
 
-        private int[] GetHKIndices(string[] geneNames, string[] hks)
+        // Single RLF HK indices
+        private int[] GetHKIndices(string[] geneNames, List<Lane> lanes)
         {
+            List<string> hks = new List<string>();
+            List<string> totHKs = lanes[0].probeContent.Where(x => x[1].StartsWith("Hou"))
+                                                       .Select(x => x[3]).ToList();
+            if (totHKs.Count > 3)
+            {
+                GeNormImplementation genorm = new GeNormImplementation(lanes);
+                hks.AddRange(genorm.SelectedRankedHKs.Where(x => x.Item2)
+                                                     .Select(x => x.Item1).ToList());
+            }
+            else
+            {
+                if(totHKs.Count > 0)
+                {
+                    hks.AddRange(totHKs);
+                }
+                else
+                {
+                    return null;
+                }
+            }
             // Get indices of HKs
-            List<int> indices = new List<int>(hks.Length);
-            for (int i = 0; i < hks.Length; i++)
+            List<int> indices = new List<int>(hks.Count);
+            for (int i = 0; i < hks.Count; i++)
             {
                 int j = 0;
                 while (j < geneNames.Length)
@@ -549,23 +980,70 @@ namespace TS_General_QCmodule
             return indices.ToArray();
         }
 
-        private double[] GetNormFactors(double[][] matrix, int[] indices)
+        private Dictionary<string, double> GetNormFactors(double[][] matrix, string[] filenames, int[] indices)
         {
-            double[] geoMeans = new double[matrix.Length];
-            for (int i = 0; i < matrix.Length; i++)
+            if(indices != null)
             {
-                double[] rowHKs = new double[indices.Length];
-                for(int j = 0; j < indices.Length; j++)
+                double[] geoMeans = new double[matrix.Length];
+                for (int i = 0; i < matrix.Length; i++)
                 {
-                    rowHKs[j] = matrix[i][indices[j]];
+                    double[] rowHKs = new double[indices.Length];
+                    for (int j = 0; j < indices.Length; j++)
+                    {
+                        rowHKs[j] = matrix[i][indices[j]];
+                    }
+                    geoMeans[i] = gm_mean(rowHKs);
                 }
-                geoMeans[i] = gm_mean(rowHKs);
+
+                double meanOfGeomeans = geoMeans.Average();
+                Dictionary<string, double> result = new Dictionary<string, double>(geoMeans.Length);
+                for (int i = 0; i < geoMeans.Length; i++)
+                {
+                    result.Add(filenames[i], (meanOfGeomeans / geoMeans[i]));
+                }
+
+                return result;
+            }
+            else
+            {
+                return GetPOSNormFactors(Lanes.ToArray());
+            }
+        }
+
+        private Dictionary<string, double> GetPOSNormFactors(Lane[] lanes)
+        {
+            IEnumerable<string> posNames = lanes[0].probeContent.Where(y => y[1].StartsWith("Pos"))
+                                                                .Select(y => y[3])
+                                                                .Distinct()
+                                                                .Where(z => !z.EndsWith("F"));
+            if (posNames.Count() > 0)
+            {
+                string[] filenames = lanes.Select(x => x.fileName).ToArray();
+                double[][] data = GetDataMatrixFromLanes(lanes.ToList(), posNames.ToList(), IsCrossCodeset).Item3;
+                bool[] use = new bool[data[0].Length];
+                for (int i = 0; i < data[0].Length; i++)
+                {
+                    if (data.Select(x => x[i]).All(y => y > 50))
+                    {
+                        use[i] = true;
+                    }
+                }
+
+                double[] geomeans = data.Select(x => gm_mean(x.Select((y, i) => use[i] ? y : -1).Where(x => x != -1).ToArray())).ToArray();
+                double meanGm = geomeans.Average();
+                double[] ret = geomeans.Select(x => x / meanGm).ToArray();
+
+                Dictionary<string, double> result = new Dictionary<string, double>(ret.Length);
+                for (int i = 0; i < ret.Length; i++)
+                {
+                    result.Add(filenames[i], ret[i]);
+                }
+
+                return result;
             }
 
-            double meanOfGeomeans = geoMeans.Average();
-            double[] result = geoMeans.Select(x => meanOfGeomeans / x).ToArray();
-
-            return result;
+            // Otherwise ...
+            return null;
         }
 
         /// <summary>
@@ -603,12 +1081,12 @@ namespace TS_General_QCmodule
             return geomean;
         }
 
-        private double[][] GetNormalized(double[][] matrix, double[] normFactors)
+        private double[][] GetNormalized(double[][] matrix, string[] filenames, Dictionary<string, double> normFactors)
         {
             double[][] result = new double[matrix.Length][];
             for(int i = 0; i < matrix.Length; i++)
             {
-                result[i] = matrix[i].Select(x => x * normFactors[i]).ToArray();
+                result[i] = matrix[i].Select(x => x * normFactors[filenames[i]]).ToArray();
             }
 
             return result;
@@ -692,7 +1170,7 @@ namespace TS_General_QCmodule
             // Argument vector to pass to R (1-based indexing)
             //       [1] = <string>  matrixPath        - path to the data matrix
             //       [2] = <bool>    hasCovariates     - TRUE = a covariate is included ; FALSE = a covariate is not included
-            //       [3] = <bool>    isSymCor          - TRUE = symmetric correlation plot ; FALSE = Gx heatmap and dendros
+            //       [3] = <bool>    isSymCor          - TRUE = symmetric correlation plot ; FALSE = Gx heatmap and dendros 
             //       [4] = <string>  resultPath        - path to the result .png
             //       [5] = <string>  distanceMetric    - distance method
             //       [6] = <string>  sampleDistMatPath - path to sample distance matrix
@@ -721,7 +1199,11 @@ namespace TS_General_QCmodule
                 annots.AddRange(selected.Value);
                 covariateName = selected.Name;
             }
-            if(VarTypeCategorical == null)
+            if(UserAnnotIsCategorical[comboBox2.SelectedIndex])
+            {
+                VarTypeCategorical = "TRUE";
+            }
+            else
             {
                 VarTypeCategorical = "FALSE";
             }
@@ -772,21 +1254,61 @@ namespace TS_General_QCmodule
 
                     // Get normalized
                     List<double[]> normalized = new List<double[]>(dat0.Item3.Length);
-                    if(HKs != null)
+                    if (IsCrossCodeset)
                     {
-                        int[] indices = GetHKIndices(dat0.Item2, HKs);
-                        double[] normFactors = GetNormFactors(dat0.Item3, indices);
-                        normalized.AddRange(GetNormalized(dat0.Item3, normFactors));
-                        IsNormalized = true;
+                        // Get RLFs to iterate through and normalize separately within each RLF
+                        List<string> rlfs = Lanes.Select(x => x.RLF).Distinct().ToList();
+                        Dictionary<string, double> normFactors = new Dictionary<string, double>(Lanes.Count);
+                        for (int i = 0; i < rlfs.Count; i++)
+                        {
+                            // Get selected HKs
+                            List<Lane> tempLanes = Lanes.Where(x => x.RLF == rlfs[i]).ToList();
+                            GeNormImplementation genorm = new GeNormImplementation(tempLanes);
+                            List<string> select = genorm.SelectedRankedHKs.Where(x => x.Item2)
+                                                                          .Select(x => x.Item1).ToList();
+                            // Get HK data and then norm factors
+                            Tuple<string[], string[], double[][]> tempMat = GetDataMatrixFromLanes(tempLanes, select, false);
+                            Dictionary<string, double> tempNormFactors = 
+                                GetNormFactors(tempMat.Item3, 
+                                               tempMat.Item1, 
+                                               Enumerable.Range(0, select.Count).ToArray());
+                            foreach(KeyValuePair<string, double> p in tempNormFactors)
+                            {
+                                normFactors.Add(p.Key, p.Value);
+                            }
+                        }
+                        normalized.AddRange(GetNormalized(dat0.Item3, dat0.Item1, normFactors));
                     }
                     else
                     {
-                        normalized.AddRange(dat0.Item3);
-                        IsNormalized = false;
+                        int[] indices = null;
+                        if (HKs != null)
+                        {
+                            indices = GetHKIndices(dat0.Item2, Lanes);
+                        }
+                        if (indices != null) // Require only one HK since this is only for visualization (i.e. not providing data)
+                        {
+                            Dictionary<string, double> normFactors = GetNormFactors(dat0.Item3, dat0.Item1, indices);
+                            if (normFactors.Select(x => x.Value).All(x => !double.IsNaN(x) && !double.IsInfinity(x)))
+                            {
+                                normalized.AddRange(GetNormalized(dat0.Item3, dat0.Item1, normFactors));
+                                IsNormalized = true;
+                            }
+                            else
+                            {
+                                normalized.AddRange(dat0.Item3);
+                                IsNormalized = false;
+                            }
+                        }
+                        else
+                        {
+                            normalized.AddRange(dat0.Item3);
+                            IsNormalized = false;
+                        }
                     }
-                    
+                                        
                     // Get datamatrix
-                    double[][] scaled = CenterAndScaleMatrix(normalized.ToArray(), false, 2.5); // Z-score limited at +/- 2.5
+                    double[][] scaled = CenterAndScaleMatrix(normalized.ToArray(), false, 2); // Z-score limited at +/- 2 sd
                     string[] outMat = GetOutMatrix(scaled, dat0.Item1, dat0.Item2, annots.ToArray());
                     string outMatPath = $"{Form1.tmpPath}\\{dateString}_DataMat.csv";
                     File.WriteAllLines(outMatPath, outMat);
@@ -808,7 +1330,7 @@ namespace TS_General_QCmodule
                     string isNormalized = string.Empty;
                     if(IsNormalized)
                     {
-                        isNormalized = "Normalized Couns";
+                        isNormalized = "Normalized Counts";
                     }
                     else
                     {
@@ -852,12 +1374,12 @@ namespace TS_General_QCmodule
 
                 return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"R Clustering and Heatmap Script Failed:\r\n{result}\r\n\r\nInner exception:\r\n{ex.Message}", "R Script Failed", MessageBoxButtons.OK);
                 return null;
             }
-            
+
         }
 
         private void OpenFileAfterSaved(string _path, int delay)
@@ -898,12 +1420,21 @@ namespace TS_General_QCmodule
         {
             if(radioButton1.Checked)
             {
+                button1.Enabled = true;
                 SymCor = true;
                 comboBox1.Enabled = false;
                 label3.Enabled = false;
             }
             else
             {
+                if(comboBox1.SelectedIndex > -1)
+                {
+                    button1.Enabled = true;
+                }
+                else
+                {
+                    button1.Enabled = false;
+                }
                 SymCor = false;
                 comboBox1.Enabled = true;
                 label3.Enabled = true;
@@ -930,21 +1461,42 @@ namespace TS_General_QCmodule
             }
         }
 
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(radioButton2.Checked)
+            {
+                if(comboBox1.SelectedIndex > -1)
+                {
+                    button1.Enabled = true;
+                }
+                else
+                {
+                    button1.Enabled = false;
+                }
+            }
+        }
+
+
         private string VarTypeCategorical { get; set; }
+        private List<bool> UserAnnotIsCategorical { get; set; }
         private void sampleAnnotButton_Click(object sender, EventArgs e)
         {
-            SampleAnnotationAdd addAnnote = new SampleAnnotationAdd(Lanes);
-            if(addAnnote.ShowDialog() == DialogResult.OK)
+            using (SampleAnnotationAdd addAnnote = new SampleAnnotationAdd(Lanes))
             {
-                if(addAnnote.Categorical)
+                if (addAnnote.ShowDialog() == DialogResult.OK)
                 {
-                    VarTypeCategorical = "TRUE";
-                }else
-                {
-                    VarTypeCategorical = "FALSE";
-                }
+                    if (addAnnote.Categorical)
+                    {
+                        UserAnnotIsCategorical.Add(true);
+                    }
+                    else
+                    {
+                        UserAnnotIsCategorical.Add(false);
+                    }
 
-                comboBox2.Items.Add(new Item2(addAnnote.CovariateName, addAnnote.AnnotVals.ToArray()));
+                    comboBox2.Items.Add(new Item2(addAnnote.CovariateName, addAnnote.AnnotVals.ToArray()));
+                    comboBox2.SelectedIndex = comboBox2.Items.Count - 1;
+                }
             }
         }
 

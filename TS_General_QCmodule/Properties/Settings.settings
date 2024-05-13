@@ -27,7 +27,13 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="rHomePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Program Files\R\R-3.3.2\bin\i386\Rscript.exe</Value>
+      <Value Profile="(Default)">Nonsense</Value>
+    </Setting>
+    <Setting Name="StartingFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Nonsense</Value>
+    </Setting>
+    <Setting Name="FirstRun" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

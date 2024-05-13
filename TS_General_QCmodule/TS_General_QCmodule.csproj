@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -25,7 +26,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -51,11 +51,16 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="RegFileParser">
       <HintPath>..\..\..\..\..\Desktop\RegFileParser\RegFileParser\obj\Release\RegFileParser.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
@@ -77,13 +82,13 @@
       <DependentUpon>AddPKCs.cs</DependentUpon>
     </Compile>
     <Compile Include="AnnotItem.cs" />
-    <Compile Include="BarPlotForm.cs">
+    <Compile Include="BarStackItem.cs" />
+    <Compile Include="CalendarDateSelect.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="BarPlotForm.Designer.cs">
-      <DependentUpon>BarPlotForm.cs</DependentUpon>
+    <Compile Include="CalendarDateSelect.Designer.cs">
+      <DependentUpon>CalendarDateSelect.cs</DependentUpon>
     </Compile>
-    <Compile Include="BarStackItem.cs" />
     <Compile Include="CartridgeItem.cs" />
     <Compile Include="CartridgeItem2.cs" />
     <Compile Include="CodeClassItem.cs" />
@@ -117,6 +122,12 @@
     </Compile>
     <Compile Include="DataGridViewDisableButtonCell.cs" />
     <Compile Include="DataGridViewDisableButtonColumn.cs" />
+    <Compile Include="DateSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DateSelect.Designer.cs">
+      <DependentUpon>DateSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="DBDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -144,12 +155,6 @@
     <Compile Include="EnterRLFs.Designer.cs">
       <DependentUpon>EnterRLFs.cs</DependentUpon>
     </Compile>
-    <Compile Include="FilePicker.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FilePicker.Designer.cs">
-      <DependentUpon>FilePicker.cs</DependentUpon>
-    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -159,6 +164,8 @@
     <Compile Include="G2EdReader.cs" />
     <Compile Include="G2FidLocRawReader.cs" />
     <Compile Include="G2zHeightReader.cs" />
+    <Compile Include="GenericDSPCodeSumTable.cs" />
+    <Compile Include="GeNormImplementation.cs" />
     <Compile Include="GuiCursor.cs" />
     <Compile Include="HeatmapHelper.cs">
       <SubType>Form</SubType>
@@ -171,7 +178,27 @@
     <Compile Include="HybCodeTarget.cs" />
     <Compile Include="LabWorksheetReader.cs" />
     <Compile Include="Lane.cs" />
+    <Compile Include="LaneFilter.cs" />
+    <Compile Include="LaneSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LaneSelect.Designer.cs">
+      <DependentUpon>LaneSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MflatArgs.cs" />
+    <Compile Include="MflatForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MflatForm.Designer.cs">
+      <DependentUpon>MflatForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="mtx.cs" />
+    <Compile Include="PCAForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PCAForm.Designer.cs">
+      <DependentUpon>PCAForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PlateViewCell.cs" />
     <Compile Include="Probe.cs" />
     <Compile Include="ProbeKitConfigCollector.cs" />
@@ -179,9 +206,20 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DspPlateReport.cs" />
     <Compile Include="Rcc.cs" />
-    <Compile Include="RHeatmap2Run.cs" />
+    <Compile Include="RDownloadLink.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RDownloadLink.Designer.cs">
+      <DependentUpon>RDownloadLink.cs</DependentUpon>
+    </Compile>
     <Compile Include="RlfClass.cs" />
     <Compile Include="RlfRecord.cs" />
+    <Compile Include="RlfSelectForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RlfSelectForm.Designer.cs">
+      <DependentUpon>RlfSelectForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="SampleAnnotationAdd.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -238,6 +276,18 @@
     <Compile Include="testForm3.Designer.cs">
       <DependentUpon>testForm3.cs</DependentUpon>
     </Compile>
+    <Compile Include="TestForm4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TestForm4.Designer.cs">
+      <DependentUpon>TestForm4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TEST_PCA_FIGURE.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TEST_PCA_FIGURE.Designer.cs">
+      <DependentUpon>TEST_PCA_FIGURE.cs</DependentUpon>
+    </Compile>
     <Compile Include="TroubleshootingTable.cs" />
     <Compile Include="UsefulLists.cs" />
     <Compile Include="YvsZ.cs" />
@@ -250,8 +300,8 @@
     <EmbeddedResource Include="AddPKCs.resx">
       <DependentUpon>AddPKCs.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="BarPlotForm.resx">
-      <DependentUpon>BarPlotForm.cs</DependentUpon>
+    <EmbeddedResource Include="CalendarDateSelect.resx">
+      <DependentUpon>CalendarDateSelect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CodeClassSelectDiaglog.resx">
       <DependentUpon>CodeClassSelectDiaglog.cs</DependentUpon>
@@ -265,6 +315,9 @@
     <EmbeddedResource Include="CustomReportForm.resx">
       <DependentUpon>CustomReportForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DateSelect.resx">
+      <DependentUpon>DateSelect.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DspCodeSumPrefsDialog.resx">
       <DependentUpon>DspCodeSumPrefsDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -277,14 +330,20 @@
     <EmbeddedResource Include="EnterRLFs.resx">
       <DependentUpon>EnterRLFs.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FilePicker.resx">
-      <DependentUpon>FilePicker.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="HeatmapHelper.resx">
       <DependentUpon>HeatmapHelper.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LaneSelect.resx">
+      <DependentUpon>LaneSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MflatForm.resx">
+      <DependentUpon>MflatForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PCAForm.resx">
+      <DependentUpon>PCAForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -296,6 +355,12 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="RDownloadLink.resx">
+      <DependentUpon>RDownloadLink.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RlfSelectForm.resx">
+      <DependentUpon>RlfSelectForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SampleAnnotationAdd.resx">
       <DependentUpon>SampleAnnotationAdd.cs</DependentUpon>
     </EmbeddedResource>
@@ -316,6 +381,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="TestForm2.resx">
       <DependentUpon>TestForm2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TestForm4.resx">
+      <DependentUpon>TestForm4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TEST_PCA_FIGURE.resx">
+      <DependentUpon>TEST_PCA_FIGURE.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ZipPasswordEnter.resx">
       <DependentUpon>ZipPasswordEnter.cs</DependentUpon>
@@ -350,6 +421,7 @@
     <EmbeddedResource Include="Properties\CodeClassTranslator.txt" />
     <EmbeddedResource Include="Resources\Fluidics_Traces.docx" />
     <EmbeddedResource Include="Resources\Fluidics Schematic.pdf" />
+    <None Include="Resources\AgglomAndHeatmap.R" />
     <None Include="Resources\n6_vRCC16.rlf" />
     <EmbeddedResource Include="Resources\Quick Start Guide - nCounter Troubleshooting Tool.docx" />
     <None Include="Resources\StatusHelp_32x.png" />
@@ -357,14 +429,20 @@
     <None Include="Resources\Cancel_12x.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="alglib.net">
-      <Version>3.16.0</Version>
+    <PackageReference Include="Accord">
+      <Version>3.8.0</Version>
     </PackageReference>
-    <PackageReference Include="DotNetZip">
-      <Version>1.15.0</Version>
+    <PackageReference Include="Accord.Math">
+      <Version>3.8.0</Version>
+    </PackageReference>
+    <PackageReference Include="Accord.Statistics">
+      <Version>3.8.0</Version>
     </PackageReference>
     <PackageReference Include="MathNet.Numerics">
       <Version>4.14.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.WindowsAPICodePack-Shell">
+      <Version>1.1.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
@@ -425,11 +503,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Folder_32x.png" />
-    <None Include="Resources\Document_32x.png" />
     <None Include="Resources\Cancel_32x.png" />
-    <Content Include="TextFile2.txt" />
+    <None Include="Resources\DownloadFolder_16x_32.bmp" />
+    <None Include="Resources\FileImport1.jpg" />
+    <None Include="Resources\fileimport5.png" />
+    <None Include="Resources\fileImport6.jpg" />
+    <None Include="Resources\Open_32x.png" />
+    <None Include="Resources\calendar.png" />
     <None Include="Resources\StatusHelp_16x.png" />
-    <Content Include="TextFile1.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Run history collection ideas.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

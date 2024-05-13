@@ -17,8 +17,8 @@ namespace TS_General_QCmodule
             zObs = GetZObs(mtxList) ?? null;
             zObsAvgs = GetZObsAvg(mtxList) ?? null;
             focVsZ = GetFocVsZ(sdPath) ?? null;
-            sdZMax = GetSdZMax(focVsZ);
-            ztaught = GetZtaught(regPath);
+            sdZMax = focVsZ != null ? GetSdZMax(focVsZ) : -1;
+            ztaught = regPath != null ? GetZtaught(regPath) : -1;
         }
 
         public double[][] zObs { get; set; }
@@ -79,7 +79,6 @@ namespace TS_General_QCmodule
             }
             catch(Exception er)
             {
-                MessageBox.Show($"{Path.GetFileName(path)} could not be opened for the following reason:\r\n\r\n{er.Message}", "File Open Error", MessageBoxButtons.OK);
                 return null;
             }
 
@@ -106,14 +105,13 @@ namespace TS_General_QCmodule
                 }
                 else
                 {
-                    return 0;
+                    return -1;
                 }
             }
             else
             {
-                return 0;
+                return -1;
             }
-
         }
 
         private double GetZtaught(string path)
@@ -130,7 +128,6 @@ namespace TS_General_QCmodule
             }
             catch(Exception er)
             {
-                MessageBox.Show($"Taught Z position could not be determined due to the following excpetion:\r\n\r\n{er.Message}", "Registry Parse Error", MessageBoxButtons.OK);
                 return -1;
             }
         }

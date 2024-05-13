@@ -1,0 +1,47 @@
+﻿I. Background worker(s) to collection for Sprint, Gen2
+	1. Separate worker and "database" per nCounter type? Or just include a Instrument type columns -> do Sprint and Gen2, Gen2.5 fields overlap enough?
+	2. Launch based on what?
+		a. Just MTX (would miss when a Sprint run did not scan and would miss at least CartID from RCCs when no MTX imported)
+		b. MTX and RCC (would miss when a Sprint run did not scan; including RCCs would have a lot of entries with partial info)
+		c. MTX + RCC + Sprint RunLogs folder (Need to pull run logs folder when no MTX folder present)
+	3. Use Backround worker
+		a. How to deal with application closing before worker process finished (how often would this occur?)	
+			i. Program starts invisible MainForm that starts Form1. Form1 closes when user attempts to close App. Main form checks if any background workers
+				running and stays open until all are closed, then closes out application
+	4. Database and what to collect:
+		a. Each entry is a cartridge
+		b. For each Sprint logs found
+			i.	Find run history and collect reagent barcodes, cart barcode, instrument serial number, # failed lanes
+				- Below threshold FOV counted when BD below X
+				- Below threshold POS when BD below X
+			ii.	If no history present - look for RunLogs/MTX and collect above for the latest run
+		c. For each Gen2/Gen2.5 logs
+
+			i.	Look for MTX and collect serial number, cart barcode if known, and:
+				-	FOV below threshold when BD below X
+				-	POS below threshold when BD below X
+			ii.	Look for errors in ScanController log? Collect ErrorRecovery?
+	5.	Backgound worker notes:
+		a.	BackroundWorker.DoWork EventHandler is where work process goes
+		b.	StartAsync_Event  event handler checks for IsBusy then runs RunWorkerAsync which calls BackgroundWorker_DoWork handler
+	6.	Where/how is data collected (simple table in resources? Actual database?)
+
+II.	How is this data pushed/pulled from server.
+	1.	When
+		a.	On activation of background worker if User's logged onto VPN/local intranet
+		b.	Whenever user logs onto VPN/local intranet
+	2.	How? 
+		a.	Application pushes?
+		b.	How to push to a server without setting off alarms
+		c.	Security
+		d.	What interface - Custom built -> Need to build a serialize deserialize class(es)
+	3.	Where?
+		a.	What resource could be used to stick all the data on
+			i.	Needs to be accessible to stake holders
+			ii.	Needs to be able to provide to a Dashboard service or at least Excel table at minimum
+			iii.What do we even have available to us.
+III.Output
+	1.	Minimal - Excel table
+	2.	Searchable database
+	3.	Dashboard
+	4.	How updated?	Would database and app managing be on component and push/pull to output be a separate component?

@@ -903,9 +903,9 @@ namespace TS_General_QCmodule
                 while(!sr.EndOfStream)
                 {
                     line = sr.ReadLine();
-                    if (line.Substring(22, 2) != "1,")
+                    string[] bits = line.Split(',');
+                    if (bits[1] != "1")
                     {
-                        string[] bits = line.Split(',');
                         int valve = int.Parse(bits[1]);
                         lanePressures.Add(Tuple.Create(valveToLane[valve], double.Parse(bits[2])));
                         break;
@@ -931,7 +931,7 @@ namespace TS_General_QCmodule
                 }
             }
         }
-
+        
         public bool[] lanePressPass { get; set; }
         private void GetLanePressPass()
         {

@@ -25,11 +25,35 @@ namespace TS_General_QCmodule
         public SlatForm(List<Lane> _lanes)
         {
             InitializeComponent();
+
+            if(_lanes.Count > 12)
+            {
+                MessageBox.Show($"SLAT is limited to only 12 lanes but {_lanes.Count} were selected. Cartridges may not be properly distinguished from each other by the tool thus more than 12 lanes are associated with the selected cartridge. Try removing all lanes and then loading one cartridge-worth of lanes at a time.", "More than 12 Lanes Selected", MessageBoxButtons.OK);
+                this.DialogResult = DialogResult.Cancel;
+                this.Close();
+                return;
+            }
+
             this.Size = new Size(Form1.maxWidth, Form1.maxHeight);
 
             theseRunLanes = _lanes;
-            GetSprintRunDirectorties(theseRunLanes[0]);
+            //try
+            //{
+                GetSprintRunDirectorties(theseRunLanes[0]);
+            //}
+            //catch(Exception er)
+            //{
+            //    if(er.Message.StartsWith("RunLog"))
+            //    {
+            //        MessageBox.Show("Error:\r\n\r\nRunLogs could not be found so the SLAT cannot be run. If MTX files are present, run those through the troubleshooting tool table generator or create the three individual tables for troubleshooting (Code Summary, FOV lane averages, String Classes).", "Run Logs Missing", MessageBoxButtons.OK);
+            //        return;
+            //    }
+            //}
             thisSlatClass = new SlatClass(theseRunLanes, runLogPath);
+            if(thisSlatClass.CodeSumFail)
+            {
+                return;
+            }
             thisRunLog = thisSlatClass.theseRunLogs;
             if(thisRunLog.fail)
             {
@@ -53,122 +77,34 @@ namespace TS_General_QCmodule
                 }
                 GetCodeSumChart1();
                 GetCodeSumChart2();
-                chartn = 0;
-                chartX = gv2.Width + 10;
-                int h = Size.Height - 55;
-                chartH = (h / 5) - 2;
-                chartW = chartH * 2;
-                for (int i = 0; i < 2; i++)
-                {
-                    Panel panel0 = new Panel();
-                    panel0.Location = new Point(chartX, chartn * chartH);
-                    panel0.Size = new Size(chartW, chartH);
-                    panel0.BringToFront();
-                    tabControl1.TabPages[2].Controls.Add(panel0);
-
-                    if (i == 0)
-                    {
-                        Chart chart = OneColorChart("FidCnt", false);
-                        panel0.Controls.Add(chart);
-                        panel0.Tag = 0;
-                    }
-                    else
-                    {
-                        Chart chart = OneColorChart("RepCnt", false);
-                        panel0.Controls.Add(chart);
-                        panel0.Tag = 1;
-                    }
-
-                    ComboBox box = new ComboBox();
-                    box.Location = new Point((int)(panel0.Width * 0.33), (int)(panel0.Height * 0.01));
-                    box.Size = new Size(100, 22);
-                    for (int j = 0; j < SlatClass.singleMets.Length; j++)
-                    {
-                        box.Items.Add(SlatClass.singleMets[j]);
-                    }
-                    box.DropDownStyle = ComboBoxStyle.DropDownList;
-                    if (i == 0)
-                    {
-                        box.SelectedItem = "FidCnt";
-                    }
-                    else
-                    {
-                        box.SelectedItem = "RepCnt";
-                    }
-
-                    panel0.Controls.Add(box);
-                    box.BringToFront();
-                    box.SelectedIndexChanged += new EventHandler(OneColorMet_IndexChanged);
-                }
-                for (int i = 0; i < fovMetMetDefault.Length; i++)
-                {
-                    Panel panel1 = new Panel();
-                    panel1.Location = new Point(chartX, chartn * chartH);
-                    panel1.Size = new Size(chartW, chartH);
-                    panel1.BringToFront();
-                    tabControl1.TabPages[2].Controls.Add(panel1);
-
-                    Chart chart = fourColorChart(fovMetMetDefault[i]);
-                    panel1.Controls.Add(chart);
-                    panel1.Tag = "chart";
-
-                    ComboBox box = new ComboBox();
-                    box.Location = new Point((int)(panel1.Width * 0.33), (int)(panel1.Height * 0.01));
-                    box.Size = new Size(100, 22);
-                    for (int j = 0; j < thisSlatClass.fourColorMets.Count; j++)
-                    {
-                        box.Items.Add(thisSlatClass.fourColorMets[j]);
-                    }
-                    box.DropDownStyle = ComboBoxStyle.DropDownList;
-                    box.SelectedItem = fovMetMetDefault[i];
-                    panel1.Controls.Add(box);
-                    box.BringToFront();
-                    box.SelectedIndexChanged += new EventHandler(FourColor_IndexChanged);
-                }
-                chartn = 0;
-                chartX = gv3.Width + 2;
-                chartH = new int[] { (h / 5) - 2, 250 }.Min();
-                int w = Size.Width - 40;
-                chartW = new int[] { w - gv3.Width - 2, chartH * 2 }.Min();
-                for (int i = 0; i < classes.Length; i++)
-                {
-                    Panel panel = new Panel();
-                    panel.Location = new Point(chartX, chartn * chartH);
-                    panel.Size = new Size(chartW, chartH);
-                    panel.BringToFront();
-                    tabControl1.TabPages[3].Controls.Add(panel);
-
-                    Chart chart = OneColorChart(classes[i], true);
-                    panel.Tag = i;
-                    panel.Controls.Add(chart);
-
-                    ComboBox box = new ComboBox();
-                    box.Location = new Point((int)(panel.Width * 0.25), (int)(panel.Height * 0.03));
-                    box.Size = new Size(175, 22);
-                    for (int j = 0; j < thisSlatClass.classRowNames.Count; j++)
-                    {
-                        box.Items.Add(thisSlatClass.classRowNames[j]);
-                    }
-                    box.DropDownStyle = ComboBoxStyle.DropDownList;
-                    box.SelectedItem = classes[i];
-                    panel.Controls.Add(box);
-                    box.BringToFront();
-                    box.SelectedIndexChanged += new EventHandler(OneColorClass_IndexChanged);
-                }
+                
+                ScanIncomplete = new bool[len];
                 for (int i = 0; i < len; i++)
                 {
+                    if (theseRunLanes[i].thisMtx.fovCount == theseRunLanes[i].thisMtx.fovMetArray.Length)
+                    {
+                        ScanIncomplete[i] = true;
+                    }
+                    else
+                    {
+                        ScanIncomplete[i] = false;
+                    }
+
                     GetLanePage(i);
                 }
 
                 GetPressures();
-                GetLanePressures();
+                if(thisRunLog.lanePressures.Count > 1)
+                {
+                    GetLanePressures();
+                }
                 GetMessageLogButton();
             }
 
             GetFlagSummary();
             if(flagList.Length > 0)
             {
-                DBDataGridView gv03 = new DBDataGridView();
+                DBDataGridView gv03 = new DBDataGridView(true);
                 gv03.Location = new Point(gv02.Location.X, gv02.Location.Y + gv02.Height + 22);
                 gv03.Size = new Size(933, 30 + (22 * flagList.Count()));
                 gv03.ColumnHeadersHeight = 28;
@@ -193,6 +129,8 @@ namespace TS_General_QCmodule
 
             this.FormClosed += new FormClosedEventHandler(This_FormClosed);
             fail = false;
+
+            this.WindowState = FormWindowState.Maximized;
         }
 
         private bool fail { get; set; }
@@ -210,13 +148,13 @@ namespace TS_General_QCmodule
             string mtxPath = tempPath.Substring(0, tempPath.LastIndexOf('\\'));
             if (!Directory.Exists(mtxPath))
             {
-                throw new Exception($"MTX directory path was extracted incorrectly:\r\n\t{mtxPath}");
+                throw new Exception($"MTX directory path was extracted incorrectly:\r\n\t{mtxPath}\r\nRunLogs could not be loaded");
             }
             string tempDir = mtxPath.Substring(0, mtxPath.LastIndexOf('\\'));
             runLogPath = $"{tempDir}\\RunLogs";
             if (!Directory.Exists(runLogPath))
             {
-                throw new Exception($"RunLog directory path was extracted incorrectly:\r\n\t{runLogPath}");
+                throw new Exception($"RunLog directory path was extracted incorrectly:\r\n\t{runLogPath}\r\nRunLogs could not be loaded");
             }
         }
 
@@ -247,6 +185,7 @@ namespace TS_General_QCmodule
             }
         }
 
+        #region Cartridge Summary Page
         private double[] posA { get; set; }
         private double[] posAvsPctCnt { get; set; }
         private double[] posAvg { get; set; }
@@ -268,7 +207,7 @@ namespace TS_General_QCmodule
                 }
                 for (int i = 0; i < len; i++)
                 {
-                    rccSum[i] = thisSlatClass.runLanes[i].probeContent.Select(x => double.Parse(x[5])).Sum();
+                    rccSum[i] = thisSlatClass.runLanes[i].probeContent.Select(x => double.Parse(x[Lane.Count])).Sum();
                     rccVsPctCnt[i] = rccSum[i] / thisSlatClass.runLanes[i].pctCounted;
                 }
             }
@@ -276,15 +215,10 @@ namespace TS_General_QCmodule
             {
                 if(thisSlatClass.isPSRLF)
                 {
-                    if(posAvg == null)
-                    {
-                        posAvg = new double[len];
-                    }
                     if(posAvgVsPctCnt == null)
                     {
                         posAvgVsPctCnt = new double[len];
                     }
-
                     posAvg = thisSlatClass.psPOSavgs;
                     for(int i = 0; i < len; i++)
                     {
@@ -293,20 +227,35 @@ namespace TS_General_QCmodule
                 }
                 else
                 {
-                    if (posA == null)
+                    if(thisSlatClass.isDspRlf)
                     {
-                        posA = new double[len];
+                        if (posAvgVsPctCnt == null)
+                        {
+                            posAvgVsPctCnt = new double[len];
+                        }
+                        posAvg = thisSlatClass.dspPOSavgs;
+                        for (int i = 0; i < len; i++)
+                        {
+                            posAvgVsPctCnt[i] = posAvg[i] / thisSlatClass.runLanes[i].pctCounted;
+                        }
                     }
-                    if (posAvsPctCnt == null)
+                    else
                     {
-                        posAvsPctCnt = new double[len];
-                    }
-                    for (int i = 0; i < len; i++)
-                    {
-                        posA[i] = thisSlatClass.runLanes[i].probeContent.Where(x => x[1].Equals("Positive") && x[3].Equals("POS_A(128)"))
-                                                                        .Select(x => double.Parse(x[5]))
-                                                                        .FirstOrDefault();
-                        posAvsPctCnt[i] = posA[i] / thisSlatClass.runLanes[i].pctCounted;
+                        if (posA == null)
+                        {
+                            posA = new double[len];
+                        }
+                        if (posAvsPctCnt == null)
+                        {
+                            posAvsPctCnt = new double[len];
+                        }
+                        for (int i = 0; i < len; i++)
+                        {
+                            posA[i] = thisSlatClass.runLanes[i].probeContent.Where(x => x[Lane.CodeClass].Equals("Positive") && x[Lane.Name].Equals("POS_A(128)"))
+                                                                            .Select(x => double.Parse(x[5]))
+                                                                            .FirstOrDefault();
+                            posAvsPctCnt[i] = posA[i] / thisSlatClass.runLanes[i].pctCounted;
+                        }
                     }
                 }
             }
@@ -338,9 +287,9 @@ namespace TS_General_QCmodule
         private DBDataGridView gv0 { get; set; }
         private void GetSummaryGV0()
         {
-            gv0 = new DBDataGridView();
+            gv0 = new DBDataGridView(true);
             gv0.Location = home;
-            gv0.Size = new Size(483, 201);
+            gv0.Size = new Size(483, 223);
             gv0.Font = bigFont;
             gv0.ReadOnly = true;
             gv0.ColumnHeadersVisible = false;
@@ -368,11 +317,13 @@ namespace TS_General_QCmodule
             if (thisRunLog.runHistory != null)
             {
                 gv0.Rows.Add(new string[] { "Runs Since Reagent Change", runCount.ToString() });
-                gv0.Rows.Add(new string[] { "Last Run Date", thisRunLog.runHistory[thisRunLog.runHistory.Count - 1][0] });
+                gv0.Rows.Add(new string[] { "Run Date", theseRunLanes[0].Date });
+                gv0.Rows.Add(new string[] { "Previous Run Date", thisRunLog.runHistory[thisRunLog.runHistory.Count - 2][0] });
             }
             else
             {
                 gv0.Rows.Add(new string[] { "Runs Since Reagent Change", "Unknown" });
+                gv0.Rows.Add(new string[] { "Run Date", theseRunLanes[0].Date });
                 gv0.Rows.Add(new string[] { "Last Run Date", "Unknown" });
             }
 
@@ -434,7 +385,7 @@ namespace TS_General_QCmodule
         private DBDataGridView gv01 { get; set; }
         private void GetSummaryGV01()
         {
-            gv01 = new DBDataGridView();
+            gv01 = new DBDataGridView(true);
             gv01.Location = new Point(1, gv0.Height + 20);
             gv01.Size = new Size(565, 91);
             gv01.Font = bigFont;
@@ -468,7 +419,7 @@ namespace TS_General_QCmodule
             }
             else
             {
-                if(thisSlatClass.isPSRLF)
+                if(thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
                 {
                     double[] posAvgStats = new double[] { Math.Round(posAvg.Average(), 1), Math.Round(MathNet.Numerics.Statistics.ArrayStatistics.StandardDeviation(posAvg), 1) };
                     gv01.Rows.Add("POS_Avg", posAvgStats[0].ToString(), posAvgStats[1].ToString(), Math.Round(100 * posAvgStats[1] / posAvgStats[0], 1).ToString());
@@ -490,7 +441,7 @@ namespace TS_General_QCmodule
         private DBDataGridView gv02 { get; set; }
         private void GetSummaryG02()
         {
-            gv02 = new DBDataGridView();
+            gv02 = new DBDataGridView(true);
             gv02.Location = new Point(1, gv01.Location.Y + gv01.Height + 20);
             gv02.Size = new Size(302 + (100 * len), 201);
             gv02.Font = bigFont;
@@ -503,11 +454,12 @@ namespace TS_General_QCmodule
                 col = new DataGridViewTextBoxColumn();
                 col.Width = 100;
                 col.HeaderText = thisSlatClass.runLanes[i].LaneID.ToString();
+                col.SortMode = DataGridViewColumnSortMode.NotSortable;
                 gv02.Columns.Add(col);
             }
 
-            gv02.Rows.Add(thisSlatClass.headerMatrix[10]);
-            gv02.Rows.Add(thisSlatClass.headerMatrix[6]);
+            gv02.Rows.Add(thisSlatClass.headerMatrix[11]);
+            gv02.Rows.Add(thisSlatClass.headerMatrix[8]);
             if (thisSlatClass.isRccRlf)
             {
                 gv02.Rows.Add(rccSum.Select(x => x.ToString()).ToArray());
@@ -515,7 +467,7 @@ namespace TS_General_QCmodule
             }
             else
             {
-                if(thisSlatClass.isPSRLF)
+                if(thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
                 {
                     gv02.Rows.Add(posAvg.Select(x => x.ToString()).ToArray());
                     gv02.Rows.Add(posAvgVsPctCnt.Select(x => Math.Round(x, 1).ToString()).ToArray());
@@ -553,14 +505,14 @@ namespace TS_General_QCmodule
             }
             else
             {
-                if(thisSlatClass.isPSRLF)
+                if(thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
                 {
-                    gv02.Rows[2].HeaderCell.Value = "POA_Avg";
+                    gv02.Rows[2].HeaderCell.Value = "POS_Avg";
                     gv02.Rows[3].HeaderCell.Value = "POS_Avg/PctCnt";
                 }
                 else
                 {
-                    gv02.Rows[2].HeaderCell.Value = "POA_A";
+                    gv02.Rows[2].HeaderCell.Value = "POS_A";
                     gv02.Rows[3].HeaderCell.Value = "POS_A/PctCnt";
                 }
             }
@@ -571,25 +523,27 @@ namespace TS_General_QCmodule
 
             tabControl1.TabPages[0].Controls.Add(gv02);
         }
+        #endregion
 
+        #region Code Summary Page
         DBDataGridView gv1 { get; set; }
         private void GetCodeSum()
         {
-            gv1 = new DBDataGridView();
+            gv1 = new DBDataGridView(true);
             gv1.Click += new EventHandler(GV_Click);
             gv1.Name = "gv1";
             gv1.ReadOnly = true;
             gv1.AllowUserToResizeColumns = true;
             gv1.RowHeadersVisible = true;
-            List<Lane> laneRef = thisSlatClass.runLanes;
-            for (int i = 0; i < laneRef.Count; i++)
+            List<Lane> Lanes = thisSlatClass.runLanes;
+            for (int i = 0; i < Lanes.Count; i++)
             {
                 DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-                col.HeaderText = laneRef[i].fileName;
+                col.HeaderText = Lanes[i].fileName;
                 col.Width = 82;
                 gv1.Columns.Add(col);
             }
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < SlatClass.headerLength; i++)
             {
                 gv1.Rows.Add(thisSlatClass.headerMatrix[i].Select(x => (object)x).ToArray());
                 gv1.Rows[i].HeaderCell.Value = SlatClass.headerNames[i];
@@ -599,12 +553,12 @@ namespace TS_General_QCmodule
             for (int i = 0; i < len1; i++)
             {
                 gv1.Rows.Add(thisSlatClass.codeSummary[i].Select(x => (object)x).ToArray());
-                gv1.Rows[i + 12].HeaderCell.Value = thisSlatClass.codeSumRowNames[i];
-                gv1.Rows[i + 12].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                gv1.Rows[i + SlatClass.headerLength].HeaderCell.Value = thisSlatClass.codeSumRowNames[i];
+                gv1.Rows[i + SlatClass.headerLength].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
             }
             gv1.RowHeadersWidth = 110;
             gv1.Location = home;
-            gv1.Size = new Size(113 + (len * 82), 665);
+            gv1.Size = new Size(113 + (len * 82), 686);
             tabControl1.TabPages[1].Controls.Add(gv1);
         }
 
@@ -683,7 +637,7 @@ namespace TS_General_QCmodule
             area2.AxisX.LabelStyle.Font = littleFont;
             area2.AxisX.LabelStyle.IsStaggered = false;
             area2.AxisY.LabelStyle.Font = littleFont;
-            if (thisSlatClass.isPSRLF)
+            if (thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
             {
                 chart2.Titles.Add("POS_Avg; POS_Avg/PctFovCounted");
                 chart2.Text = "POS_Avg vs Pct Cnt";
@@ -718,7 +672,7 @@ namespace TS_General_QCmodule
                 Series pos = new Series();
                 pos.ChartArea = "area2";
                 pos.ChartType = SeriesChartType.Column;
-                if(thisSlatClass.isPSRLF)
+                if(thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
                 {
                     pos.Name = "POS_Avg";
                     pos.Points.DataBindXY(laneLabels, posAvg);
@@ -733,7 +687,7 @@ namespace TS_General_QCmodule
                 Series posVsPctCount = new Series();
                 posVsPctCount.ChartArea = "area2";
                 posVsPctCount.ChartType = SeriesChartType.Column;
-                if (thisSlatClass.isPSRLF)
+                if (thisSlatClass.isPSRLF || thisSlatClass.isDspRlf)
                 {
                     posVsPctCount.Name = "POS_Avg/% Ct";
                     posVsPctCount.Points.DataBindXY(laneLabels, posAvgVsPctCnt);
@@ -748,11 +702,20 @@ namespace TS_General_QCmodule
             }
             panel2.Controls.Add(chart2);
         }
+        #endregion
 
+        #region FOV Metric Lane Averages
         DBDataGridView gv2 { get; set; }
         private void GetFOVmetAvgs()
         {
-            gv2 = new DBDataGridView();
+            tabControl1.TabPages[3].Size = tabControl1.ClientSize;
+
+            Panel metPanel = new Panel();
+            metPanel.AutoScroll = true;
+            metPanel.Size = new Size(131 + 82 * len, tabControl1.TabPages[3].ClientSize.Height - 10);
+            metPanel.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            metPanel.BackColor = SystemColors.Control;
+            gv2 = new DBDataGridView(true);
             gv2.Tag = 0;
             gv2.Click += new EventHandler(GV_Click);
             gv2.Name = "gv2";
@@ -767,7 +730,7 @@ namespace TS_General_QCmodule
                 col.Width = 82;
                 gv2.Columns.Add(col);
             }
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < SlatClass.headerLength; i++)
             {
                 gv2.Rows.Add(thisSlatClass.headerMatrix[i].Select(x => (object)x).ToArray());
                 gv2.Rows[i].HeaderCell.Value = SlatClass.headerNames[i];
@@ -777,17 +740,86 @@ namespace TS_General_QCmodule
             for (int i = 0; i < len1; i++)
             {
                 gv2.Rows.Add(thisSlatClass.laneAvgMatrix[i].Select(x => (object)x).ToArray());
-                gv2.Rows[i + 12].HeaderCell.Value = thisSlatClass.laneAvgRowNames[i];
-                gv2.Rows[i + 12].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                gv2.Rows[i + SlatClass.headerLength].HeaderCell.Value = thisSlatClass.laneAvgRowNames[i];
+                gv2.Rows[i + SlatClass.headerLength].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
             }
             gv2.RowHeadersWidth = 110;
-            gv2.Dock = DockStyle.Fill;
-            Panel panel1 = new Panel();
-            panel1.Location = home;
-            panel1.Tag = "1";
-            panel1.Size = new Size(130 + (len * 82), Size.Height - 83);
-            panel1.Controls.Add(gv2);
-            tabControl1.TabPages[2].Controls.Add(panel1);
+            gv2.Size = new Size(112 + 82 * len, 26 + (22 * (SlatClass.headerLength + thisSlatClass.laneAvgMatrix.Count)));
+            metPanel.Controls.Add(gv2);
+            tabControl1.TabPages[2].Controls.Add(metPanel);
+
+            chartn = 0;
+            chartX = metPanel.Width + 10;
+            int h = Size.Height - 55;
+            chartH = (h / 5) - 2;
+            chartW = chartH * 2;
+            for (int i = 0; i < 2; i++)
+            {
+                Panel panel0 = new Panel();
+                panel0.Location = new Point(chartX, chartn * chartH);
+                panel0.Size = new Size(chartW, chartH);
+                panel0.BringToFront();
+                tabControl1.TabPages[2].Controls.Add(panel0);
+
+                if (i == 0)
+                {
+                    Chart chart = OneColorChart("FidCnt", false);
+                    panel0.Controls.Add(chart);
+                    panel0.Tag = 0;
+                }
+                else
+                {
+                    Chart chart = OneColorChart("RepCnt", false);
+                    panel0.Controls.Add(chart);
+                    panel0.Tag = 1;
+                }
+
+                ComboBox box = new ComboBox();
+                box.Location = new Point((int)(panel0.Width * 0.33), (int)(panel0.Height * 0.01));
+                box.Size = new Size(100, 22);
+                for (int j = 0; j < SlatClass.singleMets.Length; j++)
+                {
+                    box.Items.Add(SlatClass.singleMets[j]);
+                }
+                box.DropDownStyle = ComboBoxStyle.DropDownList;
+                if (i == 0)
+                {
+                    box.SelectedItem = "FidCnt";
+                }
+                else
+                {
+                    box.SelectedItem = "RepCnt";
+                }
+
+                panel0.Controls.Add(box);
+                box.BringToFront();
+                box.SelectedIndexChanged += new EventHandler(OneColorMet_IndexChanged);
+            }
+            for (int i = 0; i < fovMetMetDefault.Length; i++)
+            {
+                Panel panel1 = new Panel();
+                panel1.Location = new Point(chartX, chartn * chartH);
+                panel1.Size = new Size(chartW, chartH);
+                panel1.BringToFront();
+                tabControl1.TabPages[2].Controls.Add(panel1);
+
+                Chart chart = fourColorChart(fovMetMetDefault[i]);
+                panel1.Controls.Add(chart);
+                panel1.Tag = "chart";
+
+                ComboBox box = new ComboBox();
+                box.Location = new Point((int)(panel1.Width * 0.33), (int)(panel1.Height * 0.01));
+                box.Size = new Size(100, 22);
+                for (int j = 0; j < thisSlatClass.fourColorMets.Count; j++)
+                {
+                    box.Items.Add(thisSlatClass.fourColorMets[j]);
+                }
+                box.DropDownStyle = ComboBoxStyle.DropDownList;
+                box.SelectedItem = fovMetMetDefault[i];
+                panel1.Controls.Add(box);
+                box.BringToFront();
+                box.SelectedIndexChanged += new EventHandler(FourColor_IndexChanged);
+            }
         }
 
         int chartX { get; set; }
@@ -906,42 +938,89 @@ namespace TS_General_QCmodule
             panel.Controls.Add(box);
             box.BringToFront();
         }
+        #endregion
 
+        #region String Classes PAge
         DBDataGridView gv3 { get; set; }
         private void GetRepClassSums()
         {
-            gv3 = new DBDataGridView();
+            tabControl1.TabPages[3].Size = tabControl1.ClientSize;
+            
+            // Add stringClass table
+            Panel classPanel = new Panel();
+            classPanel.AutoScroll = true;
+            classPanel.Size = new Size(241 + 82 * len, tabControl1.TabPages[3].ClientSize.Height - 10);
+            classPanel.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            classPanel.BackColor = SystemColors.Control;
+            gv3 = new DBDataGridView(true);
             gv3.Name = "gv3";
             gv3.Click += new EventHandler(GV_Click);
             gv3.ReadOnly = true;
             gv3.AllowUserToResizeColumns = true;
             gv3.RowHeadersVisible = true;
-            List<Lane> laneRef = thisSlatClass.runLanes;
-            for (int i = 0; i < laneRef.Count; i++)
+            List<Lane> Lanes = thisSlatClass.runLanes;
+            for (int i = 0; i < Lanes.Count; i++)
             {
                 DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-                col.HeaderText = laneRef[i].fileName;
+                col.HeaderText = Lanes[i].fileName;
                 col.Width = 82;
                 gv3.Columns.Add(col);
             }
-            for (int i = 0; i < 12; i++)
+            int[] inds = new int[] { 0, 1, 3, 8, 10, 11, 12};
+            for (int i = 0; i < inds.Length; i++)
             {
-                gv3.Rows.Add(thisSlatClass.headerMatrix[i].Select(x => (object)x).ToArray());
-                gv3.Rows[i].HeaderCell.Value = SlatClass.headerNames[i];
+                gv3.Rows.Add(thisSlatClass.headerMatrix[inds[i]].Select(x => (object)x).ToArray());
+                gv3.Rows[i].HeaderCell.Value = SlatClass.headerNames[inds[i]];
                 gv3.Rows[i].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
             }
             int len1 = thisSlatClass.stringClassMatrix.Count;
             for (int i = 0; i < len1; i++)
             {
                 gv3.Rows.Add(thisSlatClass.stringClassMatrix[i].Select(x => (object)x).ToArray());
-                gv3.Rows[i + 12].HeaderCell.Value = thisSlatClass.classRowNames[i];
-                gv3.Rows[i + 12].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                gv3.Rows[i + inds.Length].HeaderCell.Value = thisSlatClass.classRowNames[i];
+                gv3.Rows[i + inds.Length].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
             }
             gv3.RowHeadersWidth = 220;
-            gv3.Size = new Size(240 + 82 * len, new int[] { Size.Height - 70, 950 }.Min());
-            tabControl1.TabPages[3].Controls.Add(gv3);
-        }
+            gv3.Size = new Size(222 + 82 * len, 26 + (22 * (inds.Length + thisSlatClass.stringClassMatrix.Count)));
+            classPanel.Controls.Add(gv3);
+            tabControl1.TabPages[3].Controls.Add(classPanel);
+            
+            // Add charts
+            chartn = 0;
+            int h = Size.Height - 55;
+            chartX = classPanel.Width + 2;
+            chartH = new int[] { (h / 5) - 2, 250 }.Min();
+            int w = Size.Width - 40;
+            chartW = new int[] { w - classPanel.Width - 2, chartH * 2 }.Min();
+            for (int i = 0; i < classes.Length; i++)
+            {
+                Panel panel = new Panel();
+                panel.Location = new Point(chartX, chartn * chartH);
+                panel.Size = new Size(chartW, chartH);
+                panel.BringToFront();
+                tabControl1.TabPages[3].Controls.Add(panel);
 
+                Chart chart = OneColorChart(classes[i], true);
+                panel.Tag = i;
+                panel.Controls.Add(chart);
+
+                ComboBox box = new ComboBox();
+                box.Location = new Point((int)(panel.Width * 0.25), (int)(panel.Height * 0.03));
+                box.Size = new Size(175, 22);
+                for (int j = 0; j < thisSlatClass.classRowNames.Count; j++)
+                {
+                    box.Items.Add(thisSlatClass.classRowNames[j]);
+                }
+                box.DropDownStyle = ComboBoxStyle.DropDownList;
+                box.SelectedItem = classes[i];
+                panel.Controls.Add(box);
+                box.BringToFront();
+                box.SelectedIndexChanged += new EventHandler(OneColorClass_IndexChanged);
+            }
+        }
+        #endregion
+
+        #region Run History
         DBDataGridView gv4 { get; set; }
         private void GetRunHistory()
         {
@@ -954,10 +1033,11 @@ namespace TS_General_QCmodule
                 return;
             }
             List<string[]> matrixList = thisRunLog.runHistory;
-            gv4 = new DBDataGridView();
+            gv4 = new DBDataGridView(true);
             gv4.Name = "gv4";
             gv4.Click += new EventHandler(GV_Click);
             gv4.ReadOnly = true;
+            gv4.BackgroundColor = SystemColors.Control;
             gv4.ClearSelection();
             for (int i = 0; i < 12; i++)
             {
@@ -973,23 +1053,28 @@ namespace TS_General_QCmodule
             gv4.Dock = DockStyle.Fill;
             tabControl1.TabPages[4].Controls.Add(gv4);
         }
+        #endregion
 
+        #region Lane Pages
         private int[] xMin { get; set; }
         private double[][] xRanges { get; set; }
         private Tuple<double[], double[]>[] xAndYValues { get; set; }
         private static YvsZ[] zList { get; set; }
+        private bool[] ScanIncomplete { get; set; }
         private void GetLanePage(int lane)
         {
-            Mtx mtx = thisSlatClass.runLanes[lane].thisMtx;
-            
-            // Initialize list to hold z values for obs, exp, and no reg
-            if(zList == null)
+            Mtx mtx = thisSlatClass.runLanes.Where(x => x.LaneID == lane + 1).Select(x => x.thisMtx).FirstOrDefault();
+
+            if(mtx == null)
             {
-                zList = new YvsZ[len];
+                return;
             }
 
+            // Initialize list to hold z values for obs, exp, and no reg
+            zList = new YvsZ[len];
+
             // Initialize xRanges holder - holds Y values for x axis of 'vs. Y' and bubble charts
-            if(xRanges == null)
+            if (xRanges == null)
             {
                 xRanges = new double[len][];
             }
@@ -1018,8 +1103,6 @@ namespace TS_General_QCmodule
             area1.AxisX.Title = "Y";
             area1.AxisY.Title = "Z";
             area1.AxisX.Crossing = 0;
-            area1.AxisY.Maximum = 80;
-            area1.AxisY.Minimum = -80;
             area1.AxisX.MajorGrid.LineWidth = 0;
             chart1.ChartAreas.Add(area1);
             area1.AxisX.LabelStyle.Font = littleFont;
@@ -1033,13 +1116,20 @@ namespace TS_General_QCmodule
             legz.Font = littleFont;
             chart1.Legends.Add(legz);
 
+            Legend legz2 = new Legend("legz2");
+            legz2.IsDockedInsideChartArea = true;
+            legz2.LegendStyle = LegendStyle.Row;
+            legz2.Position = new ElementPosition(62, 93, 22, 5); 
+            legz2.Font = littleFont;
+            chart1.Legends.Add(legz2);
+
             // Xvals = Y; Yvals = Z observed
             List<double> yObs = new List<double>(mtx.fovCount);
             List<double> zObs = new List<double>(mtx.fovCount);
             List<double> yNoReg = new List<double>(mtx.fovCount);
             List<double> zNoReg = new List<double>(mtx.fovCount);
             int[] inds = new int[] { mtx.fovMetCols["Y"], mtx.fovMetCols["Z"], mtx.fovMetCols["Reg"] };
-            for (int i = 0; i < mtx.fovCount; i++)
+            for (int i = 0; i < mtx.fovMetArray.Length; i++)
             {
                 if (mtx.fovMetArray[i][inds[2]] == "1")
                 {
@@ -1066,9 +1156,13 @@ namespace TS_General_QCmodule
                 List<double> zExp = new List<double>(thisSlatClass.zObsMinusExp.Count);
                 for (int i = 0; i < keys.Count; i++)
                 {
-                    string[] thisFov = mtx.fovMetArray[fovMetKeys.IndexOf(keys[i])];
-                    yExp.Add(double.Parse(thisFov[inds[0]]));
-                    zExp.Add(double.Parse(thisFov[inds[1]]) - fovMatch[keys[i]]);
+                    int ind = fovMetKeys.IndexOf(keys[i]);
+                    if(ind < mtx.fovMetArray.Length && ind > -1)
+                    {
+                        string[] thisFov = mtx.fovMetArray[ind];
+                        yExp.Add(double.Parse(thisFov[inds[0]]));
+                        zExp.Add(double.Parse(thisFov[inds[1]]) - fovMatch[keys[i]]);
+                    }
                 }
                 zList[lane].yExp = yExp.ToArray();
                 zList[lane].zExp = zExp.ToArray();
@@ -1092,6 +1186,7 @@ namespace TS_General_QCmodule
             xMin[lane] = yRange.Where(x => x < xVals1.Min()).Max();
             area1.AxisX.Minimum = xMin[lane];
 
+            // Add Z observed positions (i.e. Z from FOV in MTX)
             Series zO = new Series("Z Obs", mtx.fovCount);
             zO.ChartType = SeriesChartType.FastPoint;
             zO.ChartArea = "area1";
@@ -1101,6 +1196,7 @@ namespace TS_General_QCmodule
             zO.Points.DataBindXY(zList[lane].yObs, zList[lane].zObs);
             chart1.Series.Add(zO);
 
+            // Add points for any FOV not registered
             Series zN = new Series("Z No Reg", mtx.fovCount);
             zN.ChartType = SeriesChartType.FastPoint;
             zN.ChartArea = "area1";
@@ -1109,6 +1205,50 @@ namespace TS_General_QCmodule
             zN.MarkerStyle = MarkerStyle.Circle;
             zN.Points.DataBindXY(zList[lane].yNoReg, zList[lane].zNoReg);
             chart1.Series.Add(zN);
+
+            // Add zTaught to lane 1
+            if(theseRunLanes[lane].LaneID == 1 && thisSlatClass.ZTaught != 0)
+            {
+                Series zT = new Series("Lane 1 Z Taught", mtx.fovCount);
+                zT.ChartType = SeriesChartType.FastLine;
+                zT.ChartArea = "area1";
+                zT.Legend = "legz2";
+                zT.Color = System.Drawing.Color.Red;
+                zT.BorderDashStyle = ChartDashStyle.DashDot;
+                zT.MarkerStyle = MarkerStyle.None;
+                zT.Points.AddXY(xVals1.Min() - 100, thisSlatClass.ZTaught);
+                zT.Points.AddXY(xVals1.Max() + 100, thisSlatClass.ZTaught);
+                chart1.Series.Add(zT);
+            }
+
+            // Set Y axis min and max
+            double[] zObsMaxMin = new double[2];
+            double[] zNoRegMaxMin = new double[2];
+
+            if(zObs.Count > 0)
+            {
+                zObsMaxMin[0] = zObs.Min() - 5;
+                zObsMaxMin[1] = zObs.Max() + 5;
+            }
+            else
+            {
+                zObsMaxMin[0] = 0;
+                zObsMaxMin[1] = 0;
+            }
+
+            if(zNoReg.Count > 0)
+            {
+                zNoRegMaxMin[0] = zNoReg.Min() - 5;
+                zNoRegMaxMin[1] = zNoReg.Max() + 5;
+            }
+            else
+            {
+                zNoRegMaxMin[0] = 0;
+                zNoRegMaxMin[1] = 0;
+            }
+
+            area1.AxisY.Maximum = Math.Round(new double[] { 80, zObsMaxMin[1] + 5, zNoRegMaxMin[1] + 5, thisSlatClass.ZTaught + 5 }.Max(), 0);
+            area1.AxisY.Minimum = Math.Round(new double[] { 80, zObsMaxMin[0] - 5, zNoRegMaxMin[0] - 5, thisSlatClass.ZTaught - 5 }.Min(), 0);
 
             panel1.Controls.Add(chart1);
 
@@ -1615,15 +1755,15 @@ namespace TS_General_QCmodule
             else
             {
                 serNames[1] = varName2;
-            } 
-
+            }
+            
             Series serA = new Series(serNames[0]);
             serA.ChartType = SeriesChartType.Bubble;
             serA.MarkerStyle = MarkerStyle.Circle;
             serA.MarkerColor = System.Drawing.Color.FromArgb(130, System.Drawing.Color.Gold);
             serA.YValuesPerPoint = 2;
             serA.ChartArea = "area";
-            if(p4)
+            if (p4)
             {
                 if (oneFirst)
                 {
@@ -1749,7 +1889,9 @@ namespace TS_General_QCmodule
         {
             return toRound - toRound % roundBy;
         }
+#endregion
 
+        #region Pressures
         private void GetPressures()
         {
             int h = -2 + (Size.Height / 4);
@@ -2164,7 +2306,9 @@ namespace TS_General_QCmodule
 
             panel16.Controls.Add(chart5);
         }
+#endregion
 
+        #region Lane Pressures
         private System.Drawing.Color[] laneColors = new System.Drawing.Color[] { System.Drawing.Color.Blue,
                                                                                  System.Drawing.Color.DarkMagenta,
                                                                                  System.Drawing.Color.DarkGoldenrod,
@@ -2292,8 +2436,8 @@ namespace TS_General_QCmodule
             leg.LegendStyle = LegendStyle.Table;
             leg.Font = littleFont;
             chart2.Legends.Add("leg1");
-
-            for(int i = 0; i < len; i++)
+            int laneCount = vals.Select(x => x.Item1).Distinct().Count();
+            for(int i = 0; i < laneCount; i++)
             {
                 Series ser = new Series($"Lane {i + 1}");
                 ser.ChartType = SeriesChartType.FastLine;
@@ -2324,7 +2468,9 @@ namespace TS_General_QCmodule
             tex1.Text = $"Pressure Differential:\r\nMax = {maxPress.ToString()}\r\nMin = {minPress.ToString()}\r\nDiff = {diffPress.ToString()}";
             tabControl1.TabPages[18].Controls.Add(tex1);
         }
+        #endregion
 
+        #region Message Log Button
         private void GetMessageLogButton()
         {
             Button messLogButton = new Button();
@@ -2355,6 +2501,7 @@ namespace TS_General_QCmodule
                 }
             }
         }
+        #endregion
 
         #region Right Click Events
         private static List<Chart> chartToCopySave { get; set; }
@@ -2640,37 +2787,40 @@ namespace TS_General_QCmodule
         }
         #endregion
 
+        #region Flags
         private string[][] flagList { get; set; }
         private void GetFlagSummary()
         {
             Dictionary<string, bool> checkList = new Dictionary<string, bool>()
             {
-                { "High PctCV", false },
-                { "LOD Fail", false },
                 { "Low FOV % Cnt", false },
                 { "Low Fids per FOV", false },
                 { "AIMs", false },
                 { "Low RepIbsAvg", false },
-                { "High deltaZ, Exp_vs_Obs", false },
-                { "High %Unstretched", false },
-                { "Low %Valid", false },
                 { "Possible Blockage", false},
-                { "Possible Leak", false }
+                { "Possible Leak", false },
+                { "High %Unstretched", false },
+                { "Low BD", false },
+                { "Low %Valid", false },
+                { "High PctCV", false },
+                { "LOD Fail", false },
+                { "High deltaZ, Exp_vs_Obs", false }
             };
 
             Dictionary<string, string> messageList = new Dictionary<string, string>()
             {
-                { "High PctCV", "%CV of geomean of ERCC Pos Controls A-E > 30%" },
-                { "LOD Fail", "Avg of ERCC Neg controls + 2 standard deviations > POS_E Counts" },
                 { "Low FOV % Cnt", "FOV % counted < 75%" },
                 { "Low Fids per FOV", "Fiducial count per FOV < 300" },
                 { "AIMs", "Any of the 4 color AIMs > 1.5 or < 0.5" },
                 { "Low RepIbsAvg", "Any of the 4 color background-subtracted reporter intensities < 40" },
-                { "High deltaZ, Exp_vs_Obs", "<<PLACEHOLDER TILL MORE INFO>>" },
-                { "High %Unstretched", "Unstretched:-5 sum divided by Class Totals > 0.20" },
-                { "Low %Valid", "Valid:1 sum divided by Class Totals < 0.50" },
                 { "Possible Blockage", "Lane Pressure max minus 1st Push > 0.15 psi" },
-                { "Possible Leak", "1st Push minus Lane Pressure min > 0.1 psi" }
+                { "Possible Leak", "1st Push minus Lane Pressure min > 0.1 psi" },
+                { "High %Unstretched", "Unstretched:-5 sum divided by Class Totals > 0.40" },
+                { "Low BD", "Low POS counts, binding density < 0.1, and lane pressure normal"},
+                { "Low %Valid", "Valid:1 sum divided by Class Totals < 0.45" },
+                { "High PctCV", "%CV of geomean of ERCC Pos Controls A-E > 30%" },
+                { "LOD Fail", "Avg of ERCC Neg controls + 2 standard deviations > POS_E Counts" },
+                { "High deltaZ, Exp_vs_Obs", "<<PLACEHOLDER TILL MORE INFO>>" }
             };
 
             double[] gmeans = theseRunLanes.Select(x => x.thisMtx.POSgeomean).ToArray();
@@ -2701,15 +2851,35 @@ namespace TS_General_QCmodule
             for (int i = 0; i < repIntIndices.Count; i++)
             {
                 IEnumerable<double> temp = thisSlatClass.laneAvgMatrix[repIntIndices[i]];
-                if (temp.Any(x => x < 40))
+                for( int j = 0; j < temp.Count(); j++)
                 {
-                    checkList["Low RepIbsAvg"] = true;
+                    if(theseRunLanes[j].BindingDensity > 0.1 && temp.ElementAt(j) < 40)
+                    {
+                        checkList["Low RepIbsAvg"] = true;
+                        break;
+                    }
+                }
+            }
+
+            for(int i = 0; i < thisSlatClass.percentUnstretched.Length; i++)
+            {
+                if(thisSlatClass.percentUnstretched[i] > 40 && thisSlatClass.stringClassAll[i] > 250000)
+                {
+                    checkList["High %Unstretched"] = true;
                     break;
                 }
             }
 
-            checkList["High %Unstretched"] = thisSlatClass.percentUnstretched.Any(x => x > 20);
-            checkList["Low %Valid"] = thisSlatClass.percentValid.Any(x => x < 50);
+            for(int i = 0; i < theseRunLanes.Count; i++)
+            {
+                if(!theseRunLanes[i].lodPass && theseRunLanes[i].BindingDensity < 0.1 && thisRunLog.lanePressPass[i])
+                {
+                    checkList["Low BD"] = true;
+                    break;
+                }
+            }
+
+            checkList["Low %Valid"] = thisSlatClass.percentValid.Any(x => x < 45);
             checkList["Possible Blockage"] = thisRunLog.lanePressPass != null ? thisRunLog.lanePressPass.Any(x => !x) : false;
             checkList["Possible Leak"] = thisRunLog.laneLeakPass != null ? thisRunLog.laneLeakPass.Any(x => !x) : false;
 
@@ -2722,22 +2892,9 @@ namespace TS_General_QCmodule
                 flagList[i][1] = messageList[flags[i]];
             }
         }
+        #endregion
 
-        private void CleanUpTmp()
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            var toDelete = Directory.EnumerateFiles(Form1.tmpPath, "*.BMP");
-            foreach(string f in toDelete)
-            {
-                try
-                {
-                    File.Delete(f);
-                }
-                catch { }
-            }
-        }
-
+        #region Slat To PDF
         private void ConvertSlatToPdf(TabControl.TabPageCollection collection)
         {
             CleanUpTmp();
@@ -3033,6 +3190,23 @@ namespace TS_General_QCmodule
             return bm;
         }
 
+        #endregion
+
+
+        private void CleanUpTmp()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            var toDelete = Directory.EnumerateFiles(Form1.tmpPath, "*.BMP");
+            foreach (string f in toDelete)
+            {
+                try
+                {
+                    File.Delete(f);
+                }
+                catch { }
+            }
+        }
         private void This_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (!this.Disposing)

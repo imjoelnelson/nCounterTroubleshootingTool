@@ -102,7 +102,7 @@ namespace TS_General_QCmodule
             }
             source = new BindingSource();
             source.DataSource = rlfsToLoad;
-            gv = new DBDataGridView();
+            gv = new DBDataGridView(true);
             gv.DataSource = source;
             gv.Dock = DockStyle.Fill;
             DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
@@ -137,9 +137,9 @@ namespace TS_General_QCmodule
         private RlfClass CheckMtxRccRlfMerge(string pathToRlfToCheck, RlfClass oldRLF)
         {
             RlfClass temp = new RlfClass(pathToRlfToCheck);
-            IEnumerable<string> tempContent = temp.content.Select(x => x.Name);
+            IEnumerable<string> oldContent = oldRLF.content.Select(x => x.Name);
             IEnumerable<string> contentToCheck = temp.content.Where(x => x.CodeClass != "Extended").Select(x => x.Name);
-            if(tempContent.Except(contentToCheck).Count() > 1)
+            if(oldContent.Any(x => !contentToCheck.Contains(x)))
             {
                 return null;
             }
@@ -156,7 +156,7 @@ namespace TS_General_QCmodule
                 string rlfName = gv.Rows[e.RowIndex].Cells[0].Value.ToString();
                 using (OpenFileDialog of = new OpenFileDialog())
                 {
-                    of.Filter = $"|*{rlfName}*";
+                    of.Filter = $"|*{rlfName}.RLF";
                     of.RestoreDirectory = true;
                     of.Title = $"Load {rlfName}";
                     if (of.ShowDialog() == DialogResult.OK)

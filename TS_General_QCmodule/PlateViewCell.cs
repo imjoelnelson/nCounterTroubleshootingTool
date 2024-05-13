@@ -11,13 +11,13 @@ namespace TS_General_QCmodule
     {
         public PlateViewCell(Lane thisLane, List<string>[] summaryList, int _col, int _row)
         {
-            IEnumerable<string> POS0 = thisLane.probeContent.Where(x => summaryList[1].Contains(x[3])).Select(x => x[5]);
+            IEnumerable<string> POS0 = thisLane.probeContent.Where(x => summaryList[1].Contains(x[Lane.Name])).Select(x => x[Lane.Count]);
             posCounts = gm_mean(POS0.Select(x => int.Parse(x)).ToList());
-            IEnumerable<string> NEG0 = thisLane.probeContent.Where(x => summaryList[2].Contains(x[3])).Select(x => x[5]);
+            IEnumerable<string> NEG0 = thisLane.probeContent.Where(x => summaryList[2].Contains(x[Lane.Name])).Select(x => x[Lane.Count]);
             negCounts = NEG0.Select(x => int.Parse(x)).Average();
-            IEnumerable<string> CONT0 = thisLane.probeContent.Where(x => summaryList[3].Contains(x[3])).Select(x => x[5]);
+            IEnumerable<string> CONT0 = thisLane.probeContent.Where(x => summaryList[3].Contains(x[Lane.Name])).Select(x => x[Lane.Count]);
             controlMean = gm_mean(CONT0.Select(x => int.Parse(x)).ToList());
-            IEnumerable<string> TOT0 = thisLane.probeContent.Where(x => summaryList[0].Contains(x[3])).Select(x => x[5]);
+            IEnumerable<string> TOT0 = thisLane.probeContent.Where(x => summaryList[0].Contains(x[Lane.Name])).Select(x => x[Lane.Count]);
             totCounts = TOT0.Select(x => int.Parse(x)).Sum();
             col = _col;
             row = _row;

@@ -18,14 +18,27 @@ namespace TS_General_QCmodule
         {
             InitializeComponent();
 
+            ConstructorComplete = false;
             Lanes = lanes;
             IsPlexSet = lanes.Any(x => x.laneType == RlfClass.RlfType.ps);
+            IsDsp = lanes.Any(x => x.laneType == RlfClass.RlfType.dsp);
 
-            if(IsPlexSet)
+            if(IsPlexSet || IsDsp)
             {
                 label3.Visible = label3.Enabled = true;
                 comboBox1.Visible = comboBox1.Enabled = true;
-                checkedListBox1.Enabled = false;
+                if (!IsDsp)
+                {
+                    checkedListBox1.Enabled = false;
+                }
+                else
+                {
+                    if(IsDsp && IsPlexSet)
+                    {
+                        MessageBox.Show("Cannot run binned counts plot on a mix of DSP and non-DSP lanes", "Warning", MessageBoxButtons.OK);
+                        return;
+                    }
+                }
                 label2.Location = new Point(13, 194);
                 checkedListBox1.Location = new Point(11, 210);
                 tableButton.Location = new Point(11, 298);
@@ -53,20 +66,53 @@ namespace TS_General_QCmodule
                 this.Size = new Size(208, 404);
             }
 
-            // NEED TO ADD SOME MEANS OF INCLUDING RELEVANT STUFF FOR DSP
-            List<string> classes0 = Lanes.SelectMany(x => x.codeClasses).Distinct()
-                                         .Where(x => x.Contains("Endogenous") 
-                                                  || x.Contains("Housekeeping") 
-                                                  || x.Contains("Invariant")).ToList();
+            // Add codeset content based on if DSP or non-DSP
+            List<string> classes0 = new List<string>();
+            if(lanes.All(x => x.laneType != RlfClass.RlfType.dsp))
+            {
+                // When no DSP lanes present
+                classes0.AddRange(Lanes.SelectMany(x => x.codeClasses).Distinct()
+                                         .Where(x => x.StartsWith("Endo")
+                                                  || x.StartsWith("Hous")
+                                                  || x.StartsWith("Inva")).ToList());
+            }
+            else
+            {
+                // When DSP lanes present
+                if(lanes.Select(x => x.RLF).Distinct().Count() > 1)
+                {
+                    MessageBox.Show("Cannot run binned counts plot on a mix of DSP and non-DSP lanes", "Warning", MessageBoxButtons.OK);
+                    return;
+                }
+                else
+                {
+                    Readers = Form1.loadPKCs();
+                    if(Readers != null)
+                    {
+                        classes0.AddRange(Readers.SelectMany(x => x.Targets.Select(y => y.CodeClass))
+                                                  .Distinct()
+                                                  .Where(z => z.StartsWith("En")
+                                                           || z.StartsWith("Cont")));
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
             
             foreach (string s in classes0)
             {
                 checkedListBox1.Items.Add(s);
             }
+            ConstructorComplete = true;
         }
 
         private List<Lane> Lanes { get; set; }
         private bool IsPlexSet { get; set; }
+        private bool IsDsp { get; set; }
+        public bool ConstructorComplete { get; set; }
+        private List<HybCodeReader> Readers { get; set; }
         private static Dictionary<string, int> Sets = new Dictionary<string, int>
         {
             { "A", 1 },
@@ -76,7 +122,8 @@ namespace TS_General_QCmodule
             { "E", 5 },
             { "F", 6 },
             { "G", 7 },
-            { "H", 8 }
+            { "H", 8 },
+            { "All", 9 }
         };
 
         private void tableButton_Click(object sender, EventArgs e)
@@ -85,7 +132,26 @@ namespace TS_General_QCmodule
             {
                 List<int> cuts = GetCuts();
                 List<string> classes = GetClasses(checkedListBox1);
-                double[][] mat = new CountBinsMatrix(Lanes, cuts, classes).Matrix;
+                double[][] mat = null;
+                if(IsDsp)
+                {
+                    if(comboBox1.SelectedIndex < 8 && comboBox1.SelectedIndex > -1)
+                    {
+                        int num = comboBox1.SelectedIndex + 1;
+                        string[] includedRows = new string[] { Sets.Where(x => x.Value == num)
+                                                                   .Select(x => x.Key)
+                                                                   .First() };
+                        mat = new CountBinsMatrix(Lanes, cuts, classes, includedRows, Readers).Matrix;
+                    }
+                    else
+                    {
+                        mat = new CountBinsMatrix(Lanes, cuts, classes, Sets.Keys.ToArray(), Readers).Matrix;
+                    }
+                }
+                else
+                {
+                    mat = new CountBinsMatrix(Lanes, cuts, classes).Matrix;
+                }
                 List<string> colNames = Lanes.Select(x => x.fileName).ToList();
                 List<string> rowNames = GetBinNames(cuts);
                 string tableString = GetTableString(mat, colNames, rowNames);
@@ -128,14 +194,29 @@ namespace TS_General_QCmodule
         {
             checkedListBox1.Enabled = true;
             int set = Sets[comboBox1.SelectedItem.ToString()];
-            checkedListBox1.Items.Clear();
-            List<string> classes0 = Lanes.SelectMany(x => x.codeClasses)
-                                            .Distinct()
-                                            .Where(x => x.Contains("Endogenous") || x.Contains("Housekeeping")).ToList();
-            var classes = classes0.Where(x => x.Contains(set.ToString()));
-            foreach (string s in classes)
+            if (!IsDsp)
             {
-                checkedListBox1.Items.Add(s);
+                checkedListBox1.Items.Clear();
+                List<string> classes0 = Lanes.SelectMany(x => x.codeClasses)
+                                                .Distinct()
+                                                .Where(x => x.Contains("Endogenous") || x.Contains("Housekeeping")).ToList();
+                List<string> classes = new List<string>();
+                if (set < 9)
+                {
+                    classes.AddRange(classes0.Where(x => x.Contains(set.ToString())));
+                }
+                else
+                {
+                    classes.AddRange(classes0);
+                }
+                foreach (string s in classes)
+                {
+                    checkedListBox1.Items.Add(s);
+                }
+                for (int i = 0; i < checkedListBox1.Items.Count; i++)
+                {
+                    checkedListBox1.SetItemCheckState(i, CheckState.Checked);
+                }
             }
         }
 
@@ -145,12 +226,34 @@ namespace TS_General_QCmodule
             {
                 List<int> cuts = GetCuts();
                 List<string> classes = GetClasses(checkedListBox1);
-                double[][] mat = new CountBinsMatrix(Lanes, cuts, classes).Matrix;
+                double[][] mat = null;
+                if (IsDsp)
+                {
+                    if (comboBox1.SelectedIndex < 8 && comboBox1.SelectedIndex > -1)
+                    {
+                        int num = comboBox1.SelectedIndex + 1;
+                        string[] includedRows = new string[] { Sets.Where(x => x.Value == num)
+                                                                   .Select(x => x.Key)
+                                                                   .First() };
+                        mat = new CountBinsMatrix(Lanes, cuts, classes, includedRows, Readers).Matrix;
+                    }
+                    else
+                    {
+                        mat = new CountBinsMatrix(Lanes, cuts, classes, Sets.Keys.ToArray(), Readers).Matrix;
+                    }
+                }
+                else
+                {
+                    mat = new CountBinsMatrix(Lanes, cuts, classes).Matrix;
+                }
                 List<string> xNames = Lanes.Select(x => x.fileName).ToList();
                 List<string> stackNames = GetBinNames(cuts);
                 double[][] mat2 = GetMat2(Lanes);
-                StackedBarDisplayWindow bar = new StackedBarDisplayWindow(xNames.ToArray(), stackNames.ToArray(), mat, mat2);
-                bar.ShowDialog();
+                using (StackedBarDisplayWindow bar = new StackedBarDisplayWindow(xNames.ToArray(), stackNames.ToArray(), mat, mat2))
+                {
+                    bar.ShowDialog();
+                }
+                
             }
             else
             {
@@ -315,8 +418,8 @@ namespace TS_General_QCmodule
 
             for (int i = 0; i < lanes.Count; i++)
             {
-                List<string[]> temp = lanes[i].probeContent.Where(y => y[1] == "Positive" && !y[3].Contains("_F")).ToList();
-                doubles.Add(gm_mean(temp.Select(x => int.Parse(x[5]))));
+                List<string[]> temp = lanes[i].probeContent.Where(y => y[Lane.CodeClass] == "Positive" && !y[Lane.Name].Contains("_F")).ToList();
+                doubles.Add(gm_mean(temp.Select(x => int.Parse(x[Lane.Count]))));
             }
 
             return doubles;

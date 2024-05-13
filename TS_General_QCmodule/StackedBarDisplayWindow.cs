@@ -15,13 +15,29 @@ namespace TS_General_QCmodule
 
             try
             {
-                if (Chart1 == null)
+                Chart1 = new Chart();
+                Area1 = new ChartArea();
+                if(LittleFont == null)
                 {
-                    Chart1 = new Chart();
+                    LittleFont = new System.Drawing.Font("Microsoft Sans Serif", 7F);
+                }
+                if(SmallishFont == null)
+                {
+                    SmallishFont = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+                }
+                if(MedFont == null)
+                {
+                    MedFont = new System.Drawing.Font("Microsoft Sans Serif", 11F);
+                }
+                if(BigFont == null)
+                {
+                    BigFont = new System.Drawing.Font("Microsoft Sans Serif", 18F);
                 }
 
                 Samp = samp;
                 Mat2 = mat2;
+
+                this.FormClosed += new FormClosedEventHandler(This_FormClosed);
 
                 // Chart panel
                 this.WindowState = FormWindowState.Maximized;
@@ -32,20 +48,18 @@ namespace TS_General_QCmodule
                 #region Chart Options
                 Chart1.Click += new EventHandler(Chart_RightClick);
                 Chart1.Dock = DockStyle.Fill;
-                Chart1.Text = "Binned Counts";
-                Area1.AxisY = new Axis(Area1, AxisName.Y);
-                Area1.AxisX = new Axis(Area1, AxisName.X);
+                Chart1.Text = "Binned Counts";  
                 Area1.AxisX.Title = "RCCs";
                 Area1.AxisY.Title = "Fraction of Counts In Each Bin";
                 Area1.AxisY.Minimum = 0;
                 Area1.AxisY.Maximum = 1;
                 if (samp.Length > 108)
                 {
-                    Area1.AxisX.Interval = 6;
+                    Area1.AxisX.Interval = 6.0;
                 }
                 else
                 {
-                    Area1.AxisX.Interval = 1;
+                    Area1.AxisX.Interval = 1.0;
                 }
                 Area1.AxisX.MajorGrid.LineWidth = Area1.AxisY.MajorGrid.LineWidth = 0;
                 Chart1.ChartAreas.Add(Area1);
@@ -78,7 +92,7 @@ namespace TS_General_QCmodule
                     Chart1.Series[bin[i]].Legend = "leg1";
                     Chart1.Series[bin[i]].Color = colors[i];
                 }
-
+                
                 panel.Controls.Add(Chart1);
 
                 // Add 2nd variable combobox
@@ -108,12 +122,12 @@ namespace TS_General_QCmodule
             }
         }
 
-        private static Font LittleFont = new System.Drawing.Font("Microsoft Sans Serif", 7F);
-        private static Font SmallishFont = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-        private static Font MedFont = new System.Drawing.Font("Microsoft Sans Serif", 11F);
-        private static Font BigFont = new System.Drawing.Font("Microsoft Sans Serif", 18F);
-        private static Chart Chart1 = new Chart();
-        private static ChartArea Area1 = new ChartArea("area1");
+        private static Font LittleFont { get; set; }
+        private static Font SmallishFont { get; set; }
+        private static Font MedFont { get; set; }
+        private static Font BigFont { get; set; }
+        private static Chart Chart1 { get; set; }
+        private static ChartArea Area1 { get; set; }
 
         private string[] Samp { get; set; }
         private double[][] Mat2 { get; set; }
@@ -161,10 +175,8 @@ namespace TS_General_QCmodule
 
         private void This_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Chart1.Series.Clear();
-            Chart1.ChartAreas.Clear();
-            Chart1.Legends.Clear();
-            Chart1.Titles.Clear();
+            Chart1.Dispose();
+            Area1.Dispose();
         }
 
 

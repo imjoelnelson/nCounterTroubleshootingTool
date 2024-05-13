@@ -83,7 +83,7 @@ namespace TS_General_QCmodule
                     PushButtonState.Disabled);
 
                 // Draw the disabled button text. 
-                if (this.FormattedValue is String)
+                if (this.FormattedValue is string)
                 {
                     TextRenderer.DrawText(graphics,
                         (string)this.FormattedValue,

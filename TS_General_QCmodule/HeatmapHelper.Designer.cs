@@ -52,6 +52,7 @@
             // 
             // button1
             // 
+            this.button1.Enabled = false;
             this.button1.Location = new System.Drawing.Point(25, 352);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(170, 27);
@@ -185,7 +186,7 @@
             0});
             this.numericUpDown1.Location = new System.Drawing.Point(27, 53);
             this.numericUpDown1.Maximum = new decimal(new int[] {
-            300,
+            500,
             0,
             0,
             0});
@@ -257,7 +258,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(227, 430);
             this.Controls.Add(this.panel2);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "HeatmapHelper";
+            this.Text = "Heatmaps";
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.panel3.ResumeLayout(false);

@@ -93,30 +93,15 @@ namespace TS_General_QCmodule
 
             //Header
             int len = index[1] - (index[0] + 1);
-            header = new Dictionary<string, string>(len);
-            for (int j = index[0] + 1; j < index[1]; j++)
-            {
-                string[] bits = lines[j].Split(',');
-                header.Add(bits[0], bits[1]);
-            }
+            GetGenericHeaderAtts(lines.Skip(index[0] + 1).Take(len).ToList());
 
             // Sample_Attributes
             len = index[3] - (index[2] + 1);
-            sampleAtt = new Dictionary<string, string>(len);
-            for (int j = index[2] + 1; j < index[3]; j++)
-            {
-                string[] bits = lines[j].Split(',');
-                sampleAtt.Add(bits[0], bits[1]);
-            }
+            GetGenericSampleAtts(lines.Skip(index[2] + 1).Take(len).ToList());
 
             // Lane attributes
             len = index[5] - (index[4] + 1);
-            laneAtt = new Dictionary<string, string>(len);
-            for (int j = index[4] + 1; j < index[5]; j++)
-            {
-                string[] bits = lines[j].Split(',');
-                laneAtt.Add(bits[0], bits[1]);
-            }
+            GetGenericLaneAtts(lines.Skip(index[4] + 1).Take(len).ToList());
 
             // Code_Summary
             rccType = thisRlfClass.thisRLFType;
@@ -137,7 +122,7 @@ namespace TS_General_QCmodule
             }
             else
             {
-                if(!Form1.ligBkgSubtract)
+                if (!Form1.ligBkgSubtract)
                 {
                     for (int j = offset; j < index[7]; j++)
                     {
@@ -189,27 +174,6 @@ namespace TS_General_QCmodule
             GetFlags();
         }
 
-        private string[] GetmiRNAProbeData(string[] parsedLine, Dictionary<string, int> cols, double aCounts)
-        {
-            string[] nameParse = parsedLine[cols["Name"]].Split('|');
-            double factor = double.Parse(nameParse[1]);
-            if(factor > 0)
-            {
-                double count = double.Parse(parsedLine[cols["Count"]]);
-                double correction = factor * aCounts;
-                double counts = correction < count ? Math.Round(count - correction) : 1;
-                return new string[] { parsedLine[0], nameParse[0], parsedLine[2], counts.ToString() };
-            }
-            else
-            {
-                return new string[] { parsedLine[0], nameParse[0], parsedLine[2], parsedLine[3] };
-            }
-        }
-
-        /// <summary>
-        /// <value>The parent lane that holds the RCC</value>
-        /// </summary>
-        public Lane parentLane { get; set; }
         /// <summary>
         /// <value>The RCC filename (not full path)</value>
         /// </summary>
@@ -227,65 +191,28 @@ namespace TS_General_QCmodule
 
         // Header
         private Dictionary<string, string> header { get; set; }
-        public string fileVersion => header["FileVersion"];
-        public string softwareVersion => header["SoftwareVersion"];
-        public string systemType => fileVersion == "2.0" ? header["SystemType"] : null;
-
-        // Sample attributes
-        /// <summary>
-        /// <value>String collection of sample attribute lines</value>
-        /// </summary>
-        private Dictionary<string, string> sampleAtt { get; set; }
+        public string fileVersion { get; set; }
+        public string softwareVersion { get; set; }
+        public string systemType { get; set; }
 
         // Sample Attributes
-        public string sampleName => sampleAtt["ID"];
-        public string owner => sampleAtt["Owner"];
-        public string comments => sampleAtt["Comments"];
-        public string date
-        {
-            get
-            {
-                if(fileName.Contains('_'))
-                {
-                    string dateCheck = fileName.Substring(0, fileName.IndexOf('_'));
-                    DateTime d;
-                    if (DateTime.TryParseExact(dateCheck, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
-                    {
-                        return dateCheck;
-                    }
-                    else
-                    {
-                        return sampleAtt["Date"];
-                    }
-                }
-                else
-                {
-                    return sampleAtt["Date"];
-                }
-            }
-        }
-        public string RLF => sampleAtt["GeneRLF"].ToLower();
+        public string sampleName { get; set; }
+        public string owner { get; set; }
+        public string comments { get; set; }
+        public string date { get; set; }
+        public string RLF { get; set; }
         public RlfClass rlfClass { get; set; }
-        public string systemAPF => sampleAtt["SystemAPF"];
-        public string assayType => fileVersion == "2.0" ? sampleAtt["AssayType"] : null;
-        /// <summary>
-        /// <value>DSP-specific; List of HybCodeReaders (i.e. class holding Probe Kit Config file data) associated with the RCC</value>
-        /// </summary>
-        public List<HybCodeReader> hybCodeList { get; set; }
+        public string systemAPF { get; set; }
 
         // Lane attributes
-        /// <summary>
-        /// <value>String collection of lane attribute lines</value>
-        /// </summary>
-        private Dictionary<string, string> laneAtt { get; set; }
-        // Lane attributes
-        public int laneID => int.Parse(laneAtt["ID"]);
-        public string cartID => laneAtt["CartridgeID"];
-        public string cartBarcode => laneAtt.Keys.Contains("CartridgeBarcode") ? laneAtt["CartridgeBarcode"] : null;
-        public string instrument => laneAtt["ScannerID"];
-        public int stagePos => int.Parse(laneAtt["StagePosition"]);
-        public int fovCount => int.Parse(laneAtt["FovCount"]);
-        public int fovCounted => int.Parse(laneAtt["FovCounted"]);
+        public int laneID { get; set; }
+        public string cartID { get; set; }
+        public string cartBarcode { get; set; }
+        public string instrument { get; set; }
+        public int stagePos { get; set; }
+        public int fovCount { get; set; }
+        public int fovCounted { get; set; }
+
         // Analysis type
         /// <summary>
         /// <value>Analysis type; Can be dsp, ps (PlexSet), miRNA (miR or miRGE), or 3D (mRNA, protein, SNV, fusion)</value>
@@ -296,14 +223,24 @@ namespace TS_General_QCmodule
         /// </summary>
         public bool isSprint => systemType != null ? systemType.Equals("gen3", StringComparison.InvariantCultureIgnoreCase) : false;
 
-        // Data list
-        public Dictionary<string, int> CodeSumCols {get;set;}
+        // Data lists
+        /// <summary>
+        /// <value>DSP-specific; List of HybCodeReaders (i.e. class holding Probe Kit Config file data) associated with the RCC</value>
+        /// </summary>
+        public List<HybCodeReader> hybCodeList { get; set; }
+        /// <summary>
+        /// <value>Column headers for the Code Summary section</value>
+        /// </summary>
+        public Dictionary<string, int> CodeSumCols { get; set; }
+        /// <summary>
+        /// <value>Code Summary section in string[][] form; Columns are 0 = CodeClass, 1 = Name, 2 = Accession, 3 = Count.</value>
+        /// </summary>
         public string[][] CodeSummary { get; set; }
 
         //// Flags
         public double pctReg { get; set; }
         public bool pctRegPass { get; set; }
-        public double BD => double.Parse(laneAtt["BindingDensity"]);
+        public double BD { get; set; }
         public bool BDpass { get; set; }
         public double POSlinearity { get; set; }
         public bool POSlinearityPass { get; set; }
@@ -313,6 +250,84 @@ namespace TS_General_QCmodule
         //
         // Methods
         //
+        private void GetGenericHeaderAtts(List<string> lines)
+        {
+            Dictionary<string, string> AttTranslate = lines.Select(x => x.Split(','))
+                                                           .ToDictionary(y => y[0], y => y[1]);
+
+            fileVersion = AttTranslate["FileVersion"];
+            softwareVersion = AttTranslate["SoftwareVersion"];
+            if(AttTranslate.Keys.Any(x => x.StartsWith("System")))
+            {
+                systemType = AttTranslate["SystemType"];
+            }
+        }
+        private void GetGenericSampleAtts(List<string> lines)
+        {
+            Dictionary<string, string> AttTranslate = lines.Select(x => x.Split(','))
+                                                           .ToDictionary(y => y[0], y => y[1]);
+            sampleName = AttTranslate["ID"];
+            owner = AttTranslate["Owner"];
+            comments = AttTranslate["Comments"];
+            date = ParseDate(fileName, AttTranslate["Date"]);
+            RLF = AttTranslate["GeneRLF"].ToLower();
+            systemAPF = AttTranslate["SystemAPF"];
+        }
+
+        private void GetGenericLaneAtts(List<string> lines)
+        {
+            Dictionary<string, string> AttTranslate = lines.Select(x => x.Split(','))
+                                                           .ToDictionary(y => y[0], y => y[1]);
+
+            laneID = int.Parse(AttTranslate["ID"]);
+            fovCount = int.Parse(AttTranslate["FovCount"]);
+            fovCounted = int.Parse(AttTranslate["FovCounted"]);
+            instrument = AttTranslate["ScannerID"];
+            stagePos = int.Parse(AttTranslate["StagePosition"]);
+            BD = double.Parse(AttTranslate["BindingDensity"]);
+            cartID = AttTranslate["CartridgeID"];
+            cartBarcode = AttTranslate["CartridgeBarcode"];
+        }
+
+        public DateTime? ParsedDate { get; set; }
+        private string ParseDate(string inputString1, string inputString2)
+        {
+            string dateCheck = string.Empty;
+            DateTime d;
+            if (inputString1.Contains('_'))
+            {
+                dateCheck = inputString1.Substring(0, fileName.IndexOf('_'));
+                if (DateTime.TryParseExact(dateCheck, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                {
+                    ParsedDate = d;
+                    return dateCheck;
+                }
+                else
+                {
+                    if (DateTime.TryParseExact(inputString2, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                    {
+                        ParsedDate = d;
+                    }
+                    else
+                    {
+                        ParsedDate = null;
+                    }
+                    return inputString2;
+                }
+            }
+            else
+            {
+                if (DateTime.TryParseExact(inputString2, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                {
+                    ParsedDate = d;
+                }
+                else
+                {
+                    ParsedDate = null;
+                }
+                return inputString2;
+            }
+        }
 
         private int GetFlagIndex(string[] _array, int start, string stop)
         {
@@ -391,6 +406,23 @@ namespace TS_General_QCmodule
                 }
             }          
             return temp[0];
+        }
+
+        private string[] GetmiRNAProbeData(string[] parsedLine, Dictionary<string, int> cols, double aCounts)
+        {
+            string[] nameParse = parsedLine[cols["Name"]].Split('|');
+            double factor = double.Parse(nameParse[1]);
+            if (factor > 0)
+            {
+                double count = double.Parse(parsedLine[cols["Count"]]);
+                double correction = factor * aCounts;
+                double counts = correction < count ? Math.Round(count - correction) : 1;
+                return new string[] { parsedLine[0], nameParse[0], parsedLine[2], counts.ToString() };
+            }
+            else
+            {
+                return new string[] { parsedLine[0], nameParse[0], parsedLine[2], parsedLine[3] };
+            }
         }
 
         private Dictionary<string, int> GetCodeSumCols(string headerLine)

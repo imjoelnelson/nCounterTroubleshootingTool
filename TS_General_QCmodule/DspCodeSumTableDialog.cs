@@ -15,20 +15,20 @@ namespace TS_General_QCmodule
 {
     public partial class DspCodeSumTableDialog : Form
     {
-        public DspCodeSumTableDialog(List<HybCodeReader> readers)
+        public DspCodeSumTableDialog(List<HybCodeReader> readers, List<Lane> lanes)
         {
             InitializeComponent();
-
             Microsoft.Win32.SystemEvents.DisplaySettingsChanged += new EventHandler(DisplaySettings_Changed);
             this.Move += new EventHandler(This_Move);
 
-            theseLanes = Form1.laneList.ToList();
+            theseLanes = lanes;
             theseReaders = readers;
 
             // CodeClass list boxes
             IEnumerable<string> theseCodeClasses = readers.SelectMany(x => x.Targets.Select(y => y.CodeClass)).Distinct();
             List<string> temp  = theseCodeClasses.Where(x => !x.Equals("Reserved") && !x.Equals("Extended")).ToList();
             selected = new BindingList<string>(temp);
+            selected.Add("Purification");
             selectedSource = new BindingSource();
             selectedSource.DataSource = selected;
             selectedListBox.DataSource = selectedSource;
@@ -345,14 +345,14 @@ namespace TS_General_QCmodule
 
         private List<HybCodeTarget> FilterDspTargets(List<HybCodeReader> readerList, List<string> selectedCodeClasses, List<string> selectedProbeGroups)
         {
-            IEnumerable<HybCodeTarget> partiallyFiltered = readerList.SelectMany(x => x.Targets).Where(y => selectedCodeClasses.Contains(y.CodeClass));
-            IEnumerable<HybCodeTarget> filtered = partiallyFiltered.Where(x => selectedProbeGroups.Contains(x.DisplayName));
-
+            List<HybCodeTarget> partiallyFiltered = readerList.SelectMany(x => x.Targets).Where(y => selectedCodeClasses.Contains(y.CodeClass)).ToList();
+            IEnumerable<HybCodeTarget> filtered = partiallyFiltered.Where(x => selectedProbeGroups.Contains(x.DisplayName) || x.DisplayName.Contains("PureSpike") || x.CodeClass.StartsWith("Pos") || x.CodeClass.StartsWith("Neg"));
             return filtered.ToList();
         }
 
         private Tuple<string, string>[] dspOrder = {Tuple.Create("Positive"  , "SpikeIn"),
                                                     Tuple.Create("Negative"  , "SpikeIn"),
+                                                    Tuple.Create("Purification", "SpikeIn"),
                                                     Tuple.Create("Positive"  , "Protein"),
                                                     Tuple.Create("Negative"  , "Protein"),
                                                     Tuple.Create("Negative"  , "RNA"),

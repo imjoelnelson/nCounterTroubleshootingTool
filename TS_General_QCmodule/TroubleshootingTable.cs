@@ -28,9 +28,9 @@ namespace TS_General_QCmodule
             GetHeaderRows();
             GetFlagTable();
 
-            if (laneList.Any(x => x.probeContent.Any(y => y[1].Contains("Positive"))))
+            if (laneList.Any(x => x.probeContent.Any(y => y[Lane.CodeClass].StartsWith("Positive"))))
             {
-                GetERCCtable();
+                erccCounts = GetERCCtable2();
             }
             List<Mtx> mtxList = lanesWithMtx.Select(x => x.thisMtx).ToList();
             stringClasses = GetStringClassTable(mtxList);
@@ -232,7 +232,7 @@ namespace TS_General_QCmodule
                 {
                     posName = "Positive";
                 }
-                if (laneList[i].probeContent.Where(x => x[1] == posName).Count() == 6)
+                if (laneList[i].probeContent.Where(x => x[Lane.CodeClass] == posName).Count() == 6)
                 {
                     if (laneList[i].lodPass)
                     {
@@ -287,6 +287,55 @@ namespace TS_General_QCmodule
             }
         }
 
+        // Non-DSP
+        private List<string> GetERCCtable2()
+        {
+            if (erccCounts == null)
+            {
+                erccCounts = new List<string>(30);
+            }
+            else
+            {
+                erccCounts.Clear();
+            }
+
+            List<Mtx> mtxList = laneList.Select(x => x.thisMtx).ToList();
+
+            List<string> geneNames = mtxList.SelectMany(q => q.codeList.Where(y => y[q.codeClassCols["CodeClass"]].StartsWith("Positive"))
+                                                                       .Select(y => y[q.codeClassCols["Name"]]))
+                                             .Distinct()
+                                             .OrderBy(z => z)
+                                             .ToList();
+            geneNames.AddRange(mtxList.SelectMany(q => q.codeList.Where(y => y[q.codeClassCols["CodeClass"]].StartsWith("Negative"))
+                                                                       .Select(y => y[q.codeClassCols["Name"]]))
+                                             .Distinct()
+                                             .OrderBy(z => z)
+                                             .ToList());
+            geneNames.AddRange(mtxList.SelectMany(q => q.codeList.Where(y => y[q.codeClassCols["CodeClass"]].StartsWith("Purification"))
+                                                                       .Select(y => y[q.codeClassCols["Name"]]))
+                                             .Distinct()
+                                             .OrderBy(z => z)
+                                             .ToList());
+
+            List<string> result = new List<string>(geneNames.Count);
+            for(int i = 0; i < geneNames.Count; i++)
+            {
+                string[] temp = new string[mtxList.Count + 1];
+                temp[0] = geneNames[i];
+                for(int j = 0; j < mtxList.Count; j++)
+                {
+                    Mtx temp0 = mtxList[j];
+                    string temp00 = temp0.codeList.Where(x => x[temp0.codeClassCols["Name"]] == geneNames[i])
+                                                  .Select(x => x[temp0.codeClassCols["Count"]])
+                                                  .FirstOrDefault();
+                    temp[j + 1] = temp00 != null ? temp00 : "NA";
+                }
+                result.Add(string.Join(",", temp));
+            }
+
+            return result;
+        }
+
         private string[] lets = new string[] { "A", "B", "C", "D", "E", "F", "G", "H" };
         private string[] lets2 = new string[] { "1.1", "2.1", "3.1" };
         private void GetERCCtable()
@@ -302,7 +351,7 @@ namespace TS_General_QCmodule
 
             int[] negLen = new int[1];
             int[] posLen = new int[1];
-            if (laneList.Any(x => x.probeContent.Where(y => y[1].Equals("Positive")).Count() == 8))
+            if (laneList.Any(x => x.probeContent.Where(y => y[Lane.CodeClass].Equals("Positive")).Count() == 8))
             {
                 posLen[0] = 8;
                 negLen[0] = 8;
@@ -310,7 +359,7 @@ namespace TS_General_QCmodule
             else
             {
                 posLen[0] = 6;
-                if (laneList.Any(x => x.probeContent.Where(y => y[1].Equals("Negative")).Count() == 6))
+                if (laneList.Any(x => x.probeContent.Where(y => y[Lane.CodeClass].Equals("Negative")).Count() == 6))
                 {
                     negLen[0] = 6;
                 }
@@ -355,21 +404,21 @@ namespace TS_General_QCmodule
                 {
                     posName = "Positive1";
                 }
-                temp0.AddRange(laneList[i].probeContent.Where(x => x[1].Equals(posName)).OrderBy(x => x[3]));
+                temp0.AddRange(laneList[i].probeContent.Where(x => x[Lane.CodeClass].Equals(posName)).OrderBy(x => x[Lane.Name]));
                 for (int j = 0; j < posLen[0]; j++)
                 {
-                    string count = temp0.Where(x => x[3].Contains(lets[j])).Select(x => x[5]).FirstOrDefault();
+                    string count = temp0.Where(x => x[Lane.Name].Contains(lets[j])).Select(x => x[Lane.Count]).FirstOrDefault();
                     tempPos[j][i] = count != null ? count : "NA";
                 }
                 temp00.Clear();
-                temp00.AddRange(laneList[i].probeContent.Where(x => x[1].Equals("Negative")).OrderBy(x => x[3]));
+                temp00.AddRange(laneList[i].probeContent.Where(x => x[Lane.CodeClass].Equals("Negative")).OrderBy(x => x[Lane.Name]));
                 for (int j = 0; j < negLen[0]; j++)
                 {
-                    string count = temp00.Where(x => x[3].Contains(lets[j])).Select(x => x[5]).FirstOrDefault();
+                    string count = temp00.Where(x => x[Lane.Name].Contains(lets[j])).Select(x => x[Lane.Count]).FirstOrDefault();
                     tempNeg[j][i] = count != null ? count : "NA";
                 }
                 temp000.Clear();
-                temp000.AddRange(laneList[i].probeContent.Where(x => x[1].Equals("Purification")).OrderBy(x => x[3]));
+                temp000.AddRange(laneList[i].probeContent.Where(x => x[Lane.CodeClass].Equals("Purification")).OrderBy(x => x[Lane.Name]));
                 for (int j = 0; j < 3; j++)
                 {
                     string count = temp000.Where(x => x[3].Contains(lets2[j])).Select(x => x[5]).FirstOrDefault();
@@ -416,7 +465,7 @@ namespace TS_General_QCmodule
             for (int i = 0; i < stringClassList.Count; i++)
             {
                 string[] temp1 = new string[len1];
-                List<Tuple<string, float>> temp2 = temp0.Select(x => x.Where(y => y.Item1 == stringClassList[i]).First()).ToList();
+                List<Tuple<string, float>> temp2 = temp0.Select(x => x.Where(y => y.Item1 == stringClassList[i]).FirstOrDefault()).ToList();
                 for (int j = 0; j < len1; j++)
                 {
                     // To accomodate situations where different file versions are included 
@@ -433,21 +482,21 @@ namespace TS_General_QCmodule
 
                 string tempClass = stringClassList[i];
 
-                if (tempClass.StartsWith("Unst"))
+                if (tempClass.StartsWith("Unst") && temp2 != null)
                 {
                     unst.AddRange(temp2.Select(x => x.Item2));
                 }
-                if (tempClass.StartsWith("Unde"))
+                if (tempClass.StartsWith("Unde") && temp2 != null)
                 {
                     under.AddRange(temp2.Select(x => x.Item2));
                 }
-                if (tempClass.StartsWith("Val"))
+                if (tempClass.StartsWith("Val") && temp2 != null)
                 {
                     valid.AddRange(temp2.Select(x => x.Item2));
                 }
-                if (!tempClass.Equals("Fiducial") && !stringClassList[i].StartsWith("Sing"))
+                if (!tempClass.Equals("Fiducial") && !stringClassList[i].StartsWith("Sing") && temp2 != null)
                 {
-                    totArray.Add(temp2.Select(x => x.Item2).ToList());
+                    totArray.Add(temp2.Select(x => x != null ? x.Item2 : 0).ToList());
                 }
 
                 if(include.Contains(tempClass))

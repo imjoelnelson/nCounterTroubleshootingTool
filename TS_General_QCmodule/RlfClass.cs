@@ -172,7 +172,7 @@ namespace TS_General_QCmodule
                                                codeClassColumnIndex,
                                                barcodeColumnIndex,
                                                seqColumnIndex };
-                int countRecords = end - indices[4];
+                countRecords = end - indices[4];
                 content = new List<RlfRecord>(countRecords);
                 for(int j = indices[4]; j < end; j++)
                 {

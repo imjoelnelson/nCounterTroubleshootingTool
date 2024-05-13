@@ -10,7 +10,7 @@ namespace TS_General_QCmodule
 {
     public class DBDataGridView : DataGridView
     {
-        public DBDataGridView()
+        public DBDataGridView(bool copypasta)
         {
             // General Properties
             DoubleBuffered = true;
@@ -26,10 +26,18 @@ namespace TS_General_QCmodule
             ColumnHeadersVisible = true;
             AutoGenerateColumns = false;
 
-            // Add copypasta context menu
-            cm = new ContextMenu();
-            cm.MenuItems.Add("Copy", cm_CopyClicked);
-            cm.MenuItems.Add("Paste", cm_PasteClicked);
+            if(copypasta)
+            {
+                // Add copypasta context menu
+                CM = new ContextMenu();
+                CM.MenuItems.Add("Copy", CM_CopyClicked);
+                CM.MenuItems.Add("Paste", CM_PasteClicked);
+            }
+            else
+            {
+                CM = new ContextMenu();
+                this.ContextMenu = CM;
+            }
 
             this.CellStateChanged += new DataGridViewCellStateChangedEventHandler(detectSelectedCells);
         }
@@ -68,9 +76,9 @@ namespace TS_General_QCmodule
             }
         }
 
-        ContextMenu cm { get; set; }
+        ContextMenu CM { get; set; }
 
-        private void cm_CopyClicked(object sender, EventArgs e)
+        private void CM_CopyClicked(object sender, EventArgs e)
         {
             if (this.GetCellCount(DataGridViewElementStates.Selected) > 0)
             {
@@ -85,7 +93,7 @@ namespace TS_General_QCmodule
             }
         }
 
-        private void cm_PasteClicked(object sender, EventArgs e)
+        private void CM_PasteClicked(object sender, EventArgs e)
         {
             SendKeys.Send("^v");
         }
@@ -96,7 +104,7 @@ namespace TS_General_QCmodule
 
             if (e.Control is TextBox)
             {
-                e.Control.ContextMenu = cm;
+                e.Control.ContextMenu = CM;
             }
         }
     }

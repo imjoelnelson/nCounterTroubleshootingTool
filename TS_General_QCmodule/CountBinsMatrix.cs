@@ -17,6 +17,16 @@ namespace TS_General_QCmodule
             Matrix = GetMatrix(stack);
         }
 
+        public CountBinsMatrix(List<Lane> lanes, List<int> cutoffs, List<string> codeclasses, string[] includedRows, List<HybCodeReader> readers)
+        {
+            Cutoffs = cutoffs.ToArray();
+            // Get included IDs
+            List<string> ids = GetIndcludedIds(readers, codeclasses, includedRows);
+            // Get stack
+            List<BarStackItem> stack = lanes.Select(x => new BarStackItem(x, Cutoffs, ids)).ToList();
+            Matrix = GetMatrix(stack);
+        }
+
         private int[] Cutoffs { get; set; }
         private string[] CodeClasses { get; set; }
         public double[][] Matrix { get; set; }
@@ -40,18 +50,27 @@ namespace TS_General_QCmodule
                         temp[i] = temp0;
                     }
                     return temp;
-            }
+                }
                 catch (Exception er)
-            {
+                {
                 MessageBox.Show($"{er.Message}", "CountBinsMatrix Error", MessageBoxButtons.OK);
                 return null;
+                }
             }
-        }
             else
             {
                 MessageBox.Show("BarStackItem length mismatch", "CountBinsMatrix Error", MessageBoxButtons.OK);
                 return null;
             }
+        }
+
+        private List<string> GetIndcludedIds(List<HybCodeReader> readers, List<string> codeClasses, string[] includedRows)
+        {
+            IEnumerable<HybCodeTarget> targets = readers.SelectMany(x => x.Targets)
+                                                        .Where(y => codeClasses.Contains(y.CodeClass));
+            List<string> result = targets.SelectMany(x => x.DSP_ID.Where(y => includedRows.Contains(y.Key))
+                                                                  .Select(y => y.Value)).ToList();
+            return result;
         }
     }
 }

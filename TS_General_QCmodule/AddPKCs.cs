@@ -38,7 +38,7 @@ namespace TS_General_QCmodule
             BindingSource source = new BindingSource();
             source.DataSource = items;
 
-            gv = new DBDataGridView();
+            gv = new DBDataGridView(true);
             gv.DataSource = source;
             gv.Dock = DockStyle.Fill;
             DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();

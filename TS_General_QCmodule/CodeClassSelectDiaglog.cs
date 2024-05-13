@@ -167,32 +167,31 @@ namespace TS_General_QCmodule
                 try
                 {
                     using (SaveFileDialog sf = new SaveFileDialog())
-                {
-                    sf.Filter = "CSV files|*.csv";
-                    sf.DefaultExt = ".csv";
-                    sf.OverwritePrompt = true;
-                    if (sf.ShowDialog() == DialogResult.OK)
                     {
-                        File.WriteAllText(sf.FileName, writeString);
-                        codeSumTable = sf.FileName;
+                        sf.Filter = "CSV files|*.csv";
+                        sf.DefaultExt = ".csv";
+                        sf.OverwritePrompt = true;
+                        if (sf.ShowDialog() == DialogResult.OK)
+                        {
+                            File.WriteAllText(sf.FileName, writeString);
+                            codeSumTable = sf.FileName;
+                        }
                     }
-                }
 
-                if (codeSumColumnList != null)
-                    codeSumColumnList.Clear();
-                if (codeSumFlagTable != null)
-                    codeSumFlagTable.Clear();
-                if (codeSumHeaderRows != null)
-                    codeSumHeaderRows.Clear();
-                if (theseLanes != null)
-                    theseLanes.Clear();
-                GC.Collect();
+                    if (codeSumColumnList != null)
+                        codeSumColumnList.Clear();
+                    if (codeSumFlagTable != null)
+                        codeSumFlagTable.Clear();
+                    if (codeSumHeaderRows != null)
+                        codeSumHeaderRows.Clear();
+                    if (theseLanes != null)
+                        theseLanes.Clear();
+                    GC.Collect();
 
-                if (codeSumTable != string.Empty)
-                {
-                    OpenFileAfterSaved(codeSumTable, 8000);
-                }
-
+                    if (codeSumTable != string.Empty)
+                    {
+                        OpenFileAfterSaved(codeSumTable, 8000);
+                    }
                 }
                 catch (Exception er)
                 {
@@ -558,8 +557,8 @@ namespace TS_General_QCmodule
 
             for (int i = 0; i < len; i++)
             {
-                string[] temp0 = thisLane.probeContent.Where(x => x[3].Equals(_contentList[i].Name)).FirstOrDefault();
-                temp[i] = temp0 != null ? temp0[5] : "N/A";
+                string[] temp0 = thisLane.probeContent.Where(x => x[Lane.Name].Equals(_contentList[i].Name)).FirstOrDefault();
+                temp[i] = temp0 != null ? temp0[Lane.Count] : "N/A";
             }
 
             return temp;
@@ -572,10 +571,10 @@ namespace TS_General_QCmodule
             string[] temp = new string[len];
             for (int i = 0; i < len; i++)
             {
-                string[] temp0 = thisLane.probeContent.Where(x => x[3].Equals(_contentList[i].Name)
-                                                               && x[1].Equals(_contentList[i].CodeClass))
+                string[] temp0 = thisLane.probeContent.Where(x => x[Lane.Name].Equals(_contentList[i].Name)
+                                                               && x[Lane.CodeClass].Equals(_contentList[i].CodeClass))
                                                       .FirstOrDefault();
-                temp[i] = temp0 != null ? temp0[5] : "NA";
+                temp[i] = temp0 != null ? temp0[Lane.Count] : "NA";
             }
 
             return temp;
@@ -589,7 +588,7 @@ namespace TS_General_QCmodule
             for (int i = 0; i < len; i++)
             {
                 string[] temp0 = thisLane.probeContent.Where(x => x[0].Equals(_contentList[i].ProbeID)).FirstOrDefault();
-                temp[i] = temp0 != null ? temp0[5] : "NA";
+                temp[i] = temp0 != null ? temp0[Lane.Count] : "NA";
             }
 
             return temp;
@@ -603,18 +602,18 @@ namespace TS_General_QCmodule
             List<CrossRlfRecord> controlList = _contentList.Where(x => x.CodeClass.StartsWith("Pos") || x.CodeClass.StartsWith("Neg") || x.CodeClass.StartsWith("Pur")).ToList();
             for (int i = 0; i < controlList.Count; i++)
             {
-                string[] temp0 = thisLane.probeContent.Where(x => x[3].Equals(controlList[i].Name)
-                                                               && x[1].Equals(controlList[i].CodeClass))
+                string[] temp0 = thisLane.probeContent.Where(x => x[Lane.Name].Equals(controlList[i].Name)
+                                                               && x[Lane.CodeClass].Equals(controlList[i].CodeClass))
                                                       .FirstOrDefault();
-                temp.Add(temp0 != null ? temp0[5] : "NA");
+                temp.Add(temp0 != null ? temp0[Lane.Count] : "NA");
             }
             List<CrossRlfRecord> endoList = _contentList.Where(x => x.CodeClass.StartsWith("Endo") || x.CodeClass.StartsWith("Hou")).ToList();
             for (int i = 0; i < endoList.Count; i++)
             {
-                string[] temp0 = thisLane.probeContent.Where(x => x[0].Equals(endoList[i].ProbeID)
-                                                               && x[1].Equals(endoList[i].CodeClass))
+                string[] temp0 = thisLane.probeContent.Where(x => x[Lane.probeID].Equals(endoList[i].ProbeID)
+                                                               && x[Lane.CodeClass].Equals(endoList[i].CodeClass))
                                                       .FirstOrDefault();
-                temp.Add(temp0 != null ? temp0[5] : "NA");
+                temp.Add(temp0 != null ? temp0[Lane.Count] : "NA");
             }
 
             return temp.ToArray();
@@ -1249,7 +1248,7 @@ namespace TS_General_QCmodule
                     temp[1].Add(flag);
                 }
 
-                if (lanes[i].POSlinearity != -1 && lanes[i].probeContent.Any(x => x[3].Contains("POS_A")))
+                if (lanes[i].POSlinearity != -1 && lanes[i].probeContent.Any(x => x[Lane.Name].Contains("POS_A")))
                 {
                     if (lanes[i].lodPass)
                     {

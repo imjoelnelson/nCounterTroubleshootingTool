@@ -62,8 +62,12 @@ namespace TS_General_QCmodule
             }
         }
 
-        public List<Lane> lanes;
+        /// <summary>
+        /// List of lane objects assoicated with the cartridge from Form1's laneList
+        /// </summary>
+        public List<Lane> lanes { get; set; }
 
+        // Implement INotifyPropertyChanged
         private void NotifyPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

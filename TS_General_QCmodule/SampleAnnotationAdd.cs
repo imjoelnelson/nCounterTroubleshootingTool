@@ -26,7 +26,7 @@ namespace TS_General_QCmodule
             source0.DataSource = AnnotList;
 
             // Initialize dgv
-            gv = new DBDataGridView();
+            gv = new DBDataGridView(false);
             gv.DataSource = source0;
             gv.AllowUserToResizeColumns = false;
             gv.Dock = DockStyle.Fill;
@@ -75,7 +75,7 @@ namespace TS_General_QCmodule
 
             gv.MouseUp += new MouseEventHandler(GV_MouseUp);
             gv.CellClick += new DataGridViewCellEventHandler(GV_Click);
-            this.MouseClick += new MouseEventHandler(GV_MouseClick);
+            gv.MouseClick += new MouseEventHandler(GV_MouseClick);
 
             int buttonXpos = panel.Width + 10;
             okButton.Location = new Point(buttonXpos, 12);
@@ -152,6 +152,7 @@ namespace TS_General_QCmodule
         List<int[]> SelInds { get; set; }
         private void GV_MouseUp(object sender, MouseEventArgs e)
         {
+            DBDataGridView gv = sender as DBDataGridView;
             if (SelInds == null)
             {
                 SelInds = new List<int[]>();
@@ -160,8 +161,17 @@ namespace TS_General_QCmodule
             {
                 SelInds.Clear();
             }
-
             SelInds.AddRange(GetSelectedInds(gv).Where(x => x[1] == 1));
+
+            // Context menu for right click on textbox editing control
+            if (gv.IsCurrentCellInEditMode && e.Button == MouseButtons.Right)
+            {
+                Rectangle rect = gv.GetCellDisplayRectangle(gv.CurrentCell.ColumnIndex, gv.CurrentCell.RowIndex, false);
+                if (rect.Left < e.X && rect.Right > e.X && rect.Top < e.Y && rect.Bottom > e.Y)
+                {
+                    GVEditCopyPastaContextMenu(e.X, e.Y);
+                }
+            }
         }
 
         private List<int[]> GetSelectedInds(DataGridView dgv)
@@ -173,7 +183,8 @@ namespace TS_General_QCmodule
                 temp.Add(new int[] { selected[i].RowIndex, selected[i].ColumnIndex });
             }
 
-            return temp;
+            IEnumerable<int[]> rowOrdered = temp.OrderBy(x => x[0]);
+            return rowOrdered.Count() > 0 ? rowOrdered.ToList() : null;
         }
 
         protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData)
@@ -229,10 +240,11 @@ namespace TS_General_QCmodule
         /// <param name="e"></param>
         private void GV_MouseClick(object sender, MouseEventArgs e)
         {
+            DataGridView gv = sender as DataGridView;
             if (e.Button == MouseButtons.Right)
             {
                 Tuple<int, int> temp = GetMouseOverCoordinates(e.X, e.Y);
-                if (temp.Item1 >= 0 && temp.Item2 == 1)
+                if (temp.Item1 >= 0 && temp.Item2 == 1 && !gv.IsCurrentCellInEditMode)
                 {
                     GVCopyPastaContextMenu(e.X, e.Y);
                 }
@@ -267,7 +279,15 @@ namespace TS_General_QCmodule
             cm.Show(gv, new Point(_X, _Y));
         }
 
-        public void GVEditControlCopy()
+        private void GVEditCopyPastaContextMenu(int _X, int _Y)
+        {
+            ContextMenu cm = new ContextMenu();
+            cm.MenuItems.Add("Copy", GV_Copy);
+            cm.MenuItems.Add("Paste", GV_Paste);
+            cm.Show(gv, new Point(_X, _Y));
+        }
+
+        private void GVEditControlCopy()
         {
             try
             {
@@ -275,9 +295,17 @@ namespace TS_General_QCmodule
                 {
                     if (gv.EditingControl.GetType().Name == "DataGridViewTextBoxEditingControl")
                     {
-                        if (gv.EditingControl.Text != null)
+                        var temp = gv.EditingControl as DataGridViewTextBoxEditingControl;
+                        if (temp.SelectedText != null)
                         {
-                            Clipboard.SetText(gv.EditingControl.Text);
+                            Clipboard.SetText(temp.SelectedText);
+                        }
+                        else
+                        {
+                            if(temp.Text != null)
+                            {
+                                Clipboard.SetText(temp.Text);
+                            }
                         }
                     }
                 }
@@ -288,9 +316,48 @@ namespace TS_General_QCmodule
             }
         }
 
+        private void GVEditControlPaste()
+        {
+            if (Clipboard.ContainsText())
+            {
+                try
+                {
+                    string clip = removeReturns(Clipboard.GetText());
+                    if(clip.Contains("\r\n"))
+                    {
+                        string[] temp3 = clip.Split(new string[] { "\r\n" }, StringSplitOptions.None).Where(x => x != "").ToArray();
+                        int index = gv.CurrentCell.RowIndex;
+                        if (gv.CurrentCell.ColumnIndex == 1)
+                        {
+                            for (int i = 0; i < temp3.Length && index + i < AnnotList.Count; i++)
+                            {
+                                AnnotList[index + i].Annot = temp3[i];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var box = gv.EditingControl as DataGridViewTextBoxEditingControl;
+                        if(box.SelectionLength > 0)
+                        {
+                            box.Text.Replace(box.SelectedText, clip);
+                        }
+                        else
+                        {
+                            box.Text.Insert(box.SelectionStart, clip);
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+        }
+
         private void GV_Copy(object sender, EventArgs e)
         {
-            GVCopy();
+            SendKeys.Send("^c");
         }
 
         private void GVCopy()
@@ -344,6 +411,7 @@ namespace TS_General_QCmodule
         private void GV_Click(object sender, DataGridViewCellEventArgs e)
         {
             // Extract ref to gv textbox edit control; for copypasta functionality; allows for applying paste listener
+            DataGridView gv = sender as DataGridView;
             Edit_text_box = GetEditTextBox(gv);
             if (Edit_text_box != null)
             {
@@ -404,7 +472,7 @@ namespace TS_General_QCmodule
             private Form parent_form = null;
             private Control listener_control = null;
             private Control owner = null;
-            private Control owner2 = null;
+            private DataGridView gv = null;
             public bool ContextMenuIsDropped { get; set; }
             // from pinvoke
             private const int WM_PASTE = 0x0302;
@@ -441,7 +509,14 @@ namespace TS_General_QCmodule
                 if (m.Msg == WM_PASTE)
                 {
                     SampleAnnotationAdd temp = parent_form as SampleAnnotationAdd;
-                    temp.Pasta();
+                    if(temp.gv.IsCurrentCellInEditMode)
+                    {
+                        temp.GVEditControlPaste();
+                    }
+                    else
+                    {
+                        temp.Pasta();
+                    }
                 }
                 if (m.Msg == WM_COPY)
                 {

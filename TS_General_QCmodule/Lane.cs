@@ -18,6 +18,7 @@ namespace TS_General_QCmodule
             LaneID = _mtx.laneID;
             SampleID = _mtx.sampleName;
             Date = _mtx.date;
+            ParsedDate = _mtx.ParsedDate;
             owner = _mtx.owner;
             comments = _mtx.comments;
             Instrument = _mtx.instrument;
@@ -59,6 +60,7 @@ namespace TS_General_QCmodule
             LaneID = _rcc.laneID;
             SampleID = _rcc.sampleName;
             Date = _rcc.date;
+            ParsedDate = _rcc.ParsedDate;
             owner = _rcc.owner;
             comments = _rcc.comments;
             Instrument = _rcc.instrument;
@@ -77,7 +79,7 @@ namespace TS_General_QCmodule
                                     _rcc.CodeSumCols["Name"],
                                     _rcc.CodeSumCols["Accession"],
                                     _rcc.CodeSumCols["Count"] };
-            if(thisRlfClass.containsRccCodes)
+            if(thisRlfClass.containsRccCodes || thisRlfClass.containsMtxCodes)
             {
                 for (int i = 0; i < len; i++)
                 {
@@ -147,6 +149,7 @@ namespace TS_General_QCmodule
         public string owner { get; set; }
         public string comments { get; set; }
         public string SampleID { get; set; }
+        public DateTime? ParsedDate { get; set; }
         public string Date { get; set; }
         public string Instrument { get; set; }
         public int StagePosition { get; set; }
@@ -154,6 +157,7 @@ namespace TS_General_QCmodule
         public int FovCount { get; set; }
         public int FovCounted { get; set; }
         public double BindingDensity { get; set; }
+        public double PosNormFactor { get; set; } // Set only in certain instances when the lane is included as part of a collection of lanes; calculated outside of the class
 
         private string CartID;
         /// <summary>
@@ -240,6 +244,13 @@ namespace TS_General_QCmodule
             }
         }
 
+
+        public static int probeID = 0;
+        public static int CodeClass = 1;
+        public static int Barcode = 2;
+        public static int Name = 3;
+        public static int Accession = 4;
+        public static int Count = 5;
         private List<string[]> ProbeContent;
         /// <summary>
         /// <value>List of probe data strings: ProbeID, CodeClass, Barcode, Name, Accession, Count</value>
@@ -310,6 +321,10 @@ namespace TS_General_QCmodule
         public bool isSprint
         {
             get => hasRCC ? thisRcc.isSprint : thisMtx.isSprint;
+        }
+        public string TypeName
+        {
+            get => isSprint ? "Sprint" : "Gen2";
         }
         /// <summary>
         /// <value>Percent of FOV attempted which were used for collecting counts; not the same as percent registered</value>
@@ -385,47 +400,6 @@ namespace TS_General_QCmodule
             }
         }
 
-        public void AddRcc(Rcc newRcc, string[] _codeClassesToAdd)
-        {
-
-            if (thisMtx != null)
-            {
-                if (MergeMtxAndRcc(this, newRcc))
-                {
-                    thisRcc = newRcc;
-                    matched = tristate.TRUE;
-                    // Add probe content from RCC
-                    int[] ind = new int[] { newRcc.CodeSumCols["CodeClass"],
-                                            -1,
-                                            newRcc.CodeSumCols["Name"],
-                                            newRcc.CodeSumCols["Accession"],
-                                            newRcc.CodeSumCols["Count"] };
-                    List<string[]> contentToChange = thisRcc.CodeSummary.Where(x => _codeClassesToAdd.Contains(x[ind[0]])).ToList();
-                    for (int i = 0; i < contentToChange.Count; i++)
-                    {
-                        probeContent.Add(new string[] { string.Empty,
-                                                        contentToChange[i][ind[0]],
-                                                        string.Empty,
-                                                        contentToChange[i][ind[2]],
-                                                        contentToChange[i][ind[3]],
-                                                        contentToChange[i][ind[4]] });
-                    }
-                }
-                else
-                {
-                    thisRcc = null;
-                    matched = tristate.FALSE;
-                }
-            }
-            else
-            {
-                thisRcc = newRcc;
-                matched = tristate.NULL;
-            }
-
-            UpdateLane(true);
-        }
-
         private bool MergeMtxAndRcc(Lane lane, Rcc rcc)
         {
             bool[] checks = new bool[4];
@@ -433,19 +407,19 @@ namespace TS_General_QCmodule
             if (lane.laneType == RlfClass.RlfType.dsp ||
                 lane.laneType == RlfClass.RlfType.generic)
             {
-                targetToCheck = lane.probeContent.Where(x => x[5] != "0"
-                                                          && x[5] != "1").FirstOrDefault();
+                targetToCheck = lane.probeContent.Where(x => x[Count] != "0"
+                                                          && x[Count] != "1").FirstOrDefault();
             }
             else
             {
-                targetToCheck = lane.probeContent.Where(x => x[3].StartsWith("POS_")
-                                                          && x[5] != "0"
-                                                          && x[5] != "1").FirstOrDefault();
+                targetToCheck = lane.probeContent.Where(x => x[Name].StartsWith("POS_")
+                                                          && x[Count] != "0"
+                                                          && x[Count] != "1").FirstOrDefault();
             }
             if (targetToCheck != null)
             {
                 string valOne = targetToCheck[5];
-                string valTwo = rcc.CodeSummary.Where(x => x[rcc.CodeSumCols["Name"]] == targetToCheck[3])
+                string valTwo = rcc.CodeSummary.Where(x => x[rcc.CodeSumCols["Name"]] == targetToCheck[Name])
                                                .Select(x => x[rcc.CodeSumCols["Count"]]).FirstOrDefault();
                 if (valTwo != null)
                 {
@@ -533,8 +507,8 @@ namespace TS_General_QCmodule
             if (targetToCheck != null)
             {
                 string valOne = targetToCheck[mtx.codeClassCols["Count"]];
-                string valTwo = probeContent.Where(x => x[3] == targetToCheck[mtx.codeClassCols["Name"]])
-                                            .Select(x => x[5]).FirstOrDefault();
+                string valTwo = probeContent.Where(x => x[Name] == targetToCheck[mtx.codeClassCols["Name"]])
+                                            .Select(x => x[Count]).FirstOrDefault();
                 if (valTwo != null)
                 {
                     checks[0] = valOne == valTwo;
@@ -603,7 +577,7 @@ namespace TS_General_QCmodule
 
         public void AddProbeIDsToProbeContent(Dictionary<string, string> nameIDMatch)
         {
-            List<string[]> notExtendedProbes = probeContent.Where(x => x[1] != "Reserved" && x[1] != "Extended").ToList();
+            List<string[]> notExtendedProbes = probeContent.Where(x => x[CodeClass] != "Reserved" && x[CodeClass] != "Extended").ToList();
             for (int i = 0; i < notExtendedProbes.Count; i++)
             {
                 notExtendedProbes[i][0] = nameIDMatch[notExtendedProbes[i][3]];
@@ -620,7 +594,7 @@ namespace TS_General_QCmodule
                                                                            .FirstOrDefault();
                 if(nameIDMatch != null)
                 {
-                    List<string[]> tempProbes = probeContent.Where(x => x[1].Equals(CodeClasses[i])).ToList();
+                    List<string[]> tempProbes = probeContent.Where(x => x[CodeClass].Equals(CodeClasses[i])).ToList();
                     for(int j = 0; j < tempProbes.Count; j++)
                     {
                         tempProbes[j][0] = nameIDMatch[tempProbes[j][3]];
@@ -676,8 +650,8 @@ namespace TS_General_QCmodule
 
         public double PosGeoMean { get; set; }
 
-        private void GetPosGeoMean() { PosGeoMean = CalculatePosGeoMean(); }
-        public double CalculatePosGeoMean()
+        public void GetPosGeoMean() { PosGeoMean = CalculatePosGeoMean(); }
+        private double CalculatePosGeoMean()
         {
             if(hasRCC)
             {
@@ -685,7 +659,8 @@ namespace TS_General_QCmodule
             }
             else
             {
-                return thisMtx.GetPOSgeomean();
+                thisMtx.GetPOSgeomean();
+                return thisMtx.POSgeomean;
             }
         }
 

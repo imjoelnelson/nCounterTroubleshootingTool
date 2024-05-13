@@ -20,12 +20,22 @@ namespace TS_General_QCmodule
             slat = "Run SLAT";
         }
 
-        public CartridgeItem(string name, string runName, List<Lane> associatedLanes)
+        public CartridgeItem(string runName, string _date, List<Lane> associatedLanes, bool isSprint)
         {
-            cartName = name;
-            cartID = runName;
-            lanes = associatedLanes;
-            slat = "Click";
+            if(isSprint)
+            {
+                cartName = runName;
+                cartID = _date;
+                lanes = associatedLanes;
+                slat = "Click";
+            }
+            else
+            {
+                cartID = runName;
+                Date = _date;
+                lanes = associatedLanes;
+                slat = "Click";
+            }
         }
 
         private string CartName;
@@ -52,6 +62,20 @@ namespace TS_General_QCmodule
                 {
                     CartID = value;
                     NotifyPropertyChanged("cartID");
+                }
+            }
+        }
+
+        private string Date;
+        public string date
+        {
+            get { return Date; }
+            set 
+            { 
+                if(Date != value)
+                {
+                    Date = value;
+                    NotifyPropertyChanged("date");
                 }
             }
         }

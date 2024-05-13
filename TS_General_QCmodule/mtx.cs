@@ -21,29 +21,25 @@ namespace TS_General_QCmodule
             rlfClass = thisRlfClass;
 
             indices = getIndices(lines);
-            
-            // Get dictionary sections
-            headerAtts = GetSection(lines, indices[0] + 1, indices[1]);
-            sampleAtt = GetSection(lines, indices[2] + 1, indices[3]);
-            laneAtt = GetSection(lines, indices[4] + 1, indices[5]);
+
+            // Get header, sample attributes, and lane attributes section properties
+            GetHeaderAtts(lines.Skip(indices[0] + 1).Take(indices[1] - indices[0] - 1).ToList());
+            GetGenericSampleAtts(lines.Skip(indices[2] + 1).Take(indices[3] - indices[2] - 1).ToList());
+            GetGenericLaneAtts(lines.Skip(indices[4] + 1).Take(indices[5] - indices[4] - 1).ToList());
 
             // Determine mtx type (dx, miRNA, miRGE, 3D, ps, dsp)
             mtxType = thisRlfClass.thisRLFType;
-            if(mtxType == RlfClass.RlfType.dx)
-            {
-                throw new Exception("For diagnostic MTX files, use the DX QCmodule tool; this tool is for LS MTX and RCCs only");
-            }
 
             // MTX data sections
             List<string> codeClasses = new List<string>();
 
             // Get Fov metrics columns by file version
-            if(fileVersion == "1.9")
+            if (fileVersion == "1.9")
             {
                 fovMetProperties = new List<string>();
                 fovMetProperties.AddRange(Form1.fovMetProperties19);
             }
-            if(fileVersion == "2.1")
+            if (fileVersion == "2.1")
             {
                 fovMetProperties = new List<string>();
                 fovMetProperties.AddRange(Form1.fovMetProperties21);
@@ -68,10 +64,10 @@ namespace TS_General_QCmodule
             fovClassSums = GetFovStatList(headers1, "Sum", null);
 
             // Set flags
-            pctCounted = Math.Round((double)fovCounted / (double)fovCount,3);
+            pctCounted = Math.Round((double)fovCounted / (double)fovCount, 3);
             if (!isSprint)
             {
-                deltaZatY = GetTiltFlag(fovMetArray);
+                deltaZatY = GetTilt(fovMetArray);
             }
 
             if (isSprint)
@@ -83,7 +79,7 @@ namespace TS_General_QCmodule
                 BDpass = BD < 2.25;
             }
             GetPosName();
-            if(codeList.Where(x => x[codeClassCols["CodeClass"]] == posName).Count() == 6)
+            if (codeList.Where(x => x[codeClassCols["CodeClass"]] == posName).Count() == 6)
             {
                 GetPosFlags();
             }
@@ -93,10 +89,6 @@ namespace TS_General_QCmodule
         // Properties
         //
         /// <summary>
-        /// <value>The parent lane that holds the MTX</value>
-        /// </summary>
-        public Lane parentLane { get; set; }
-        /// <summary>
         /// <value>The MTX filename</value>
         /// </summary>
         public string fileName { get; set; }
@@ -104,35 +96,22 @@ namespace TS_General_QCmodule
         /// <value>The file path to this MTX file</value>
         /// </summary>
         public string filePath { get; set; }
+        /// <summary>
+        /// <value>Path of the folder/file initially opened to search for MTX/RCC</value>
+        /// </summary>
+        public string rootPath { get; set; }
 
         //Header
-        private Dictionary<string, string> headerAtts { get; set; }
-        public string fileVersion => headerAtts["FileVersion"];
-        public string softwareVersion => headerAtts["SoftwareVersion"];
-        public string systemType => double.Parse(fileVersion) > 1.9 ? headerAtts["SystemType"] : null;
+        public string fileVersion { get; set; }
+        public string softwareVersion { get; set; }
+        public string systemType { get; set; }
 
         // Sample attributes
-        private Dictionary<string, string> sampleAtt { get; set; }
-        public string sampleName => sampleAtt["ID"];
-        public string comments => sampleAtt["Comments"];
-        public string owner => sampleAtt["Owner"];
-        public string date
-        {
-            get
-            {
-                string dateCheck = fileName.Substring(0, fileName.IndexOf('_'));
-                DateTime d;
-                if (DateTime.TryParseExact(dateCheck, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
-                {
-                    return dateCheck;
-                }
-                else
-                {
-                    return sampleAtt["Date"];
-                }
-            }
-        }
-        public string RLF => sampleAtt["GeneRLF"].ToLower();
+        public string sampleName { get; set; }
+        public string comments { get; set; }
+        public string owner { get; set; }
+        public string date { get; set; }
+        public string RLF { get; set; }
         /// <summary>
         /// <value>RLF class with name matching sampleAtt[3] (i.e. the GeneRLF); may or not be present depending on if loaded</value>
         /// </summary>
@@ -141,19 +120,20 @@ namespace TS_General_QCmodule
         /// <value>DSP-specific; List of HybCodeReaders (i.e. class holding Probe Kit Config file data) associated with the RCC</value>
         /// </summary>
         public List<HybCodeReader> hybCodeList { get; set; }
-        public string systemAPF => sampleAtt["SystemAPF"];
-        public string AssayType => fileVersion == "2.0" ? sampleAtt["AssayType"] : null;
+        public string systemAPF { get; set; }
+        public string AssayType { get; set; }
 
         // Lane attributes
         private Dictionary<string, string> laneAtt { get; set; }
-        public int laneID => int.Parse(laneAtt["ID"]);
-        public string cartID => laneAtt["CartridgeID"];
-        public string cartBarcode => laneAtt.Keys.Contains("CartridgeBarcode") ? laneAtt["CartridgeBarcode"] : null;
-        public string instrument => laneAtt["ScannerID"];
-        public int stagePos => int.Parse(laneAtt["StagePosition"]);
-        public int fovCount => int.Parse(laneAtt["FovCount"]);
-        public int fovCounted => int.Parse(laneAtt["FovCounted"]);
-        public Double BD => double.Parse(laneAtt["BindingDensity"]);
+        public int laneID { get; set; }
+        public string cartID { get; set; }
+        public string cartBarcode { get; set; }
+        public string instrument { get; set; }
+        public int stagePos { get; set; }
+        public int fovCount {get; set;}
+        public int fovReg { get; set; }
+        public int fovCounted { get; set; }
+        public double BD { get; set; }
 
         // Analysis type
         /// <summary>
@@ -201,14 +181,15 @@ namespace TS_General_QCmodule
         public double pctCounted { get; set; }
         public bool pctCountedPass => pctCounted >= 0.75;
         public double pctReg { get; set; }
-        public Double deltaZatY { get; set; }
+        public double deltaZatY { get; set; }
         public bool tilt => deltaZatY >= 15;
         public bool BDpass { get; set; }
         public double POSlinearity { get; set; }
         public bool POSlinearityPass { get; set; }
+        public double negMean { get; set; }
         public double LOD { get; set; }
         public bool lodPass { get; set; }
-        
+
         //
         // Methods
         //
@@ -289,22 +270,89 @@ namespace TS_General_QCmodule
             return index;
         }
 
-        private Dictionary<string, string> GetSection(string[] lines, int start, int stop)
+        private void GetHeaderAtts(List<string> lines)
         {
-            int len = stop - start;
-            Dictionary<string,string> temp = new Dictionary<string, string>(len);
-            for (int i = start; i < stop; i++)
+            var temp0 = lines.Where(x => x.StartsWith("File") && x.Contains(','));
+            var temp1 = temp0.Count() > 0 ? temp0.Select(x => x.Split(',')[1]).FirstOrDefault() : null;
+            fileVersion = temp1 != null ? temp1 : "0.0";
+            var temp2 = lines.Where(x => x.StartsWith("Soft"));
+            var temp3 = temp2.Count() > 0 ? temp2.Select(x => x.Split(',')[1]).FirstOrDefault() : "";
+            softwareVersion = temp3 != null ? temp3 : "";
+            var temp4 = lines.Where(x => x.StartsWith("Syst"));
+            var temp5 = temp4.Count() > 0 ? temp4.Select(x => x.Split(',')[1]).FirstOrDefault() : "";
+            systemType = temp5 != null ? temp5 : "";
+        }
+
+        private void GetGenericSampleAtts(List<string> lines)
+        {
+            Dictionary<string, string> AttTranslate = lines.Select(x => x.Split(','))
+                                                           .ToDictionary(y => y[0], y => y[1]);
+            sampleName = AttTranslate["ID"];
+            owner = AttTranslate["Owner"];
+            comments = AttTranslate["Comments"];
+            date = ParseDate(fileName, AttTranslate["Date"]);
+            RLF = AttTranslate["GeneRLF"].ToLower();
+            systemAPF = AttTranslate["SystemAPF"];
+        }
+
+        public DateTime? ParsedDate { get; set; }
+        private string ParseDate(string inputString1, string inputString2)
+        {
+            string dateCheck = string.Empty;
+            DateTime d;
+            if (inputString1.Contains('_'))
             {
-                string[] bits = lines[i].Split(',');
-                temp.Add(bits[0], bits[1]);
+                dateCheck = inputString1.Substring(0, fileName.IndexOf('_'));
+                if (DateTime.TryParseExact(dateCheck, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                {
+                    ParsedDate = d;
+                    return dateCheck;
+                }
+                else
+                {
+                    if (DateTime.TryParseExact(inputString2, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                    {
+                        ParsedDate = d;
+                    }
+                    else
+                    {
+                        ParsedDate = null;
+                    }
+                    return inputString2;
+                }
             }
-            return temp;
+            else
+            {
+                if (DateTime.TryParseExact(inputString2, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out d))
+                {
+                    ParsedDate = d;
+                }
+                else
+                {
+                    ParsedDate = null;
+                }
+                return inputString2;
+            }
+        }
+
+        private void GetGenericLaneAtts(List<string> lines)
+        {
+            Dictionary<string, string> AttTranslate = lines.Select(x => x.Split(','))
+                                                           .ToDictionary(y => y[0], y => y[1]);
+
+            laneID = int.Parse(AttTranslate["ID"]);
+            fovCount = int.Parse(AttTranslate["FovCount"]);
+            fovCounted = int.Parse(AttTranslate["FovCounted"]);
+            instrument = AttTranslate["ScannerID"];
+            stagePos = int.Parse(AttTranslate["StagePosition"]);
+            BD = double.Parse(AttTranslate["BindingDensity"]);
+            cartID = AttTranslate["CartridgeID"];
+            cartBarcode = AttTranslate["CartridgeBarcode"];
         }
 
         private void MtxCheck(string[] _headers)
         {
             bool fovCountRight = fovCount == (indices[7] - (indices[6] + 2));
-
         }
 
         /// <summary>
@@ -406,10 +454,10 @@ namespace TS_General_QCmodule
                             temp2.Add(i);
                         }
                     }
-                    
                 }
-                // Get % reg here out of convenience
-                pctReg = Math.Round((double)temp1.Count / fovCount, 3);
+                // Get % reg here out of 
+                fovReg = temp1.Count;
+                pctReg = fovCount > 0 ? Math.Round((double)fovReg / fovCount, 3) : -1;
                 return Tuple.Create(temp1, temp2);
             }
             else
@@ -600,20 +648,26 @@ namespace TS_General_QCmodule
             }
         }
 
-        public double GetPOSgeomean()
+        private double CalculatePOSgeomean(string[][] codeList, Dictionary<string, int> codeClassCols)
         {
             IEnumerable<string[]> posRows = codeList.Where(x => x[codeClassCols["CodeClass"]] == posName);
             if (posRows == null)
             {
-                return -1;
+                this.POSgeomean = - 1;
             }
 
             int[] posCounts = posRows.OrderBy(x => x[codeClassCols["Name"]])
                                      .Select(x => int.Parse(x[codeClassCols["Count"]]))
                                      .ToArray();
 
-            // POS Geomean
-            return gm_mean(posCounts.Take(4));
+            double result = gm_mean(posCounts.Take(4));
+
+            return result;
+        }
+
+        public void GetPOSgeomean()
+        {
+            this.POSgeomean = CalculatePOSgeomean(codeList, codeClassCols);
         }
         
         /// <summary>
@@ -632,11 +686,11 @@ namespace TS_General_QCmodule
                                      .ToArray();
 
             // POS Geomean
-            POSgeomean = gm_mean(posCounts.Take(4));
+            GetPOSgeomean();
             
-            // POS linearity flag
-            double POS_E;
-            if (mtxType != RlfClass.RlfType.ps && mtxType != RlfClass.RlfType.dsp)
+            // POS linearity flag and LOD flag
+            double POS_E = -1;
+            if (mtxType != RlfClass.RlfType.ps && mtxType != RlfClass.RlfType.dsp && mtxType != RlfClass.RlfType.generic)
             {
                 if (posCounts.Length == 6)
                 {
@@ -646,32 +700,36 @@ namespace TS_General_QCmodule
                 }
                 else
                 {
-                    throw new Exception($"Only {posCounts.Count()} ERCC POS rows detected");
+                    if(posCounts.Length < 6)
+                    {
+                        throw new Exception($"Only {posCounts.Count()} ERCC POS rows detected");
+                    }
                 }
             }
             else
             {
-                if (posCounts.Length == 8)
-                {
-                    POSlinearity = -1;
-                    POSlinearityPass = false;
-                    POS_E = -1.0;
-                }
-                else
-                {
-                    return;
-                }
+                POSlinearity = -1;
+                POSlinearityPass = false;
+                POS_E = -1.0;
             }
 
-
-            // LOD flag
-            IEnumerable<int> negCounts = codeList.Where(x => x[codeClassCols["CodeClass"]] == "Negative")
-                                             .Select(x => int.Parse(x[codeClassCols["Count"]]));
-
-            if (negCounts.Count() >= 6)
+            if (POS_E > -1)
             {
-                LOD = getLOD(negCounts);
-                lodPass = POS_E > LOD;
+                // LOD flag
+                IEnumerable<int> negCounts = codeList.Where(x => x[codeClassCols["CodeClass"]] == "Negative")
+                                             .Select(x => int.Parse(x[codeClassCols["Count"]]));
+                negMean = negCounts.Count() > 0 ? negCounts.Average() : -1;
+
+                if (negCounts.Count() >= 6)
+                {
+                    LOD = getLOD(negCounts);
+                    lodPass = POS_E > LOD;
+                }
+            }
+            else
+            {
+                LOD = -1;
+                lodPass = false;
             }
         }
 
@@ -680,9 +738,9 @@ namespace TS_General_QCmodule
         /// </summary>
         /// <param name="numbers">An array of Doubles</param>
         /// <returns>A Double, the geomean of the input array</returns>
-        private Double gm_mean(IEnumerable<int> numbers)
+        public double gm_mean(IEnumerable<int> numbers)
         {
-            List<Double> nums = new List<Double>();
+            List<double> nums = new List<double>();
             foreach (int i in numbers)
             {
                 if (i == 0)
@@ -694,7 +752,7 @@ namespace TS_General_QCmodule
                     nums.Add(Convert.ToDouble(i));
                 }
             }
-            List<Double> logs = new List<Double>();
+            List<double> logs = new List<double>();
             for(int i = 0; i < nums.Count; i++)
             {
                 if (nums[i] > 0)
@@ -706,7 +764,7 @@ namespace TS_General_QCmodule
                     logs.Add(0);
                 }
             }
-            Double geomean = Math.Pow(2, logs.Sum() / logs.Count());
+            double geomean = Math.Pow(2, logs.Sum() / logs.Count());
             return geomean;
         }
 
@@ -843,27 +901,34 @@ namespace TS_General_QCmodule
         }
 
         /// <summary>
-        /// Gets a bool indicating whether the lane indicates tilt (15 steps between averages of 10 FOVs at the extreme ends)
+        /// Returns a double indicating the number of steps in the Z axis between the extremem ends of a lane
         /// </summary>
-        /// <param name="array"></param>
-        /// <returns></returns>
-        private double GetTiltFlag(string[][] array)
+        /// <param name="array">Unparsed FOV metrics matrix</param>
+        /// <returns>double equal to the difference in steps in the Z axis between the averages of ten FOV at each extreme of the Y range</returns>
+        private double GetTilt(string[][] array)
         {
-            int len = fovMetArray.Length;
-            List<double[]> list = new List<double[]>(len);
-            int xIndex = fovMetCols["X"];
-            int zIndex = fovMetCols["Z"];
-            for (int i = 0; i < len; i++)
+            if(array.Length > 20)
             {
-                list.Add(new double[] { double.Parse(array[i][xIndex]),
+                int len = fovMetArray.Length;
+                List<double[]> list = new List<double[]>(len);
+                int xIndex = fovMetCols["Y"];
+                int zIndex = fovMetCols["Z"];
+                for (int i = 0; i < len; i++)
+                {
+                    list.Add(new double[] { double.Parse(array[i][xIndex]),
                                         double.Parse(array[i][zIndex])});
+                }
+                List<double[]> list1 = list.OrderBy(x => x[0]).ToList();
+                List<double[]> list2 = list1.OrderByDescending(x => x[0]).ToList();
+
+                double delta = Math.Abs(list1.Take(10).Select(x => x[1]).Average() - list2.Take(10).Select(x => x[1]).Average());
+
+                return delta;
             }
-            List<double[]> list1 = list.OrderBy(x => x[0]).ToList();
-            List<double[]> list2 = list1.OrderByDescending(x => x[0]).ToList();
-
-            double delta = Math.Abs(list1.Take(10).Select(x => x[1]).Average() - list2.Take(10).Select(x => x[1]).Average());
-
-            return delta;
+            else
+            {
+                return -1;
+            }
         }
     }
 }
