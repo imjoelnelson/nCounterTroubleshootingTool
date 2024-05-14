@@ -1,0 +1,26 @@
+########    G2LAT QC Thresholds    ########
+
+# High binding density threshold (double; i.e. number with decimals)
+BD = 2.25
+# Low threshold for FOV counted (double; i.e. number with decimals)
+FovCnt = 0.85
+# Low threshold for FOV registered (double; i.e. number with decimals
+FovReg = 0.85
+# Height difference between any of: lane 1 FOV 1, SD , or taught Z height (integer)
+ZHeight = 40
+# Threshold for average fiducial counts (FidCnt) per FOV
+FidCnt = 100
+# Lower threshold for AIMs
+LoAim = 0.5
+# High threshold for AIMs
+HiAim = 1.5
+# High threshold for BkgIntAvg (fluorescence background intensity)
+HiBkg = 500
+# High threshold for FidLocAvg
+FidLoc = 0.23
+# Min total spot counts to consider % unstretched
+SpotCnt = 250000
+# high % unstretched
+PctUnstr = 40
+# low POS control geomean per FOV; 4 is ~equivalent to POS_A = 9000 at 280 FOV
+LowPosGeo = 4

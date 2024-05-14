@@ -1,0 +1,2068 @@
+{
+  "Name": "Mars IO Mouse All Content", 
+  "Version": 2.0, 
+  "AnalyteType": "Protein", 
+  "MinArea": 1600, 
+  "MinNuclei": 20, 
+  "Compatibility": "10", 
+  "Date": "210127", 
+  "ReporterSpace": "111111000", 
+  "PlexSize": 8, 
+  "ProbeGroups": [
+    {
+      "Name": "Oncogene", 
+      "Targets": [
+        "Her2"
+      ]
+    }, 
+    {
+      "Name": "Th cells", 
+      "Targets": [
+        "FOXP3", 
+        "CD40L", 
+        "CD4", 
+        "CTLA4"
+      ]
+    }, 
+    {
+      "Name": "Melanoma", 
+      "Targets": [
+        "S100B", 
+        "Pmel17"
+      ]
+    }, 
+    {
+      "Name": "B cells", 
+      "Targets": [
+        "CD19"
+      ]
+    }, 
+    {
+      "Name": "DC", 
+      "Targets": [
+        "BatF3", 
+        "CD11b", 
+        "CD11c"
+      ]
+    }, 
+    {
+      "Name": "Checkpoint", 
+      "Targets": [
+        "CD86", 
+        "CD28", 
+        "B7-H3", 
+        "CTLA4", 
+        "LAG3", 
+        "PD-1", 
+        "PD-L1", 
+        "Tim-3", 
+        "VISTA"
+      ]
+    }, 
+    {
+      "Name": "Memory", 
+      "Targets": [
+        "CD127/IL7RA"
+      ]
+    }, 
+    {
+      "Name": "Antigen Presentation", 
+      "Targets": [
+        "BatF3", 
+        "MHC II"
+      ]
+    }, 
+    {
+      "Name": "Fibroblasts", 
+      "Targets": [
+        "Fibronectin"
+      ]
+    }, 
+    {
+      "Name": "Proliferation", 
+      "Targets": [
+        "Ki-67"
+      ]
+    }, 
+    {
+      "Name": "Transgene", 
+      "Targets": [
+        "GFP"
+      ]
+    }, 
+    {
+      "Name": "Tregs", 
+      "Targets": [
+        "FOXP3"
+      ]
+    }, 
+    {
+      "Name": "T cell Activation", 
+      "Targets": [
+        "CD27", 
+        "CD44", 
+        "ICOS", 
+        "CD40L", 
+        "CD28", 
+        "IFNGR", 
+        "CTLA4", 
+        "GITR", 
+        "GZMB", 
+        "LAG3", 
+        "OX40L", 
+        "PD-1", 
+        "Tim-3"
+      ]
+    }, 
+    {
+      "Name": "Naive", 
+      "Targets": [
+        "CD127/IL7RA"
+      ]
+    }, 
+    {
+      "Name": "Monocyte", 
+      "Targets": [
+        "CD14"
+      ]
+    }, 
+    {
+      "Name": "Background", 
+      "Targets": [
+        "Rb IgG", 
+        "Rt IgG2a", 
+        "Rt IgG2b"
+      ]
+    }, 
+    {
+      "Name": "Housekeepers", 
+      "Targets": [
+        "GAPDH", 
+        "Histone H3", 
+        "S6"
+      ]
+    }, 
+    {
+      "Name": "Neutrophil", 
+      "Targets": [
+        "Ly6G/Ly6C"
+      ]
+    }, 
+    {
+      "Name": "Myeloid Suppression", 
+      "Targets": [
+        "CD163"
+      ]
+    }, 
+    {
+      "Name": "Cytotoxicity", 
+      "Targets": [
+        "GZMB"
+      ]
+    }, 
+    {
+      "Name": "Myeloid Activation", 
+      "Targets": [
+        "CD40", 
+        "CD86", 
+        "PD-L1", 
+        "VISTA"
+      ]
+    }, 
+    {
+      "Name": "T cells", 
+      "Targets": [
+        "CD27", 
+        "FOXP3", 
+        "CD127/IL7RA", 
+        "CD40L", 
+        "CD28", 
+        "CD3e", 
+        "CD4", 
+        "CD8a", 
+        "CTLA4", 
+        "GITR", 
+        "LAG3", 
+        "PD-1", 
+        "Tim-3"
+      ]
+    }, 
+    {
+      "Name": "Tumor", 
+      "Targets": [
+        "Epcam", 
+        "S100B", 
+        "PanCk"
+      ]
+    }, 
+    {
+      "Name": "Myeloid", 
+      "Targets": [
+        "CD14", 
+        "CD163", 
+        "CD40", 
+        "CD86", 
+        "Ly6G/Ly6C", 
+        "CD11b", 
+        "CD11c", 
+        "F4/80", 
+        "OX40L", 
+        "VISTA"
+      ]
+    }, 
+    {
+      "Name": "Hormone Receptor", 
+      "Targets": [
+        "ER", 
+        "AR"
+      ]
+    }, 
+    {
+      "Name": "MHC2", 
+      "Targets": [
+        "MHC II"
+      ]
+    }, 
+    {
+      "Name": "Hematopoietic", 
+      "Targets": [
+        "CD34"
+      ]
+    }, 
+    {
+      "Name": "CD8 T cells", 
+      "Targets": [
+        "CD8a"
+      ]
+    }, 
+    {
+      "Name": "Interferon", 
+      "Targets": [
+        "IFNGR"
+      ]
+    }, 
+    {
+      "Name": "Total Immune", 
+      "Targets": [
+        "CD45"
+      ]
+    }, 
+    {
+      "Name": "Endothelial", 
+      "Targets": [
+        "CD31"
+      ]
+    }, 
+    {
+      "Name": "Antigen", 
+      "Targets": [
+        "S100B", 
+        "Pmel17", 
+        "Her2"
+      ]
+    }, 
+    {
+      "Name": "Stroma", 
+      "Targets": [
+        "Fibronectin", 
+        "SMA"
+      ]
+    }, 
+    {
+      "Name": "M2 Macrophage", 
+      "Targets": [
+        "CD163"
+      ]
+    }, 
+    {
+      "Name": "Epithelial", 
+      "Targets": [
+        "Epcam", 
+        "PanCk"
+      ]
+    }, 
+    {
+      "Name": "Macrophage", 
+      "Targets": [
+        "CD163", 
+        "F4/80", 
+        "VISTA"
+      ]
+    }, 
+    {
+      "Name": "nCounter Hyb Controls", 
+      "Targets": [
+        "HYB-NEG", 
+        "HYB-POS"
+      ]
+    }
+  ], 
+  "ProbeGroupVersion": 1.0, 
+  "Targets": [
+    {
+      "GeneID": [
+        20371
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "FOXP3", 
+      "SystematicName": [
+        "Foxp3"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0116", 
+      "RTS_Seq": "TCACAAACCCAAGCGCTATGGTTCTATTCCCCAAT", 
+      "DSP_ID": {
+        "A": "DSP_0018", 
+        "B": "DSP_0186", 
+        "C": "DSP_0546", 
+        "D": "DSP_0316", 
+        "E": "DSP_0415", 
+        "F": "DSP_0536", 
+        "G": "DSP_0737", 
+        "H": "DSP_0110"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00090.1", 
+          "Accession": [
+            "Q53Z59", 
+            "Q99JB6"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        17345
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Ki-67", 
+      "SystematicName": [
+        "Mki67"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0017", 
+      "RTS_Seq": "ATCAACGTAGGGTAAGGTCATATTTTTACCTTACG", 
+      "DSP_ID": {
+        "A": "DSP_0684", 
+        "B": "DSP_0141", 
+        "C": "DSP_0389", 
+        "D": "DSP_0853", 
+        "E": "DSP_0382", 
+        "F": "DSP_0431", 
+        "G": "DSP_0928", 
+        "H": "DSP_0322"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00070.1", 
+          "Accession": [
+            "E9PVX6"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12490
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD34", 
+      "SystematicName": [
+        "Cd34"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0053", 
+      "RTS_Seq": "ACATGGATCTCATAGTCACCACATAGATCGCGACG", 
+      "DSP_ID": {
+        "A": "DSP_0719", 
+        "B": "DSP_0381", 
+        "C": "DSP_0154", 
+        "D": "DSP_0921", 
+        "E": "DSP_0095", 
+        "F": "DSP_0009", 
+        "G": "DSP_0901", 
+        "H": "DSP_0576"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00048.1", 
+          "Accession": [
+            "Q543Y2", 
+            "Q543B6", 
+            "Q64314"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        20104
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "S6", 
+      "SystematicName": [
+        "Rps6"
+      ], 
+      "CodeClass": "Control", 
+      "RTS_ID": "ATS-0089", 
+      "RTS_Seq": "GCTGATCGTATGTATGGTCTATGGCCCCTACAAGG", 
+      "DSP_ID": {
+        "A": "DSP_0289", 
+        "B": "DSP_0692", 
+        "C": "DSP_0778", 
+        "D": "DSP_0299", 
+        "E": "DSP_0766", 
+        "F": "DSP_0542", 
+        "G": "DSP_0045", 
+        "H": "DSP_0131"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00069.1", 
+          "Accession": [
+            "P62754", 
+            "Q5BLK1"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        16768
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "LAG3", 
+      "SystematicName": [
+        "Lag3"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0048", 
+      "RTS_Seq": "TTGCTGGAGGAAACTTCTTTATAATGGCAGATACG", 
+      "DSP_ID": {
+        "A": "DSP_0702", 
+        "B": "DSP_0720", 
+        "C": "DSP_0531", 
+        "D": "DSP_0306", 
+        "E": "DSP_0008", 
+        "F": "DSP_0458", 
+        "G": "DSP_0725", 
+        "H": "DSP_0379"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00082.1", 
+          "Accession": [
+            "Q61790"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12504
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD4", 
+      "SystematicName": [
+        "Cd4"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0021", 
+      "RTS_Seq": "ATATCTTTCTCGGGTAAAGATTAGGCGTCCGATAG", 
+      "DSP_ID": {
+        "A": "DSP_0472", 
+        "B": "DSP_0135", 
+        "C": "DSP_0032", 
+        "D": "DSP_0036", 
+        "E": "DSP_0940", 
+        "F": "DSP_0357", 
+        "G": "DSP_0525", 
+        "H": "DSP_0960"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00075.1", 
+          "Accession": [
+            "Q3TSV7", 
+            "P06332"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Rb IgG", 
+      "SystematicName": [], 
+      "CodeClass": "Negative", 
+      "RTS_ID": "ATS-0165", 
+      "RTS_Seq": "CGGATAAGCTCTCTACTGCAGCCGATAATACATGC", 
+      "DSP_ID": {
+        "A": "DSP_0944", 
+        "B": "DSP_0331", 
+        "C": "DSP_0917", 
+        "D": "DSP_0492", 
+        "E": "DSP_0087", 
+        "F": "DSP_0814", 
+        "G": "DSP_0149", 
+        "H": "DSP_0911"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00001.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        110308, 
+        16678, 
+        16687, 
+        16688, 
+        16691, 
+        16661, 
+        16681, 
+        16664, 
+        16666, 
+        16669
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "PanCk", 
+      "SystematicName": [
+        "Krt16", 
+        "Krt6a", 
+        "Krt2", 
+        "Krt1", 
+        "Krt14", 
+        "Krt6b", 
+        "Krt5", 
+        "Krt10", 
+        "Krt8", 
+        "Krt19"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0057", 
+      "RTS_Seq": "CTACAGAGGCAACAGGTTTTGGTTGTTCAGTTATA", 
+      "DSP_ID": {
+        "A": "DSP_0191", 
+        "B": "DSP_0959", 
+        "C": "DSP_0295", 
+        "D": "DSP_0681", 
+        "E": "DSP_0343", 
+        "F": "DSP_0711", 
+        "G": "DSP_0359", 
+        "H": "DSP_0752"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00022.1", 
+          "Accession": [
+            "Q3TTY5", 
+            "Q3SYP5", 
+            "Q9Z2K1", 
+            "P19001", 
+            "Q61781", 
+            "P50446", 
+            "P11679", 
+            "P02535", 
+            "Q3ZAW8", 
+            "Q922U2", 
+            "Q32P04", 
+            "P04104", 
+            "Q3UV11", 
+            "A2A513", 
+            "B1AQ78"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        21936
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "GITR", 
+      "SystematicName": [
+        "Tnfrsf18"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0162", 
+      "RTS_Seq": "TCTTACAAAAGCTTGGTAGATAAACAGCAGCTTTT", 
+      "DSP_ID": {
+        "A": "DSP_0595", 
+        "B": "DSP_0410", 
+        "C": "DSP_0592", 
+        "D": "DSP_0856", 
+        "E": "DSP_0376", 
+        "F": "DSP_0119", 
+        "G": "DSP_0509", 
+        "H": "DSP_0243"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00035.1", 
+          "Accession": [
+            "Q540M6", 
+            "O35714"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "SpikeIn", 
+      "DisplayName": "HYB-POS", 
+      "SystematicName": [], 
+      "CodeClass": "Positive", 
+      "DSP_ID": {
+        "A": "DSP_0505", 
+        "B": "DSP_0078", 
+        "C": "DSP_0643", 
+        "D": "DSP_0749", 
+        "E": "DSP_0030", 
+        "F": "DSP_0655", 
+        "G": "DSP_0839", 
+        "H": "DSP_0414"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DCTL_00002.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        11475
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "SMA", 
+      "SystematicName": [
+        "Acta2"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0181", 
+      "RTS_Seq": "ACCAACTCCTCCAGCAATTGCTAATAAGCAGTTTT", 
+      "DSP_ID": {
+        "A": "DSP_0394", 
+        "B": "DSP_0534", 
+        "C": "DSP_0153", 
+        "D": "DSP_0827", 
+        "E": "DSP_0630", 
+        "F": "DSP_0262", 
+        "G": "DSP_0175", 
+        "H": "DSP_0646"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00023.1", 
+          "Accession": [
+            "P62737"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        20203
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "S100B", 
+      "SystematicName": [
+        "S100b"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0073", 
+      "RTS_Seq": "ATGCTGAAAGATTTAACAGATGCAAAAGGCATACC", 
+      "DSP_ID": {
+        "A": "DSP_0757", 
+        "B": "DSP_0703", 
+        "C": "DSP_0932", 
+        "D": "DSP_0188", 
+        "E": "DSP_0669", 
+        "F": "DSP_0252", 
+        "G": "DSP_0363", 
+        "H": "DSP_0254"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00056.1", 
+          "Accession": [
+            "Q3UY00", 
+            "P50114"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        360198
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Histone H3", 
+      "SystematicName": [
+        "H3c1"
+      ], 
+      "CodeClass": "Control", 
+      "RTS_ID": "ATS-0007", 
+      "RTS_Seq": "ATATTCTGTACTCAGTGCCTATCCACCTAATAGGG", 
+      "DSP_ID": {
+        "A": "DSP_0627", 
+        "B": "DSP_0927", 
+        "C": "DSP_0127", 
+        "D": "DSP_0402", 
+        "E": "DSP_0920", 
+        "F": "DSP_0238", 
+        "G": "DSP_0647", 
+        "H": "DSP_0396"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00005.1", 
+          "Accession": [
+            "P68433"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        171285
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Tim-3", 
+      "SystematicName": [
+        "Havcr2"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0027", 
+      "RTS_Seq": "TCAGGTGCTTGTAGGCTCATGATAGGGGTAATGCG", 
+      "DSP_ID": {
+        "A": "DSP_0219", 
+        "B": "DSP_0103", 
+        "C": "DSP_0006", 
+        "D": "DSP_0907", 
+        "E": "DSP_0761", 
+        "F": "DSP_0427", 
+        "G": "DSP_0337", 
+        "H": "DSP_0850"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00083.1", 
+          "Accession": [
+            "Q8VIM0"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        60533
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "PD-L1", 
+      "SystematicName": [
+        "Cd274"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0045", 
+      "RTS_Seq": "GGTGGGTGCTAACTCTTTAATAGCCTTCAGTGACG", 
+      "DSP_ID": {
+        "A": "DSP_0782", 
+        "B": "DSP_0014", 
+        "C": "DSP_0820", 
+        "D": "DSP_0146", 
+        "E": "DSP_0744", 
+        "F": "DSP_0085", 
+        "G": "DSP_0798", 
+        "H": "DSP_0221"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00080.1", 
+          "Accession": [
+            "Q9EP73", 
+            "Q3U472"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        20431
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Pmel17", 
+      "SystematicName": [
+        "Pmel"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0167", 
+      "RTS_Seq": "AATGCATTTGCCAATGTAGCCATTGTATAACCAGA", 
+      "DSP_ID": {
+        "A": "DSP_0691", 
+        "B": "DSP_0894", 
+        "C": "DSP_0745", 
+        "D": "DSP_0948", 
+        "E": "DSP_0117", 
+        "F": "DSP_0403", 
+        "G": "DSP_0193", 
+        "H": "DSP_0605"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00269.1", 
+          "Accession": [
+            "Q9CZB2"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12475
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD14", 
+      "SystematicName": [
+        "Cd14"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0229", 
+      "RTS_Seq": "TAGTTGTATGGTTTCAGATGAGGGAACGTGTAGGA", 
+      "DSP_ID": {
+        "A": "DSP_0804", 
+        "B": "DSP_0121", 
+        "C": "DSP_0253", 
+        "D": "DSP_0334", 
+        "E": "DSP_0480", 
+        "F": "DSP_0158", 
+        "G": "DSP_0483", 
+        "H": "DSP_0887"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00091.1", 
+          "Accession": [
+            "P10810", 
+            "Q4FJP7", 
+            "Q3UE54", 
+            "Q3UB18"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12524
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD86", 
+      "SystematicName": [
+        "Cd86"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0415", 
+      "RTS_Seq": "CGAGCTAGTGGATCAGATATCCAGGTAGTGAACTG", 
+      "DSP_ID": {
+        "A": "DSP_0754", 
+        "B": "DSP_0453", 
+        "C": "DSP_0844", 
+        "D": "DSP_0005", 
+        "E": "DSP_0307", 
+        "F": "DSP_0659", 
+        "G": "DSP_0547", 
+        "H": "DSP_0145"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00273.1", 
+          "Accession": [
+            "Q549Q9", 
+            "P42082", 
+            "Q61238"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        15979
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "IFNGR", 
+      "SystematicName": [
+        "Ifngr1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0423", 
+      "RTS_Seq": "GATACACGCAAAATCCCCAGAGGCAGTTATAAGGA", 
+      "DSP_ID": {
+        "A": "DSP_0047", 
+        "B": "DSP_0248", 
+        "C": "DSP_0187", 
+        "D": "DSP_0601", 
+        "E": "DSP_0361", 
+        "F": "DSP_0562", 
+        "G": "DSP_0471", 
+        "H": "DSP_0718"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00347.1", 
+          "Accession": [
+            "P15261"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        18613
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD31", 
+      "SystematicName": [
+        "Pecam1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0120", 
+      "RTS_Seq": "AATTTCTGAGATTGTTGGTAGAGGGAGAAATGGGA", 
+      "DSP_ID": {
+        "A": "DSP_0136", 
+        "B": "DSP_0530", 
+        "C": "DSP_0285", 
+        "D": "DSP_0771", 
+        "E": "DSP_0288", 
+        "F": "DSP_0868", 
+        "G": "DSP_0671", 
+        "H": "DSP_0914"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00104.1", 
+          "Accession": [
+            "Q08481", 
+            "Q8CAW4"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        16197
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD127/IL7RA", 
+      "SystematicName": [
+        "Il7r"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0046", 
+      "RTS_Seq": "TATGTATAGAGTGCCGGGAAGTGAAAAATCTTTGG", 
+      "DSP_ID": {
+        "A": "DSP_0767", 
+        "B": "DSP_0037", 
+        "C": "DSP_0437", 
+        "D": "DSP_0532", 
+        "E": "DSP_0128", 
+        "F": "DSP_0096", 
+        "G": "DSP_0563", 
+        "H": "DSP_0617"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00036.1", 
+          "Accession": [
+            "Q8C9W4", 
+            "P16872", 
+            "Q5FW78"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        381319
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "BatF3", 
+      "SystematicName": [
+        "Batf3"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0101", 
+      "RTS_Seq": "TTCTTTACCGTAAAGCTTTTCTCTCGCTTCAACGA", 
+      "DSP_ID": {
+        "A": "DSP_0302", 
+        "B": "DSP_0048", 
+        "C": "DSP_0304", 
+        "D": "DSP_0360", 
+        "E": "DSP_0240", 
+        "F": "DSP_0442", 
+        "G": "DSP_0819", 
+        "H": "DSP_0392"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00351.1", 
+          "Accession": [
+            "Q9D275"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12477
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CTLA4", 
+      "SystematicName": [
+        "Ctla4"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0169", 
+      "RTS_Seq": "ACCACTATACATGATTCACGAAAATGCGCACGCCG", 
+      "DSP_ID": {
+        "A": "DSP_0130", 
+        "B": "DSP_0625", 
+        "C": "DSP_0231", 
+        "D": "DSP_0623", 
+        "E": "DSP_0151", 
+        "F": "DSP_0026", 
+        "G": "DSP_0883", 
+        "H": "DSP_0300"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00018.1", 
+          "Accession": [
+            "Q5SSM0", 
+            "P09793", 
+            "Q6GTR6"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        54167
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "ICOS", 
+      "SystematicName": [
+        "Icos"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0226", 
+      "RTS_Seq": "TTGTTTTGAAAACCATAGGAGGAAACCTCCTATTG", 
+      "DSP_ID": {
+        "A": "DSP_0255", 
+        "B": "DSP_0615", 
+        "C": "DSP_0201", 
+        "D": "DSP_0324", 
+        "E": "DSP_0004", 
+        "F": "DSP_0139", 
+        "G": "DSP_0622", 
+        "H": "DSP_0406"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00086.1", 
+          "Accession": [
+            "Q5SUZ7", 
+            "Q9WVS0", 
+            "Q3V3X2"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12487
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD28", 
+      "SystematicName": [
+        "Cd28"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0064", 
+      "RTS_Seq": "TTTTATTGCATTGTATTTCATCTTACCCAACCCCT", 
+      "DSP_ID": {
+        "A": "DSP_0502", 
+        "B": "DSP_0916", 
+        "C": "DSP_0049", 
+        "D": "DSP_0479", 
+        "E": "DSP_0867", 
+        "F": "DSP_0336", 
+        "G": "DSP_0077", 
+        "H": "DSP_0485"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00260.1", 
+          "Accession": [
+            "Q8CDB3", 
+            "P31041"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        19264
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD45", 
+      "SystematicName": [
+        "Ptprc"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0232", 
+      "RTS_Seq": "ATAAGTTAAGTCTGCTCAATACAGGGGTCTGTCCA", 
+      "DSP_ID": {
+        "A": "DSP_0501", 
+        "B": "DSP_0656", 
+        "C": "DSP_0941", 
+        "D": "DSP_0937", 
+        "E": "DSP_0033", 
+        "F": "DSP_0794", 
+        "G": "DSP_0950", 
+        "H": "DSP_0533"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00076.1", 
+          "Accession": [
+            "S4R1S4", 
+            "Q8C6Q7", 
+            "S4R1M0", 
+            "S4R2V1"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12505
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD44", 
+      "SystematicName": [
+        "Cd44"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0280", 
+      "RTS_Seq": "GGTAAGCAACATGTTCGGCGCCGTTTTGAAAACAA", 
+      "DSP_ID": {
+        "A": "DSP_0686", 
+        "B": "DSP_0436", 
+        "C": "DSP_0125", 
+        "D": "DSP_0624", 
+        "E": "DSP_0658", 
+        "F": "DSP_0377", 
+        "G": "DSP_0709", 
+        "H": "DSP_0368"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00261.1", 
+          "Accession": [
+            "Q3U8S1", 
+            "Q80X37", 
+            "A2APM3", 
+            "A2APM2", 
+            "A2APM1", 
+            "A2APM4", 
+            "P15379"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        16149
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "MHC II", 
+      "SystematicName": [
+        "Cd74"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0223", 
+      "RTS_Seq": "GTCAAGCGTCCACGATCACCGTACATCTTAGTCGC", 
+      "DSP_ID": {
+        "A": "DSP_0227", 
+        "B": "DSP_0046", 
+        "C": "DSP_0321", 
+        "D": "DSP_0765", 
+        "E": "DSP_0053", 
+        "F": "DSP_0735", 
+        "G": "DSP_0222", 
+        "H": "DSP_0781"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00067.1", 
+          "Accession": [
+            "P04441", 
+            "Q3U4Q8", 
+            "Q545Y5"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        21940
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD27", 
+      "SystematicName": [
+        "Cd27"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0047", 
+      "RTS_Seq": "CTAGACCAGGTAAGATACTCATAGCACCGGAATAG", 
+      "DSP_ID": {
+        "A": "DSP_0730", 
+        "B": "DSP_0488", 
+        "C": "DSP_0249", 
+        "D": "DSP_0225", 
+        "E": "DSP_0086", 
+        "F": "DSP_0847", 
+        "G": "DSP_0862", 
+        "H": "DSP_0969"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00089.1", 
+          "Accession": [
+            "D3Z7W5", 
+            "P41272", 
+            "Q3U4X0", 
+            "B7ZW87"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        21939
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD40", 
+      "SystematicName": [
+        "Cd40"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0044", 
+      "RTS_Seq": "TCACAGCTTCGATAATTTTTTCAACGTATTCAGTG", 
+      "DSP_ID": {
+        "A": "DSP_0613", 
+        "B": "DSP_0137", 
+        "C": "DSP_0813", 
+        "D": "DSP_0506", 
+        "E": "DSP_0585", 
+        "F": "DSP_0805", 
+        "G": "DSP_0865", 
+        "H": "DSP_0649"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00087.1", 
+          "Accession": [
+            "P27512"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        14433
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "GAPDH", 
+      "SystematicName": [
+        "Gapdh"
+      ], 
+      "CodeClass": "Control", 
+      "RTS_ID": "ATS-0103", 
+      "RTS_Seq": "TAAAACTCATACTCGAAGGTGGGGCACGGACATAC", 
+      "DSP_ID": {
+        "A": "DSP_0579", 
+        "B": "DSP_0439", 
+        "C": "DSP_0678", 
+        "D": "DSP_0292", 
+        "E": "DSP_0229", 
+        "F": "DSP_0888", 
+        "G": "DSP_0614", 
+        "H": "DSP_0327"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00020.1", 
+          "Accession": [
+            "P16858", 
+            "D2KHZ9", 
+            "A0A0A0MQF6"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        11622
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "AhR", 
+      "SystematicName": [
+        "Ahr"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0257", 
+      "RTS_Seq": "ATCTGAACCGCAGCCTAGACCGTTTGTAAAATATG", 
+      "DSP_ID": {
+        "A": "DSP_0235", 
+        "B": "DSP_0864", 
+        "C": "DSP_0721", 
+        "D": "DSP_0733", 
+        "E": "DSP_0213", 
+        "F": "DSP_0924", 
+        "G": "DSP_0849", 
+        "H": "DSP_0429"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00349.1", 
+          "Accession": [
+            "Q3U5D9", 
+            "P30561"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12525
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD8a", 
+      "SystematicName": [
+        "Cd8a"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0020", 
+      "RTS_Seq": "TGTCGCTCTAGTGTGACTTTTCCACCTCGCATCTG", 
+      "DSP_ID": {
+        "A": "DSP_0305", 
+        "B": "DSP_0747", 
+        "C": "DSP_0742", 
+        "D": "DSP_0329", 
+        "E": "DSP_0822", 
+        "F": "DSP_0947", 
+        "G": "DSP_0090", 
+        "H": "DSP_0118"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00078.1", 
+          "Accession": [
+            "P01731", 
+            "Q8CAX3"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        21947
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD40L", 
+      "SystematicName": [
+        "Cd40lg"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0186", 
+      "RTS_Seq": "CAGGGTTTTAGAACGCGCATTCGGGAGATACAGTT", 
+      "DSP_ID": {
+        "A": "DSP_0648", 
+        "B": "DSP_0152", 
+        "C": "DSP_0638", 
+        "D": "DSP_0061", 
+        "E": "DSP_0851", 
+        "F": "DSP_0223", 
+        "G": "DSP_0418", 
+        "H": "DSP_0160"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00088.1", 
+          "Accession": [
+            "P27548", 
+            "Q0VEI3"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        11835
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "AR", 
+      "SystematicName": [
+        "Ar"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0271", 
+      "RTS_Seq": "GCTCGGAGGTGTAAATTAGCAATATTAGGGGAGTA", 
+      "DSP_ID": {
+        "A": "DSP_0874", 
+        "B": "DSP_0059", 
+        "C": "DSP_0274", 
+        "D": "DSP_0051", 
+        "E": "DSP_0817", 
+        "F": "DSP_0603", 
+        "G": "DSP_0869", 
+        "H": "DSP_0044"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00267.1", 
+          "Accession": [
+            "P19091"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Rt IgG2b", 
+      "SystematicName": [], 
+      "CodeClass": "Negative", 
+      "RTS_ID": "ATS-0004", 
+      "RTS_Seq": "CGACACCGAGTTCGACCGTTATGTTGGTAGGATCG", 
+      "DSP_ID": {
+        "A": "DSP_0412", 
+        "B": "DSP_0642", 
+        "C": "DSP_0056", 
+        "D": "DSP_0908", 
+        "E": "DSP_0263", 
+        "F": "DSP_0279", 
+        "G": "DSP_0682", 
+        "H": "DSP_0474"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00064.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        17075
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Epcam", 
+      "SystematicName": [
+        "Epcam"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0014", 
+      "RTS_Seq": "TTTGAGCAGTAAGGCGAACTCGGAAACTCGCATTG", 
+      "DSP_ID": {
+        "A": "DSP_0393", 
+        "B": "DSP_0931", 
+        "C": "DSP_0570", 
+        "D": "DSP_0697", 
+        "E": "DSP_0922", 
+        "F": "DSP_0107", 
+        "G": "DSP_0031", 
+        "H": "DSP_0567"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00092.1", 
+          "Accession": [
+            "Q99JW5"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        22164
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "OX40L", 
+      "SystematicName": [
+        "Tnfsf4"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0224", 
+      "RTS_Seq": "CAATAGGACGGAACGCCATCCAATAACTCGGAAGG", 
+      "DSP_ID": {
+        "A": "DSP_0740", 
+        "B": "DSP_0852", 
+        "C": "DSP_0919", 
+        "D": "DSP_0640", 
+        "E": "DSP_0560", 
+        "F": "DSP_0644", 
+        "G": "DSP_0042", 
+        "H": "DSP_0795"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00028.1", 
+          "Accession": [
+            "B6DXE3", 
+            "P43488"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "SpikeIn", 
+      "DisplayName": "HYB-NEG", 
+      "SystematicName": [], 
+      "CodeClass": "Negative", 
+      "DSP_ID": {
+        "A": "DSP_0468", 
+        "B": "DSP_0895", 
+        "C": "DSP_0330", 
+        "D": "DSP_0224", 
+        "E": "DSP_0559", 
+        "F": "DSP_0134", 
+        "G": "DSP_0318", 
+        "H": "DSP_0943"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DCTL_00001.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        74048
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "VISTA", 
+      "SystematicName": [
+        "Vsir"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0052", 
+      "RTS_Seq": "CTCCAGCATCTGAGCGCAATACATATCATGCGAGG", 
+      "DSP_ID": {
+        "A": "DSP_0554", 
+        "B": "DSP_0356", 
+        "C": "DSP_0073", 
+        "D": "DSP_0425", 
+        "E": "DSP_0027", 
+        "F": "DSP_0494", 
+        "G": "DSP_0936", 
+        "H": "DSP_0618"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00084.1", 
+          "Accession": [
+            "Q9D659", 
+            "A0A171EBK7"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12501
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD3e", 
+      "SystematicName": [
+        "Cd3e"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0029", 
+      "RTS_Seq": "GTGCATATTGCAGCTGAGCCAGCTCAATTTGAAGG", 
+      "DSP_ID": {
+        "A": "DSP_0910", 
+        "B": "DSP_0317", 
+        "C": "DSP_0565", 
+        "D": "DSP_0409", 
+        "E": "DSP_0407", 
+        "F": "DSP_0179", 
+        "G": "DSP_0023", 
+        "H": "DSP_0013"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00074.1", 
+          "Accession": [
+            "A6H6M1", 
+            "P22646"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Rt IgG2a", 
+      "SystematicName": [], 
+      "CodeClass": "Negative", 
+      "RTS_ID": "ATS-0006", 
+      "RTS_Seq": "CAGACACTGCGACAACTCACGATCATGACACAGAG", 
+      "DSP_ID": {
+        "A": "DSP_0029", 
+        "B": "DSP_0218", 
+        "C": "DSP_0475", 
+        "D": "DSP_0065", 
+        "E": "DSP_0710", 
+        "F": "DSP_0159", 
+        "G": "DSP_0291", 
+        "H": "DSP_0062"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00063.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        13982
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "ER", 
+      "SystematicName": [
+        "Esr1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0190", 
+      "RTS_Seq": "ATTCCAAATGCCGTGTTTTCGCGCCGCTTATCTAT", 
+      "DSP_ID": {
+        "A": "DSP_0209", 
+        "B": "DSP_0200", 
+        "C": "DSP_0704", 
+        "D": "DSP_0815", 
+        "E": "DSP_0548", 
+        "F": "DSP_0879", 
+        "G": "DSP_0763", 
+        "H": "DSP_0057"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00265.1", 
+          "Accession": [
+            "P19785", 
+            "E7FJU2", 
+            "E7FJU3"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        102657
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "B7-H3", 
+      "SystematicName": [
+        "Cd276"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0059", 
+      "RTS_Seq": "ATGCCATATCTGTTATTTTTGGCTCATGCGGCTTC", 
+      "DSP_ID": {
+        "A": "DSP_0450", 
+        "B": "DSP_0785", 
+        "C": "DSP_0759", 
+        "D": "DSP_0105", 
+        "E": "DSP_0426", 
+        "F": "DSP_0277", 
+        "G": "DSP_0350", 
+        "H": "DSP_0122"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00032.1", 
+          "Accession": [
+            "A6MDC5", 
+            "Q8VE98"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        14939
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "GZMB", 
+      "SystematicName": [
+        "Gzmb"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0050", 
+      "RTS_Seq": "ATACCCAAGGCAAATGTGCGTAGACAACTTGTATG", 
+      "DSP_ID": {
+        "A": "DSP_0650", 
+        "B": "DSP_0226", 
+        "C": "DSP_0629", 
+        "D": "DSP_0232", 
+        "E": "DSP_0677", 
+        "F": "DSP_0529", 
+        "G": "DSP_0705", 
+        "H": "DSP_0673"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00079.1", 
+          "Accession": [
+            "Q3TZH4", 
+            "P04187"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        18566
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "PD-1", 
+      "SystematicName": [
+        "Pdcd1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0043", 
+      "RTS_Seq": "ATGATCGTTCCGCATTTTGAATTTACGGTCATGAG", 
+      "DSP_ID": {
+        "A": "DSP_0561", 
+        "B": "DSP_0755", 
+        "C": "DSP_0498", 
+        "D": "DSP_0481", 
+        "E": "DSP_0886", 
+        "F": "DSP_0694", 
+        "G": "DSP_0824", 
+        "H": "DSP_0499"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00065.1", 
+          "Accession": [
+            "Q544F3", 
+            "Q02242"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        93671
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD163", 
+      "SystematicName": [
+        "Cd163"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0035", 
+      "RTS_Seq": "CCAGTACGGGTACTAATAAGTGTCATATCTATTGG", 
+      "DSP_ID": {
+        "A": "DSP_0355", 
+        "B": "DSP_0028", 
+        "C": "DSP_0653", 
+        "D": "DSP_0668", 
+        "E": "DSP_0106", 
+        "F": "DSP_0610", 
+        "G": "DSP_0777", 
+        "H": "DSP_0311"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00052.1", 
+          "Accession": [
+            "Q2VLH6", 
+            "B7ZMW6"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        14268
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Fibronectin", 
+      "SystematicName": [
+        "Fn1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0191", 
+      "RTS_Seq": "AATTCCCCCAGCTACTCTAAACGCATCTATTGTAA", 
+      "DSP_ID": {
+        "A": "DSP_0380", 
+        "B": "DSP_0731", 
+        "C": "DSP_0654", 
+        "D": "DSP_0438", 
+        "E": "DSP_0469", 
+        "F": "DSP_0230", 
+        "G": "DSP_0793", 
+        "H": "DSP_0764"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00081.1", 
+          "Accession": [
+            "Q3UGY5", 
+            "A0A087WR50", 
+            "A0A087WS56", 
+            "Q3UZF9", 
+            "P11276", 
+            "B7ZNJ1", 
+            "Q3UHL6", 
+            "B9EHT6", 
+            "Q3UH17", 
+            "A0A087WSN6", 
+            "Q3UHR1", 
+            "Q3TBB4"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        17067, 
+        546644
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Ly6G/Ly6C", 
+      "SystematicName": [
+        "Ly6g", 
+        "Ly6c1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0166", 
+      "RTS_Seq": "ATAAAATTGGCAATATCATCCAACCTTGCTGCTAA", 
+      "DSP_ID": {
+        "A": "DSP_0339", 
+        "B": "DSP_0569", 
+        "C": "DSP_0424", 
+        "D": "DSP_0094", 
+        "E": "DSP_0878", 
+        "F": "DSP_0129", 
+        "G": "DSP_0550", 
+        "H": "DSP_0756"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00085.1", 
+          "Accession": [
+            "A0A087WNZ5", 
+            "P0CW02", 
+            "A0A087WRG9", 
+            "A0A087WQF5"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        13733
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "F4/80", 
+      "SystematicName": [
+        "Adgre1"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0026", 
+      "RTS_Seq": "CCAATTATACTGTCTGTTATGTTCTCGGATAAGCG", 
+      "DSP_ID": {
+        "A": "DSP_0148", 
+        "B": "DSP_0281", 
+        "C": "DSP_0584", 
+        "D": "DSP_0120", 
+        "E": "DSP_0591", 
+        "F": "DSP_0930", 
+        "G": "DSP_0430", 
+        "H": "DSP_0842"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00071.1", 
+          "Accession": [
+            "Q61549", 
+            "Q3U9R0"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        13866
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "Her2", 
+      "SystematicName": [
+        "Erbb2"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0011", 
+      "RTS_Seq": "GTCCTTTGTTGGGCGGACCGTAATGAGGAATTTGG", 
+      "DSP_ID": {
+        "A": "DSP_0524", 
+        "B": "DSP_0210", 
+        "C": "DSP_0411", 
+        "D": "DSP_0803", 
+        "E": "DSP_0712", 
+        "F": "DSP_0066", 
+        "G": "DSP_0522", 
+        "H": "DSP_0111"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00059.1", 
+          "Accession": [
+            "P70424"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        16411
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD11c", 
+      "SystematicName": [
+        "Itgax"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0065", 
+      "RTS_Seq": "AAAACAGGCAAGCCGGTGATTTTATCTACAGGAAT", 
+      "DSP_ID": {
+        "A": "DSP_0825", 
+        "B": "DSP_0832", 
+        "C": "DSP_0195", 
+        "D": "DSP_0674", 
+        "E": "DSP_0207", 
+        "F": "DSP_0043", 
+        "G": "DSP_0543", 
+        "H": "DSP_0651"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00072.1", 
+          "Accession": [
+            "Q9QXH4"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "GFP", 
+      "SystematicName": [], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0062", 
+      "RTS_Seq": "TTCTGACCATACATTGGGAATACTCGCCCCAGTAG", 
+      "DSP_ID": {
+        "A": "DSP_0369", 
+        "B": "DSP_0088", 
+        "C": "DSP_0060", 
+        "D": "DSP_0897", 
+        "E": "DSP_0040", 
+        "F": "DSP_0762", 
+        "G": "DSP_0537", 
+        "H": "DSP_0541"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00268.1", 
+          "Accession": []
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        16409
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD11b", 
+      "SystematicName": [
+        "Itgam"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0016", 
+      "RTS_Seq": "TTACCCTATCTCGTCTATGTACGTCAGGCTGAATG", 
+      "DSP_ID": {
+        "A": "DSP_0746", 
+        "B": "DSP_0420", 
+        "C": "DSP_0652", 
+        "D": "DSP_0208", 
+        "E": "DSP_0556", 
+        "F": "DSP_0341", 
+        "G": "DSP_0326", 
+        "H": "DSP_0577"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00068.1", 
+          "Accession": [
+            "E9Q604", 
+            "G5E8F1"
+          ]
+        }
+      ]
+    }, 
+    {
+      "GeneID": [
+        12478
+      ], 
+      "AnalyteType": "Protein", 
+      "DisplayName": "CD19", 
+      "SystematicName": [
+        "Cd19"
+      ], 
+      "CodeClass": "Endogenous", 
+      "RTS_ID": "ATS-0018", 
+      "RTS_Seq": "TTCCCTCTTTCTCCGCTTATGGATGAAAGGACAGG", 
+      "DSP_ID": {
+        "A": "DSP_0063", 
+        "B": "DSP_0838", 
+        "C": "DSP_0408", 
+        "D": "DSP_0564", 
+        "E": "DSP_0566", 
+        "F": "DSP_0616", 
+        "G": "DSP_0448", 
+        "H": "DSP_0440"
+      }, 
+      "Probes": [
+        {
+          "ProbeID": "DPROT_00073.1", 
+          "Accession": [
+            "Q3TQG5", 
+            "P25918"
+          ]
+        }
+      ]
+    }
+  ]
+}
